@@ -13,13 +13,25 @@ const R_SUN   = 6.96e8;    // meters
 const R_EARTH = 6.371e6;   // meters
 const R_MOON  = 1.737e6;   // meters
 
-// Secundus: quarter the mass of Primus, eccentric inner orbit.
-// Sits inside Primus's orbit so Primus can't destabilize it.
-// Period ≈ 8.2 days — fast inner moon swinging between 0.29 and 0.61 LD.
-// Numerically stable past 200 simulated years.
+// Four-moon system stable past 1000 simulated years.
+// Masses 0.02 / 0.04 / 0.25 / 1.00 LM, all e=0.10.
+// Inner1 at 0.12 LD (period ≈ 0.36 d), Inner2 at 0.24 LD (≈ 1.0 d),
+// Secundus at 0.45 LD (≈ 8.3 d), Primus at 1.00 LD (≈ 27.3 d).
+const M_INNER1        = M_MOON * 0.02;
+const R_INNER1        = R_MOON * Math.cbrt(0.02);
+const INNER1_E        = 0.10;
+const INNER1_A        = 0.12 * LUNAR_DIST;
+const INNER1_R_PERI   = INNER1_A * (1 - INNER1_E);
+
+const M_INNER2        = M_MOON * 0.04;
+const R_INNER2        = R_MOON * Math.cbrt(0.04);
+const INNER2_E        = 0.10;
+const INNER2_A        = 0.24 * LUNAR_DIST;
+const INNER2_R_PERI   = INNER2_A * (1 - INNER2_E);
+
 const M_SECUNDUS      = M_MOON / 4;
-const R_SECUNDUS      = R_MOON * Math.cbrt(0.25);   // same density as Primus
-const SECUNDUS_E      = 0.35;
+const R_SECUNDUS      = R_MOON * Math.cbrt(0.25);
+const SECUNDUS_E      = 0.10;
 const SECUNDUS_A      = 0.45 * LUNAR_DIST;
 const SECUNDUS_R_PERI = SECUNDUS_A * (1 - SECUNDUS_E);
 
@@ -185,8 +197,10 @@ function createInitialBodies() {
   // Circular orbit speeds
   const v_earth    = Math.sqrt(G * M_SUN   / AU);
   const v_moon_rel = Math.sqrt(G * M_EARTH / LUNAR_DIST);
-  // Secundus periapsis velocity from vis-viva: v = sqrt(G M (1+e) / r_peri)
-  const v_sec_peri = Math.sqrt(G * M_EARTH * (1 + SECUNDUS_E) / SECUNDUS_R_PERI);
+  // Periapsis speeds from vis-viva: v = sqrt(G M (1+e) / r_peri)
+  const v_inner1_peri = Math.sqrt(G * M_EARTH * (1 + INNER1_E) / INNER1_R_PERI);
+  const v_inner2_peri = Math.sqrt(G * M_EARTH * (1 + INNER2_E) / INNER2_R_PERI);
+  const v_sec_peri    = Math.sqrt(G * M_EARTH * (1 + SECUNDUS_E) / SECUNDUS_R_PERI);
 
   const bodies = [
     new Body({
@@ -228,16 +242,41 @@ function createInitialBodies() {
     new Body({
       name: 'Secundus',
       mass: M_SECUNDUS,
-      // Start at periapsis, 90° ahead of Primus (in +y from Qaia) to avoid overlap.
-      // Prograde velocity at periapsis is perpendicular to radius: −x in Qaia's frame.
+      // Periapsis at 90° (in +y from Qaia). Prograde v points in −x in Qaia's frame.
       x: AU, y: SECUNDUS_R_PERI, z: 0,
       vx: -v_sec_peri, vy: v_earth, vz: 0,
       physicalRadius: R_SECUNDUS,
       minDisplayPx: 3,
       color: '#CC9966',
       trailColor: '#CC9966',
-      // 1400 recorded points × 10 steps × 360 s/step ≈ 58 days ≈ 1 Secundus orbit
+      // 1400 recorded points × 10 steps × 360 s/step ≈ 58 days ≈ 7 Secundus orbits
       trailMaxLen: 1400,
+    }),
+    new Body({
+      name: 'Inner1',
+      mass: M_INNER1,
+      // Periapsis at 180° (in −x from Qaia). Prograde v points in −y in Qaia's frame.
+      x: AU - INNER1_R_PERI, y: 0, z: 0,
+      vx: 0, vy: v_earth - v_inner1_peri, vz: 0,
+      physicalRadius: R_INNER1,
+      minDisplayPx: 3,
+      color: '#FFAA66',
+      trailColor: '#FFAA66',
+      // 300 points × 10 × 360 s ≈ 12 days ≈ 34 Inner1 orbits
+      trailMaxLen: 300,
+    }),
+    new Body({
+      name: 'Inner2',
+      mass: M_INNER2,
+      // Periapsis at 270° (in −y from Qaia). Prograde v points in +x in Qaia's frame.
+      x: AU, y: -INNER2_R_PERI, z: 0,
+      vx: v_inner2_peri, vy: v_earth, vz: 0,
+      physicalRadius: R_INNER2,
+      minDisplayPx: 3,
+      color: '#88CCAA',
+      trailColor: '#88CCAA',
+      // 500 points × 10 × 360 s ≈ 20 days ≈ 20 Inner2 orbits
+      trailMaxLen: 500,
     }),
   ];
 

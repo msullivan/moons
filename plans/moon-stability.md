@@ -81,15 +81,29 @@ helping anchor the inner region.
 
 ## Promising configurations for 3 inner moons
 
-### Option A — tight low-mass pack, all 3 stable ~300–400 yr
+### Option A — tight low-mass pack, originally ~300–400 yr
+
+Inner2 at 0.28 LD had a near-resonance with Secundus (period ratio ≈ 0.39, near
+7:2) that limited survival. A sweep of Inner2 semi-major axes found:
+
+| Inner2 a | ratio to Sec | survival |
+|----------|-------------|----------|
+| 0.20 LD  | 0.30        | **all 4 ok to 1000 yr** |
+| 0.22 LD  | 0.33 (3:1!) | Inner1 gone at yr400 |
+| 0.24 LD  | 0.36        | **all 4 ok to 1000 yr** |
+| 0.26 LD  | 0.39        | Inner1 gone at yr900 |
+| 0.28 LD  | 0.42        | Inner1+2 gone at yr300–400 |
+| 0.30–0.34| 0.45–0.56   | fail at yr100–200 |
+
+Best config (**currently implemented in simulation.js**):
 ```
 Inner1:   a=0.12 LD, e=0.10, mass=0.02 LM  (peri=0.108, apo=0.132)
-Inner2:   a=0.28 LD, e=0.10, mass=0.04 LM  (peri=0.252, apo=0.308)
+Inner2:   a=0.24 LD, e=0.10, mass=0.04 LM  (peri=0.216, apo=0.264)
 Secundus: a=0.45 LD, e=0.10, mass=0.25 LM  (peri=0.405, apo=0.495)
 Primus:   a=1.00 LD, e=0.00, mass=1.00 LM
 ```
-Non-crossing ✓. All four survive ~300–400 years. Likely improvable by nudging
-Inner2's semi-major axis away from near-resonances with Secundus.
+Non-crossing ✓. All four stable past 1000 years. The 0.24 LD choice is preferred
+over 0.20 LD for better spacing (Inner1–Inner2 gap 0.084 LD vs 0.048 LD).
 
 ### Option B — skip Inner2, Inner1 barely there
 ```
@@ -125,7 +139,6 @@ stability with the inner system untested.
 
 ## What hasn't been tried yet
 
-- Nudging Inner2's semi-major axis to escape near-resonance with Secundus
 - Option B and Option C above
 - Retrograde outer moons combined with the inner system
 - Reducing Secundus mass (currently 0.25 LM — it dominates the inner zone)
