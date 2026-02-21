@@ -201,7 +201,7 @@ class Renderer {
     }
 
     const barPx = barM / this.scale;
-    const x = 20, y = H - 36;
+    const x = 20, y = H - 90;
 
     ctx.strokeStyle = 'rgba(180,220,255,0.65)';
     ctx.lineWidth   = 2;
