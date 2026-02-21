@@ -13,6 +13,15 @@ const R_SUN   = 6.96e8;    // meters
 const R_EARTH = 6.371e6;   // meters
 const R_MOON  = 1.737e6;   // meters
 
+// Secundus: quarter the mass of Primus, 1:2 resonance orbit with eccentricity 0.3
+// Period ∝ a^(3/2), so a₂ = 2^(2/3) × LUNAR_DIST gives exactly T₂ = 2 × T_Primus.
+// Eccentricity is set independently — it doesn't affect the period.
+const M_SECUNDUS      = M_MOON / 4;
+const R_SECUNDUS      = R_MOON * Math.cbrt(0.25);   // same density as Primus
+const SECUNDUS_E      = 0.3;
+const SECUNDUS_A      = Math.pow(2, 2 / 3) * LUNAR_DIST;
+const SECUNDUS_R_PERI = SECUNDUS_A * (1 - SECUNDUS_E);
+
 class Body {
   constructor(cfg) {
     this.name            = cfg.name;
@@ -175,6 +184,8 @@ function createInitialBodies() {
   // Circular orbit speeds
   const v_earth    = Math.sqrt(G * M_SUN   / AU);
   const v_moon_rel = Math.sqrt(G * M_EARTH / LUNAR_DIST);
+  // Secundus periapsis velocity from vis-viva: v = sqrt(G M (1+e) / r_peri)
+  const v_sec_peri = Math.sqrt(G * M_EARTH * (1 + SECUNDUS_E) / SECUNDUS_R_PERI);
 
   const bodies = [
     new Body({
@@ -210,8 +221,22 @@ function createInitialBodies() {
       minDisplayPx: 3,
       color: '#CCCCCC',
       trailColor: '#CCCCCC',
-      // 700 recorded points × 10 steps × 360 s/step ≈ 29 days → covers one lunar cycle
-      trailMaxLen: 700,
+      // 1400 recorded points × 10 steps × 360 s/step ≈ 58 days → covers ~2 lunar cycles
+      trailMaxLen: 1400,
+    }),
+    new Body({
+      name: 'Secundus',
+      mass: M_SECUNDUS,
+      // Start at periapsis, 90° ahead of Primus (in +y from Qaia) to avoid overlap.
+      // Prograde velocity at periapsis is perpendicular to radius: −x in Qaia's frame.
+      x: AU, y: SECUNDUS_R_PERI, z: 0,
+      vx: -v_sec_peri, vy: v_earth, vz: 0,
+      physicalRadius: R_SECUNDUS,
+      minDisplayPx: 3,
+      color: '#CC9966',
+      trailColor: '#CC9966',
+      // 1400 recorded points × 10 steps × 360 s/step ≈ 58 days ≈ 1 Secundus orbit
+      trailMaxLen: 1400,
     }),
   ];
 
