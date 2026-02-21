@@ -169,7 +169,7 @@ class Simulation {
   }
 }
 
-const PRIMUS_INCLINATION = 15 * Math.PI / 180; // orbital inclination relative to xy-plane
+const PRIMUS_INCLINATION = 5.14 * Math.PI / 180; // orbital inclination relative to xy-plane
 
 function createInitialBodies() {
   // Circular orbit speeds
