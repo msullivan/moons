@@ -3,10 +3,10 @@
 ## Visually inspecting the simulation
 
 Use Playwright to take screenshots rather than asking the user to open a browser.
-Playwright and its Chromium bundle are installed under `/tmp/pw_test/`:
+Playwright is a dev dependency — run `npm install` once if `node_modules/` is missing,
+then run scripts from the project root:
 
 ```bash
-cd /tmp/pw_test
 node - << 'EOF'
 import { chromium } from 'playwright';
 
@@ -30,17 +30,11 @@ EOF
 
 Then read the screenshots with the Read tool to view them.
 
-### Reinstalling if /tmp/pw_test is gone
-
-`/tmp` is cleared on reboot. If the directory is missing:
+### First-time setup
 
 ```bash
-mkdir -p /tmp/pw_test
-cd /tmp/pw_test
-npm init -y
-npm install playwright
-# Chromium bundle should already be cached at ~/.cache/ms-playwright/
-# If not: npx playwright install chromium
+npm install                   # install playwright
+npx playwright install chromium  # download browser bundle (cached in ~/.cache/ms-playwright/)
 ```
 
 ### Useful Playwright interactions
