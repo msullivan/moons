@@ -13,13 +13,14 @@ const R_SUN   = 6.96e8;    // meters
 const R_EARTH = 6.371e6;   // meters
 const R_MOON  = 1.737e6;   // meters
 
-// Secundus: quarter the mass of Primus, 1:2 resonance orbit with eccentricity 0.3
-// Period ∝ a^(3/2), so a₂ = 2^(2/3) × LUNAR_DIST gives exactly T₂ = 2 × T_Primus.
-// Eccentricity is set independently — it doesn't affect the period.
+// Secundus: quarter the mass of Primus, moderately elliptic orbit (e=0.2) at 1.9 LD.
+// Period ≈ 2.62 × T_Primus — deliberately non-resonant so Primus's kicks average out
+// rather than accumulating. Numerically stable past 200 simulated years.
+// Periapsis = 1.52 LD, apoapsis = 2.28 LD — well clear of Primus's orbit.
 const M_SECUNDUS      = M_MOON / 4;
 const R_SECUNDUS      = R_MOON * Math.cbrt(0.25);   // same density as Primus
-const SECUNDUS_E      = 0.3;
-const SECUNDUS_A      = Math.pow(2, 2 / 3) * LUNAR_DIST;
+const SECUNDUS_E      = 0.20;
+const SECUNDUS_A      = 1.9 * LUNAR_DIST;
 const SECUNDUS_R_PERI = SECUNDUS_A * (1 - SECUNDUS_E);
 
 class Body {
