@@ -1,33 +1,39 @@
-// screenshot.mjs — take screenshots of the simulation
 import { chromium } from 'playwright';
 
-const browser = await chromium.launch();
+const SHELL_PATH = '/root/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell';
+
+const browser = await chromium.launch({ executablePath: SHELL_PATH });
 const page = await browser.newPage();
 await page.setViewportSize({ width: 1280, height: 800 });
 await page.goto('file:///home/user/moons/index.html');
 await page.waitForFunction(() => typeof renderer !== 'undefined');
+await page.waitForTimeout(1000);
+await page.screenshot({ path: '/tmp/sim_solar.png' });
 
-// Take a screenshot at t=0
-await page.screenshot({ path: '/tmp/sim_t0.png' });
-
-// Switch to Qaia-Primus view
 await page.click('text=Qaia-Primus');
 await page.waitForTimeout(500);
-await page.screenshot({ path: '/tmp/sim_qaia_t0.png' });
+await page.screenshot({ path: '/tmp/sim_qaia_init.png' });
 
-// Run for a few seconds at 1 yr/s to see all moons in orbit
-const speedBtns = await page.$$('.speed-btn');
-// Click 4th speed preset (1 yr/s)
-for (const btn of speedBtns) {
-  const txt = await btn.textContent();
-  if (txt.trim() === '1 yr/s') { await btn.click(); break; }
-}
+// Run at 10 yr/s
+await page.evaluate(() => {
+  const btn = [...document.querySelectorAll('.speed-btn')].find(b => b.textContent === '10 yr/s');
+  if (btn) btn.click();
+});
 await page.waitForTimeout(3000);
-await page.screenshot({ path: '/tmp/sim_qaia_3yr.png' });
+await page.screenshot({ path: '/tmp/sim_qaia_running.png' });
 
-// Run more to see all moons still orbiting
-await page.waitForTimeout(5000);
-await page.screenshot({ path: '/tmp/sim_qaia_8yr.png' });
+const info = await page.evaluate(() => {
+  const days = sim.time / 86400;
+  const qaia = sim.bodies[1];
+  const moons = sim.bodies.slice(2).map(m => {
+    const dx = m.x - qaia.x, dy = m.y - qaia.y, dz = m.z - qaia.z;
+    const r = Math.sqrt(dx*dx+dy*dy+dz*dz) / 3.844e8;
+    const dvx = m.vx - qaia.vx, dvy = m.vy - qaia.vy, dvz = m.vz - qaia.vz;
+    const eps = 0.5*(dvx*dvx+dvy*dvy+dvz*dvz) - 6.674e-11 * 5.972e24 / (r * 3.844e8);
+    return { name: m.name, r_ld: r.toFixed(3), bound: eps < 0 };
+  });
+  return { simDays: days.toFixed(1), moons };
+});
+console.log('State after 3s at 10 yr/s:', JSON.stringify(info, null, 2));
 
 await browser.close();
-console.log('Screenshots written to /tmp/sim_t0.png, /tmp/sim_qaia_t0.png, /tmp/sim_qaia_3yr.png, /tmp/sim_qaia_8yr.png');

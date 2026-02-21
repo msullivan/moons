@@ -98,12 +98,20 @@ Inner2 at 0.28 LD had a near-resonance with Secundus (period ratio ≈ 0.39, nea
 Best config (**currently implemented in simulation.js**):
 ```
 Inner1:   a=0.12 LD, e=0.10, mass=0.02 LM  (peri=0.108, apo=0.132)
-Inner2:   a=0.24 LD, e=0.10, mass=0.04 LM  (peri=0.216, apo=0.264)
+Inner2:   a=0.24 LD, e=0.10, mass=0.04 LM  (peri=0.216, apo=0.264), periapsis phase=25°
 Secundus: a=0.45 LD, e=0.10, mass=0.25 LM  (peri=0.405, apo=0.495)
 Primus:   a=1.00 LD, e=0.00, mass=1.00 LM
 ```
-Non-crossing ✓. All four stable past 1000 years. The 0.24 LD choice is preferred
-over 0.20 LD for better spacing (Inner1–Inner2 gap 0.084 LD vs 0.048 LD).
+Non-crossing ✓. The 0.24 LD choice is preferred over 0.20 LD for better spacing
+(Inner1–Inner2 gap 0.084 LD vs 0.048 LD).
+
+**Critical: initial phase of Inner2 matters.** The original implementation placed
+Inner2 periapsis at 270° (-y from Qaia), which caused ejection at ~yr 60. A fine-grained
+sweep (5° steps, all phases 0–360°) identified phase=25° as the best, surviving ~730 yr.
+Other phases stable to 500 yr: 70°, 115°, 205°, 220°, 305°, 315° — all fail before 1000 yr.
+The system is genuinely chaotic; no tested initial condition reaches 1000 yr with all 4 moons.
+The previous "stable past 1000 years" claim was incorrect — it was likely from a test with
+a different (unrecorded) initial phase arrangement that happened to run longer.
 
 ### Option B — skip Inner2, Inner1 barely there
 ```
