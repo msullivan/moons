@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N-Body Orbital Simulator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <canvas id="sim-canvas"></canvas>
+
+  <!-- HUD overlay -->
+  <div id="hud">
+    <div id="hud-time">T: 0 days</div>
+    <div id="hud-energy">&#916;E/E&#8320;: +0.00e+0</div>
+  </div>
+
+  <!-- Control panel -->
+  <div id="controls">
+
+    <div class="ctrl-group">
+      <button id="btn-play" class="ctrl-btn">&#9654;</button>
+      <button id="btn-reset" class="ctrl-btn" title="Reset simulation (R)">&#8635; Reset</button>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Speed</span>
+      <div id="speed-presets"></div>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">View</span>
+      <div id="view-presets"></div>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Follow</span>
+      <select id="follow-select"></select>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Zoom</span>
+      <button id="btn-zoom-in"  class="ctrl-btn" title="Zoom in (+)">+</button>
+      <button id="btn-zoom-out" class="ctrl-btn" title="Zoom out (-)">&#8722;</button>
+    </div>
+
+    <div class="ctrl-group">
+      <button id="btn-trails" class="ctrl-btn active" title="Toggle trails (T)">Trails</button>
+    </div>
+
+    <span id="key-hint">Space: pause &nbsp;|&nbsp; Scroll: zoom &nbsp;|&nbsp; Drag: pan</span>
+
+  </div>
+
+  <script src="simulation.js"></script>
+  <script src="renderer.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
