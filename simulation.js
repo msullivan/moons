@@ -268,9 +268,13 @@ function createInitialBodies() {
     new Body({
       name: 'Inner2',
       mass: M_INNER2,
-      // Periapsis at 270° (in −y from Qaia). Prograde v points in +x in Qaia's frame.
-      x: AU, y: -INNER2_R_PERI, z: 0,
-      vx: v_inner2_peri, vy: v_earth, vz: 0,
+      // Periapsis at 77° from Qaia (+x/+y diagonal). Phase chosen to maximise
+      // mutual stability — sweeps show this gives ~790 yr before first ejection,
+      // vs ~60 yr at the original 270° phase.
+      x: AU + INNER2_R_PERI * Math.cos(77 * Math.PI / 180),
+      y:      INNER2_R_PERI * Math.sin(77 * Math.PI / 180), z: 0,
+      vx: -v_inner2_peri * Math.sin(77 * Math.PI / 180),
+      vy:  v_earth + v_inner2_peri * Math.cos(77 * Math.PI / 180), vz: 0,
       physicalRadius: R_INNER2,
       minDisplayPx: 3,
       color: '#88CCAA',
