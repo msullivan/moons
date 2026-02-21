@@ -69,8 +69,7 @@ function tick(ts) {
     stepAccum  -= steps;
 
     const actual        = Math.min(steps, MAX_STEPS_PER_FRAME);
-    // Record at most ~300 trail points per frame to keep buffer meaningful
-    const trailInterval = Math.max(1, Math.floor(actual / 300));
+    const trailInterval = Math.max(10, Math.floor(actual / 300));
 
     if (actual > 0) sim.advance(actual, trailInterval, renderer.followIndex);
   }
