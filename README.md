@@ -1,7 +1,9 @@
 # moons
 
-A browser-based n-body gravitational simulator. Watch the Earth, Moon, and Sun
-interact under real, numerically integrated Newtonian gravity.
+A browser-based n-body gravitational simulator with eventual
+applications for my RPG setting.
+
+Vibed up with Sonnet 4.6 ([initial transcript](https://gisthost.github.io/?6b9f9707a45da51879bffdbf9e8f5509/index.html)).
 
 Open `index.html` directly in a browser. No build step, no server required.
 
