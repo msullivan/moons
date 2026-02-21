@@ -165,6 +165,35 @@ class Renderer {
     ctx.arc(sx, sy, r, 0, Math.PI * 2);
     ctx.fill();
 
+    // Night-side shadow (skip for the Sun itself)
+    const sun = this.sim.bodies[0];
+    if (body !== sun) {
+      const { sx: sunSx, sy: sunSy } = this.worldToScreen(sun.x, sun.y);
+      const dsx = sunSx - sx;
+      const dsy = sunSy - sy;
+      const dist = Math.sqrt(dsx * dsx + dsy * dsy);
+      const nx = dist > 0 ? dsx / dist : 1;
+      const ny = dist > 0 ? dsy / dist : 0;
+
+      // Gradient from sun-facing edge (transparent) to night-side edge (dark)
+      const shadow = ctx.createLinearGradient(
+        sx + nx * r, sy + ny * r,
+        sx - nx * r, sy - ny * r
+      );
+      shadow.addColorStop(0,    'rgba(0,0,0,0)');
+      shadow.addColorStop(0.5,  'rgba(0,0,0,0)');
+      shadow.addColorStop(0.55, 'rgba(0,0,0,0.65)');
+      shadow.addColorStop(1,    'rgba(0,0,0,0.65)');
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.fillStyle = shadow;
+      ctx.fillRect(sx - r, sy - r, r * 2, r * 2);
+      ctx.restore();
+    }
+
     // Label
     if (this.showLabels) {
       ctx.fillStyle  = 'rgba(210,230,255,0.85)';
