@@ -7,8 +7,8 @@ class Renderer {
     this.sim             = sim;
 
     // View state (metres per CSS pixel)
-    this.scale           = 5e8;
-    this.followIndex     = null;  // null = fixed CoM origin
+    this.scale           = 2e6;
+    this.followIndex     = 1;     // follow Earth by default
     this.panX            = 0;    // world-space pan offset (metres)
     this.panY            = 0;
 
@@ -108,28 +108,34 @@ class Renderer {
     // The followed body's own trail is always (0,0) — skip it.
     if (this.followIndex !== null && body === this.sim.bodies[this.followIndex]) return;
 
-    const trail = body.trail;
-    const n = trail.length;
+    const n = body.trailCount;
     if (n < 2) return;
 
-    const ctx = this.ctx;
-    const GROUPS = 6;
+    const buf     = body.trailBuf;
+    const head    = body.trailHead;
+    const maxLen  = body.trailMaxLen;
+    const ctx     = this.ctx;
+    const GROUPS  = 6;
     const groupSize = Math.ceil(n / GROUPS);
 
     for (let g = 0; g < GROUPS; g++) {
-      const alpha  = ((g + 1) / GROUPS) * 0.65;
-      const start  = g * groupSize;
-      const end    = Math.min(start + groupSize + 1, n); // +1 for continuity
+      const start = g * groupSize;
+      if (start >= n) break; // no data left for this group
+
+      const alpha = ((g + 1) / GROUPS) * 0.65;
+      const end   = Math.min(start + groupSize + 1, n); // +1 for continuity
 
       ctx.beginPath();
       ctx.strokeStyle = hexAlpha(body.trailColor, alpha);
       ctx.lineWidth   = 1;
 
-      const p0 = this._trailToScreen(trail[start].x, trail[start].y);
+      const s0 = buf[(head + start) % maxLen];
+      const p0 = this._trailToScreen(s0.x, s0.y);
       ctx.moveTo(p0.sx, p0.sy);
 
-      for (let i = start + 1; i < end; i++) {
-        const p = this._trailToScreen(trail[i].x, trail[i].y);
+      for (let k = start + 1; k < end; k++) {
+        const s = buf[(head + k) % maxLen];
+        const p = this._trailToScreen(s.x, s.y);
         ctx.lineTo(p.sx, p.sy);
       }
       ctx.stroke();

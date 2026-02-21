@@ -28,22 +28,38 @@ class Body {
     this.color           = cfg.color;
     this.trailColor      = cfg.trailColor || cfg.color;
     this.trailMaxLen     = cfg.trailMaxLen || 2000;
-    this.trail           = []; // array of {x, y}
+    // Ring buffer — O(1) insert with no shifting.
+    this.trailBuf        = [];
+    this.trailHead       = 0;  // index of oldest point
+    this.trailCount      = 0;  // number of valid points
   }
 
   recordTrail(refX = 0, refY = 0) {
     // Store position relative to the current reference body so trails render
     // correctly regardless of how far the reference body has moved since.
-    this.trail.push({ x: this.x - refX, y: this.y - refY });
-    if (this.trail.length > this.trailMaxLen) {
-      this.trail.shift();
+    const maxLen = this.trailMaxLen;
+    if (this.trailCount < maxLen) {
+      this.trailBuf.push({ x: this.x - refX, y: this.y - refY });
+      this.trailCount++;
+    } else {
+      // Overwrite the oldest slot and advance the head pointer.
+      const slot = this.trailBuf[this.trailHead];
+      slot.x = this.x - refX;
+      slot.y = this.y - refY;
+      this.trailHead = (this.trailHead + 1) % maxLen;
     }
+  }
+
+  clearTrail() {
+    this.trailBuf   = [];
+    this.trailHead  = 0;
+    this.trailCount = 0;
   }
 }
 
 class Simulation {
   constructor() {
-    this.dt     = 3600;  // simulation timestep: 1 hour in seconds
+    this.dt     = 360;   // simulation timestep: 6 minutes in seconds
     this.time   = 0;     // elapsed simulation seconds
     this.bodies = createInitialBodies();
     this._computeAccelerations();
@@ -117,7 +133,7 @@ class Simulation {
   }
 
   clearTrails() {
-    for (const b of this.bodies) b.trail = [];
+    for (const b of this.bodies) b.clearTrail();
   }
 
   totalEnergy() {
@@ -169,8 +185,8 @@ function createInitialBodies() {
       minDisplayPx: 6,
       color: '#4499FF',
       trailColor: '#4499FF',
-      // 9000 steps × 3600 s/step = 375 days → covers one full Earth orbit
-      trailMaxLen: 9000,
+      // 25000 steps × 360 s/step = 104 days of trail
+      trailMaxLen: 25000,
     }),
     new Body({
       name: 'Moon',
@@ -181,8 +197,8 @@ function createInitialBodies() {
       minDisplayPx: 3,
       color: '#CCCCCC',
       trailColor: '#CCCCCC',
-      // 700 steps × 3600 s/step ≈ 29 days → covers one lunar cycle
-      trailMaxLen: 700,
+      // 7000 steps × 360 s/step ≈ 29 days → covers one lunar cycle
+      trailMaxLen: 7000,
     }),
   ];
 

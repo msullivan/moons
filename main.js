@@ -8,10 +8,10 @@ let lastTs         = null;
 let stepAccum      = 0;      // fractional steps carried over between frames
 
 // sim-seconds per real-second
-let simSpeed = 86400 * 365.25;  // default: 1 year / second
+let simSpeed = 86400;  // default: 1 day / second
 
 // Maximum steps per frame (prevents tab from freezing at very high speeds)
-const MAX_STEPS_PER_FRAME = 8000;
+const MAX_STEPS_PER_FRAME = 80000;
 
 const SPEED_PRESETS = [
   { label: '1 day/s',   value: 86400 },
