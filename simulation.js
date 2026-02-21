@@ -169,6 +169,8 @@ class Simulation {
   }
 }
 
+const PRIMUS_INCLINATION = 15 * Math.PI / 180; // orbital inclination relative to xy-plane
+
 function createInitialBodies() {
   // Circular orbit speeds
   const v_earth    = Math.sqrt(G * M_SUN   / AU);
@@ -201,8 +203,9 @@ function createInitialBodies() {
     new Body({
       name: 'Primus',
       mass: M_MOON,
-      x: AU + LUNAR_DIST, y: 0,
-      vx: 0, vy: v_earth + v_moon_rel,
+      x: AU + LUNAR_DIST, y: 0, z: 0,
+      vx: 0, vy: v_earth + v_moon_rel * Math.cos(PRIMUS_INCLINATION),
+      vz: v_moon_rel * Math.sin(PRIMUS_INCLINATION),
       physicalRadius: R_MOON,
       minDisplayPx: 3,
       color: '#CCCCCC',
