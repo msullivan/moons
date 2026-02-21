@@ -19,10 +19,13 @@ class Body {
     this.mass            = cfg.mass;
     this.x               = cfg.x;
     this.y               = cfg.y;
+    this.z               = cfg.z  || 0;
     this.vx              = cfg.vx;
     this.vy              = cfg.vy;
+    this.vz              = cfg.vz || 0;
     this.ax              = 0;
     this.ay              = 0;
+    this.az              = 0;
     this.physicalRadius  = cfg.physicalRadius;
     this.minDisplayPx    = cfg.minDisplayPx || 4;
     this.color           = cfg.color;
@@ -71,6 +74,7 @@ class Simulation {
     for (const b of bodies) {
       b.ax = 0;
       b.ay = 0;
+      b.az = 0;
     }
     const n = bodies.length;
     for (let i = 0; i < n; i++) {
@@ -79,13 +83,16 @@ class Simulation {
         const bj = bodies[j];
         const dx = bj.x - bi.x;
         const dy = bj.y - bi.y;
-        const r2 = dx * dx + dy * dy;
+        const dz = bj.z - bi.z;
+        const r2 = dx * dx + dy * dy + dz * dz;
         const r3 = r2 * Math.sqrt(r2);
         const f  = G / r3;
         bi.ax += f * bj.mass * dx;
         bi.ay += f * bj.mass * dy;
+        bi.az += f * bj.mass * dz;
         bj.ax -= f * bi.mass * dx;
         bj.ay -= f * bi.mass * dy;
+        bj.az -= f * bi.mass * dz;
       }
     }
   }
@@ -100,11 +107,13 @@ class Simulation {
     for (const b of bodies) {
       b.x += b.vx * dt + b.ax * dt2h;
       b.y += b.vy * dt + b.ay * dt2h;
+      b.z += b.vz * dt + b.az * dt2h;
     }
 
     // Save old accelerations
     const ax0 = bodies.map(b => b.ax);
     const ay0 = bodies.map(b => b.ay);
+    const az0 = bodies.map(b => b.az);
 
     // Compute new accelerations at x(t+dt)
     this._computeAccelerations();
@@ -113,6 +122,7 @@ class Simulation {
     for (let i = 0; i < bodies.length; i++) {
       bodies[i].vx += 0.5 * (ax0[i] + bodies[i].ax) * dt;
       bodies[i].vy += 0.5 * (ay0[i] + bodies[i].ay) * dt;
+      bodies[i].vz += 0.5 * (az0[i] + bodies[i].az) * dt;
     }
 
     this.time += dt;
@@ -140,13 +150,13 @@ class Simulation {
     let E = 0;
     const bodies = this.bodies;
     for (const b of bodies) {
-      E += 0.5 * b.mass * (b.vx * b.vx + b.vy * b.vy);
+      E += 0.5 * b.mass * (b.vx * b.vx + b.vy * b.vy + b.vz * b.vz);
     }
     for (let i = 0; i < bodies.length; i++) {
       for (let j = i + 1; j < bodies.length; j++) {
         const bi = bodies[i], bj = bodies[j];
-        const dx = bj.x - bi.x, dy = bj.y - bi.y;
-        const r = Math.sqrt(dx * dx + dy * dy);
+        const dx = bj.x - bi.x, dy = bj.y - bi.y, dz = bj.z - bi.z;
+        const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
         E -= G * bi.mass * bj.mass / r;
       }
     }
@@ -177,7 +187,7 @@ function createInitialBodies() {
       trailMaxLen: 600,
     }),
     new Body({
-      name: 'Earth',
+      name: 'Qaia',
       mass: M_EARTH,
       x: AU, y: 0,
       vx: 0, vy: v_earth,
@@ -189,7 +199,7 @@ function createInitialBodies() {
       trailMaxLen: 2500,
     }),
     new Body({
-      name: 'Moon',
+      name: 'Primus',
       mass: M_MOON,
       x: AU + LUNAR_DIST, y: 0,
       vx: 0, vy: v_earth + v_moon_rel,
@@ -203,19 +213,21 @@ function createInitialBodies() {
   ];
 
   // Shift to centre-of-mass frame (zero total momentum, origin at CoM)
-  let totalMass = 0, cmX = 0, cmY = 0, cmVx = 0, cmVy = 0;
+  let totalMass = 0, cmX = 0, cmY = 0, cmZ = 0, cmVx = 0, cmVy = 0, cmVz = 0;
   for (const b of bodies) {
     totalMass += b.mass;
     cmX  += b.mass * b.x;
     cmY  += b.mass * b.y;
+    cmZ  += b.mass * b.z;
     cmVx += b.mass * b.vx;
     cmVy += b.mass * b.vy;
+    cmVz += b.mass * b.vz;
   }
-  cmX /= totalMass; cmY /= totalMass;
-  cmVx /= totalMass; cmVy /= totalMass;
+  cmX /= totalMass; cmY /= totalMass; cmZ /= totalMass;
+  cmVx /= totalMass; cmVy /= totalMass; cmVz /= totalMass;
   for (const b of bodies) {
-    b.x  -= cmX;  b.y  -= cmY;
-    b.vx -= cmVx; b.vy -= cmVy;
+    b.x  -= cmX;  b.y  -= cmY;  b.z  -= cmZ;
+    b.vx -= cmVx; b.vy -= cmVy; b.vz -= cmVz;
   }
 
   return bodies;

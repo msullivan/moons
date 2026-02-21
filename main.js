@@ -29,7 +29,7 @@ const VIEW_PRESETS = [
     apply: (r) => { r.scale = 5e8; r.followIndex = null; r.panX = 0; r.panY = 0; },
   },
   {
-    label: 'Earth-Moon',
+    label: 'Qaia-Primus',
     apply: (r) => { r.scale = 2e6; r.followIndex = 1; r.panX = 0; r.panY = 0; },
   },
 ];
