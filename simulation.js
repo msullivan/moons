@@ -185,8 +185,8 @@ function createInitialBodies() {
       minDisplayPx: 6,
       color: '#4499FF',
       trailColor: '#4499FF',
-      // 25000 steps × 360 s/step = 104 days of trail
-      trailMaxLen: 25000,
+      // 2500 recorded points × 10 steps × 360 s/step ≈ 104 days of trail
+      trailMaxLen: 2500,
     }),
     new Body({
       name: 'Moon',
@@ -197,8 +197,8 @@ function createInitialBodies() {
       minDisplayPx: 3,
       color: '#CCCCCC',
       trailColor: '#CCCCCC',
-      // 7000 steps × 360 s/step ≈ 29 days → covers one lunar cycle
-      trailMaxLen: 7000,
+      // 700 recorded points × 10 steps × 360 s/step ≈ 29 days → covers one lunar cycle
+      trailMaxLen: 700,
     }),
   ];
 
