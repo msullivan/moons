@@ -150,6 +150,14 @@ function buildUI(canvas) {
     trailBtn.classList.toggle('active', renderer.showTrails);
   });
 
+  // Labels toggle
+  const labelBtn = document.getElementById('btn-labels');
+  labelBtn.classList.toggle('active', renderer.showLabels);
+  labelBtn.addEventListener('click', () => {
+    renderer.showLabels = !renderer.showLabels;
+    labelBtn.classList.toggle('active', renderer.showLabels);
+  });
+
   // Zoom buttons
   document.getElementById('btn-zoom-in').addEventListener('click',
     () => renderer.zoomAt(1 / 2, renderer.W / 2, renderer.H / 2));
@@ -295,6 +303,10 @@ function handleKey(e) {
     case 't': case 'T':
       renderer.showTrails = !renderer.showTrails;
       document.getElementById('btn-trails').classList.toggle('active', renderer.showTrails);
+      break;
+    case 'l': case 'L':
+      renderer.showLabels = !renderer.showLabels;
+      document.getElementById('btn-labels').classList.toggle('active', renderer.showLabels);
       break;
   }
 }
