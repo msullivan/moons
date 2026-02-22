@@ -1,0 +1,26 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to moroso
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_TARGET: ${{ vars.DEPLOY_TARGET }}
+        run: |
+          mkdir -p ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy_key
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          echo "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
+          mkdir dist
+          cp *.js *.css *.html dist/
+          sudo apt-get install -y rclone
+          rclone sync dist/ ":sftp,host=moroso.emarhavil.com,user=upload-sully,key_file=$HOME/.ssh/deploy_key:$DEPLOY_TARGET"
