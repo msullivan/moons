@@ -1,4 +1,4 @@
-# moons
+# Qaia Moon Simulation
 
 A browser-based n-body gravitational simulator with eventual
 applications for my RPG setting.
