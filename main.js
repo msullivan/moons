@@ -18,24 +18,13 @@ let simSpeed = 86400;  // default: 1 day / second
 const MAX_STEPS_PER_FRAME = 80000;
 
 const SPEED_PRESETS = [
+  { label: '6h/s',      value: 3600 * 6 },
   { label: '1 day/s',   value: 86400 },
   { label: '1 wk/s',    value: 86400 * 7 },
   { label: '1 mo/s',    value: 86400 * 30.4375 },
   { label: '1 yr/s',    value: 86400 * 365.25 },
   { label: '10 yr/s',   value: 86400 * 365.25 * 10 },
   { label: '100 yr/s',  value: 86400 * 365.25 * 100 },
-];
-
-// Pre-set views
-const VIEW_PRESETS = [
-  {
-    label: 'Solar System',
-    apply: (r) => { r.scale = 5e8; r.followIndex = null; r.panX = 0; r.panY = 0; },
-  },
-  {
-    label: 'Qaia-Primus',
-    apply: (r) => { r.scale = 2e6; r.followIndex = 1; r.panX = 0; r.panY = 0; },
-  },
 ];
 
 // ─── init ───────────────────────────────────────────────────────────────────
@@ -291,20 +280,6 @@ function buildUI(canvas) {
       btn.classList.add('active');
     });
     speedRow.appendChild(btn);
-  });
-
-  // View presets
-  const viewRow = document.getElementById('view-presets');
-  VIEW_PRESETS.forEach(({ label, apply }) => {
-    const btn = document.createElement('button');
-    btn.textContent = label;
-    btn.className   = 'ctrl-btn';
-    btn.addEventListener('click', () => {
-      apply(renderer);
-      sim.clearTrails();
-      updateFollowSelect();
-    });
-    viewRow.appendChild(btn);
   });
 
   // Follow select

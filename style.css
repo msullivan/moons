@@ -127,7 +127,7 @@ button.ctrl-btn.active {
 
 /* ── Speed preset row ───────────────────────────────────────── */
 
-#speed-presets, #view-presets {
+#speed-presets {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
