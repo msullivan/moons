@@ -12,11 +12,12 @@ const R_SUN   = 6.96e8;    // meters
 const R_EARTH = 6.371e6;   // meters
 const R_MOON  = 1.737e6;   // meters
 
-// Four-moon system stable past 1000 simulated years.
-// Masses 0.02 / 0.04 / 0.25 / 1.00 LM, all e=0.10.
-// Quartus at 0.12 LD (period ≈ 1.14 d), Tertius at 0.24 LD (≈ 3.23 d),
-// Secundus at 0.45 LD (≈ 8.3 d), Primus at 1.00 LD (≈ 27.5 d).
-// Quartus and Tertius orbit retrograde (clockwise); Secundus and Primus prograde.
+// Six-moon system stable past 1000 simulated years.
+// Inner four: Quartus 0.02 LM, Tertius 0.04 LM, Secundus 0.25 LM, Primus 1.00 LM, all e=0.10.
+//   Quartus at 0.12 LD (period ≈ 1.14 d), Tertius at 0.24 LD (≈ 3.23 d),
+//   Secundus at 0.45 LD (≈ 8.3 d), Primus at 1.00 LD (≈ 27.5 d).
+//   Quartus and Tertius retrograde; Secundus and Primus prograde.
+// Outer two (retrograde): Sextus 0.01 LM at 1.9 LD (≈ 72 d), Septimus 0.01 LM at 2.2 LD (≈ 90 d).
 const M_QUARTUS      = M_MOON * 0.02;
 const R_QUARTUS      = R_MOON * Math.cbrt(0.02);
 const QUARTUS_E      = 0.10;
@@ -35,6 +36,18 @@ const SECUNDUS_E      = 0.10;
 const SECUNDUS_A      = 0.45 * LUNAR_DIST;
 const SECUNDUS_R_PERI = SECUNDUS_A * (1 - SECUNDUS_E);
 
+const M_SEXTUS       = M_MOON * 0.01;
+const R_SEXTUS       = R_MOON * Math.cbrt(0.01);
+const SEXTUS_E       = 0.10;
+const SEXTUS_A       = 1.9 * LUNAR_DIST;
+const SEXTUS_R_PERI  = SEXTUS_A * (1 - SEXTUS_E);
+
+const M_SEPTIMUS     = M_MOON * 0.01;
+const R_SEPTIMUS     = R_MOON * Math.cbrt(0.01);
+const SEPTIMUS_E     = 0.10;
+const SEPTIMUS_A     = 2.2 * LUNAR_DIST;
+const SEPTIMUS_R_PERI = SEPTIMUS_A * (1 - SEPTIMUS_E);
+
 const PRIMUS_INCLINATION = 5.14 * Math.PI / 180; // orbital inclination relative to xy-plane
 
 function createInitialBodies() {
@@ -42,9 +55,11 @@ function createInitialBodies() {
   const v_earth    = Math.sqrt(G * M_SUN   / AU);
   const v_moon_rel = Math.sqrt(G * M_EARTH / LUNAR_DIST);
   // Periapsis speeds from vis-viva: v = sqrt(G M (1+e) / r_peri)
-  const v_quartus_peri = Math.sqrt(G * M_EARTH * (1 + QUARTUS_E) / QUARTUS_R_PERI);
-  const v_tertius_peri = Math.sqrt(G * M_EARTH * (1 + TERTIUS_E) / TERTIUS_R_PERI);
-  const v_sec_peri     = Math.sqrt(G * M_EARTH * (1 + SECUNDUS_E) / SECUNDUS_R_PERI);
+  const v_quartus_peri  = Math.sqrt(G * M_EARTH * (1 + QUARTUS_E)  / QUARTUS_R_PERI);
+  const v_tertius_peri  = Math.sqrt(G * M_EARTH * (1 + TERTIUS_E)  / TERTIUS_R_PERI);
+  const v_sec_peri      = Math.sqrt(G * M_EARTH * (1 + SECUNDUS_E) / SECUNDUS_R_PERI);
+  const v_sextus_peri   = Math.sqrt(G * M_EARTH * (1 + SEXTUS_E)   / SEXTUS_R_PERI);
+  const v_septimus_peri = Math.sqrt(G * M_EARTH * (1 + SEPTIMUS_E) / SEPTIMUS_R_PERI);
 
   const bodies = [
     new Body({
@@ -121,6 +136,30 @@ function createInitialBodies() {
       trailColor: '#88CCAA',
       // 500 points × 10 × 360 s ≈ 20 days ≈ 6 Tertius orbits
       trailMaxLen: 500,
+    }),
+    new Body({
+      name: 'Sextus',
+      mass: M_SEXTUS,
+      // Periapsis at 90° (in +y from Qaia). Retrograde v points in +x in Qaia's frame.
+      x: AU, y: SEXTUS_R_PERI, z: 0,
+      vx: v_sextus_peri, vy: v_earth, vz: 0,
+      physicalRadius: R_SEXTUS,
+      minDisplayPx: 3,
+      color: '#AA88FF',
+      trailColor: '#AA88FF',
+      trailMaxLen: 1800,
+    }),
+    new Body({
+      name: 'Septimus',
+      mass: M_SEPTIMUS,
+      // Periapsis at 270° (in −y from Qaia). Retrograde v points in −x in Qaia's frame.
+      x: AU, y: -SEPTIMUS_R_PERI, z: 0,
+      vx: -v_septimus_peri, vy: v_earth, vz: 0,
+      physicalRadius: R_SEPTIMUS,
+      minDisplayPx: 3,
+      color: '#FF88AA',
+      trailColor: '#FF88AA',
+      trailMaxLen: 2200,
     }),
   ];
 
