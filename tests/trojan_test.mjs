@@ -1,5 +1,5 @@
-// three_outer.mjs — test 3 retrograde outer moons together
-// Run with: node tests/three_outer.mjs
+// trojan_test.mjs — test a Trojan at Primus L4 and L5
+// Run with: node tests/trojan_test.mjs
 
 const G = 6.674e-11;
 const AU = 1.496e11;
@@ -25,18 +25,19 @@ const SECUNDUS_R_PERI = SECUNDUS_A * (1 - SECUNDUS_E);
 
 const PRIMUS_INCLINATION = 5.14 * Math.PI / 180;
 
-// Three outer moons, all retrograde, e=0.10, spread 120° apart
-const SEXTUS_SEPTIMUS = [
-  { name: 'Sextus',   mass: M_MOON * 0.01, a_ld: 1.9, phase_deg:  90, retro: true,  incl_deg: 0 },
-  { name: 'Septimus', mass: M_MOON * 0.01, a_ld: 2.2, phase_deg: 210, retro: true,  incl_deg: 0 },
-];
+// Trojan: tiny mass, same orbit as Primus, ±60° ahead/behind
+const M_TROJAN = M_MOON * 0.001;
+const TROJAN_A = 1.00 * LUNAR_DIST;
 
-function createBodies(outerList) {
+function createBodies(trojan_phase_deg) {
   const v_earth        = Math.sqrt(G * M_SUN   / AU);
   const v_moon_rel     = Math.sqrt(G * M_EARTH / LUNAR_DIST);
   const v_quartus_peri = Math.sqrt(G * M_EARTH * (1 + QUARTUS_E) / QUARTUS_R_PERI);
   const v_tertius_peri = Math.sqrt(G * M_EARTH * (1 + TERTIUS_E) / TERTIUS_R_PERI);
   const v_sec_peri     = Math.sqrt(G * M_EARTH * (1 + SECUNDUS_E) / SECUNDUS_R_PERI);
+  const v_trojan       = Math.sqrt(G * M_EARTH / TROJAN_A); // circular
+
+  const ph = trojan_phase_deg * Math.PI / 180;
 
   const bodies = [
     { name:'Sun',     mass:M_SUN,      x:0,                  y:0,               z:0, vx:0,               vy:0,       vz:0 },
@@ -45,26 +46,11 @@ function createBodies(outerList) {
     { name:'Secundus',mass:M_SECUNDUS, x:AU,                 y:SECUNDUS_R_PERI, z:0, vx:-v_sec_peri,     vy:v_earth, vz:0 },
     { name:'Quartus', mass:M_QUARTUS,  x:AU-QUARTUS_R_PERI,  y:0,               z:0, vx:0,               vy:v_earth+v_quartus_peri, vz:0 },
     { name:'Tertius', mass:M_TERTIUS,  x:AU,                 y:-TERTIUS_R_PERI, z:0, vx:-v_tertius_peri, vy:v_earth, vz:0 },
+    // Trojan at L4 (+60°) or L5 (-60°) from Primus, prograde circular orbit
+    { name:'Trojan',  mass:M_TROJAN,
+      x: AU + TROJAN_A * Math.cos(ph), y: TROJAN_A * Math.sin(ph), z: 0,
+      vx: -v_trojan * Math.sin(ph), vy: v_earth + v_trojan * Math.cos(ph), vz: 0 },
   ];
-
-  for (const o of outerList) {
-    const r_peri = o.a_ld * LUNAR_DIST * (1 - 0.10);
-    const v_peri = Math.sqrt(G * M_EARTH * (1 + 0.10) / r_peri);
-    const ph = o.phase_deg * Math.PI / 180;
-    let bx, by, bz, bvx, bvy, bvz;
-    if (o.incl_deg === 90) {
-      // Polar orbit: periapsis along +z, velocity along +x
-      bx = AU; by = 0; bz = r_peri;
-      bvx = v_peri; bvy = v_earth; bvz = 0;
-    } else {
-      // Equatorial: prograde tangent (-sin ph, cos ph), retrograde (sin ph, -cos ph)
-      const sign = o.retro ? 1 : -1;
-      bx = AU + r_peri * Math.cos(ph); by = r_peri * Math.sin(ph); bz = 0;
-      bvx = sign * v_peri * Math.sin(ph); bvy = v_earth - sign * v_peri * Math.cos(ph); bvz = 0;
-    }
-    bodies.push({ name: o.name, mass: o.mass, x: bx, y: by, z: bz, vx: bvx, vy: bvy, vz: bvz, ax: 0, ay: 0, az: 0 });
-  }
-
   for (const b of bodies) { b.ax=0; b.ay=0; b.az=0; }
 
   let tot=0,cx=0,cy=0,cz=0,cvx=0,cvy=0,cvz=0;
@@ -110,17 +96,16 @@ function specificEnergy(moon, qaia) {
   return 0.5*(dvx*dvx+dvy*dvy+dvz*dvz) - G*qaia.mass/r;
 }
 
-const MAX_YR = 1000;
-const dt=360, YEAR=365.25*86400;
-const stepsPerCheck=Math.round(10*YEAR/dt);
-
-function run(label, outerList) {
-  process.stdout.write(`  ${label}: `);
-  const bodies = createBodies(outerList);
+function run(label, phase_deg, maxYr) {
+  const dt=360, YEAR=365.25*86400;
+  const stepsPerCheck=Math.round(10*YEAR/dt);
+  const bodies=createBodies(phase_deg);
   computeAcc(bodies);
-  const qaia = bodies[1];
-  const moons = bodies.slice(2);
-  for (let yr=10; yr<=MAX_YR; yr+=10) {
+  const qaia=bodies[1], trojan=bodies[bodies.length-1];
+  const moons=bodies.slice(2);
+
+  process.stdout.write(`  ${label}: `);
+  for (let yr=10; yr<=maxYr; yr+=10) {
     for (let s=0; s<stepsPerCheck; s++) stepVV(bodies, dt);
     for (const m of moons) {
       if (specificEnergy(m, qaia) > 0) {
@@ -129,17 +114,10 @@ function run(label, outerList) {
       }
     }
   }
-  console.log(`all stable to ${MAX_YR} yr ✓`);
+  console.log(`all stable to ${maxYr} yr ✓`);
 }
 
-const POLAR_DISTANCES = [0.55, 0.65, 0.75, 0.85, 1.5];
-console.log('Polar orbit alone:');
-for (const a of POLAR_DISTANCES) {
-  const oct = { name: 'Octavus', mass: M_MOON * 0.01, a_ld: a, phase_deg: 0, retro: false, incl_deg: 90 };
-  run(`a=${a} LD`, [oct]);
-}
-console.log('\nPolar orbit + Sextus + Septimus:');
-for (const a of POLAR_DISTANCES) {
-  const oct = { name: 'Octavus', mass: M_MOON * 0.01, a_ld: a, phase_deg: 0, retro: false, incl_deg: 90 };
-  run(`a=${a} LD`, [...SEXTUS_SEPTIMUS, oct]);
-}
+const MAX_YR = 500;
+console.log(`Primus Trojan test to ${MAX_YR} yr (0.001 LM)\n`);
+run('L4 (+60°)', 60,  MAX_YR);
+run('L5 (-60°)', -60, MAX_YR);
