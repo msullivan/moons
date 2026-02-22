@@ -5,10 +5,10 @@
 Use Playwright to take screenshots rather than asking the user to open a browser.
 Playwright is a dev dependency — run `npm install` once if `node_modules/` is missing.
 
-**Important**: write scripts to a `.mjs` file in the project root and run them with
-`node script.mjs`. Do NOT use heredocs with Playwright scripts — Claude Code's shell
+**Important**: write scripts to a `.mjs` file in `tests/` and run them with
+`node tests/script.mjs`. Do NOT use heredocs with Playwright scripts — Claude Code's shell
 parser flags `${obj.property}` as bad substitutions even inside single-quoted heredocs.
-Scripts must live in the project directory so Node can resolve `node_modules/playwright`.
+Scripts must live under the project directory so Node can resolve `node_modules/playwright`.
 
 ```javascript
 // screenshot.mjs (run with: node screenshot.mjs)
@@ -78,10 +78,23 @@ const eps = 0.5 * (dvx*dvx + dvy*dvy) - G * M_EARTH / r;
 **Do not** just check distance at a few snapshot times — an escaped moon in a nearby
 solar orbit can pass close to Qaia by coincidence, giving a false "stable" reading.
 
+## File structure
+
+```
+simulation.js  — Body class, Simulation class, Velocity Verlet integrator, G constant
+bodies.js      — Physical constants (AU, masses, radii), moon orbital params, createInitialBodies()
+renderer.js    — Canvas rendering (trails, glow, shadow, scale bar)
+main.js        — Animation loop, UI, zoom/pan, keyboard handling
+tests/         — Standalone Node.js stability and screenshot scripts
+```
+
+`simulation.js` loads first (defines `G` and `Body`), then `bodies.js` (uses both).
+To add or change a moon, edit `bodies.js` only.
+
 ### What we learned about stability
 
 - Outer prograde moons (outside Primus at 1 LD) are very hard to keep stable. Primus
   perturbs them via resonances and they escape within years even if initially bound.
-- Inner moons (inside Primus's orbit, a ≤ 0.45 LD) are stable past 200 years.
-- Secundus is set up as an inner moon: a = 0.45 LD, e = 0.35 (peri = 0.29 LD,
-  apo = 0.61 LD), period ≈ 8.2 days.
+- Inner moons (inside Primus's orbit, a ≤ 0.45 LD) are individually stable.
+- Current 4-moon system (all e=0.10): Quartus a=0.12, Tertius a=0.24, Secundus a=0.45,
+  Primus a=1.00 LD — all stable past 1000 simulated years. See plans/moon-stability.md.
