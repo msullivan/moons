@@ -220,6 +220,12 @@ function drawPhaseDisc(ctx, cx, cy, R, cosElong, moonColor, waning = false) {
   ctx.fillStyle = '#0e0e1e';
   ctx.fillRect(-R, -R, 2 * R, 2 * R);
 
+  // Near new moon: stay fully dark — both the flip and the crescent are sub-pixel
+  if (alpha >= PI * 0.95) {
+    ctx.restore();
+    return;
+  }
+
   // Lit right semicircle (sun side)
   ctx.fillStyle = moonColor;
   ctx.beginPath();
