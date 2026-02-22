@@ -210,6 +210,17 @@ class Renderer {
       for (let i = 1; i < c3.length; i++) ctx.lineTo(c3[i][0] * r, c3[i][1] * r);
       ctx.closePath();
       ctx.fill();
+      // Fourth continent — opposite c2, clear of c1 (which ends at y≈-0.12)
+      const c4 = [
+        [ 0.10, -0.55], [ 0.30, -0.40], [ 0.52, -0.45],
+        [ 0.62, -0.62], [ 0.52, -0.78], [ 0.25, -0.82],
+        [ 0.08, -0.70],
+      ];
+      ctx.beginPath();
+      ctx.moveTo(c4[0][0] * r, c4[0][1] * r);
+      for (let i = 1; i < c4.length; i++) ctx.lineTo(c4[i][0] * r, c4[i][1] * r);
+      ctx.closePath();
+      ctx.fill();
       ctx.restore();
     }
 
