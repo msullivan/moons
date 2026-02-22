@@ -182,8 +182,6 @@ function updateMoonPhases() {
 
   const dsx = sun.x - qaia.x;
   const dsy = sun.y - qaia.y;
-  // Angle from Qaia toward Sun in screen space (y-axis flipped)
-  const sunScreenAngle = Math.atan2(-dsy, dsx);
   const sunDist = Math.hypot(dsx, dsy);
 
   PHASE_BODIES.forEach(bi => {
@@ -201,14 +199,14 @@ function updateMoonPhases() {
     const cosElong = Math.max(-1, Math.min(1,
       (dmx * dsx + dmy * dsy) / (moonDist * sunDist)));
 
-    drawPhaseDisc(ctx, 32, 32, 26, cosElong, sunScreenAngle, body.color);
+    drawPhaseDisc(ctx, 32, 32, 26, cosElong, body.color);
   });
 }
 
 // Draw a phase disc centered at (cx, cy) with radius R.
 // cosElong = cos of Sun-Qaia-Moon elongation angle.
-// sunScreenAngle = atan2(-dy, dx) from Qaia to Sun in screen coords.
-function drawPhaseDisc(ctx, cx, cy, R, cosElong, sunScreenAngle, moonColor) {
+// Lit side is on the right (+x). cosElong=-1 → full, cosElong=1 → new.
+function drawPhaseDisc(ctx, cx, cy, R, cosElong, moonColor) {
   const PI = Math.PI;
   // Phase angle at moon: 0 = full, PI = new
   const alpha = Math.acos(-cosElong);
@@ -217,7 +215,6 @@ function drawPhaseDisc(ctx, cx, cy, R, cosElong, sunScreenAngle, moonColor) {
 
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.rotate(sunScreenAngle); // +x now points toward sun
 
   // Clip to disc
   ctx.beginPath();
