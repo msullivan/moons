@@ -201,13 +201,7 @@ function updateMoonPhases() {
     const cosElong = Math.max(-1, Math.min(1,
       (dmx * dsx + dmy * dsy) / (moonDist * sunDist)));
 
-    // Orient the disc in the moon's orbital frame so the terminator
-    // sweeps continuously in one direction as the moon orbits, rather
-    // than flapping back and forth.
-    const moonScreenAngle = Math.atan2(-dmy, dmx);
-    const discAngle = sunScreenAngle - moonScreenAngle;
-
-    drawPhaseDisc(ctx, 32, 32, 26, cosElong, discAngle, body.color);
+    drawPhaseDisc(ctx, 32, 32, 26, cosElong, sunScreenAngle, body.color);
   });
 }
 
