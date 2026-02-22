@@ -2,6 +2,9 @@
 
 // ─── globals ────────────────────────────────────────────────────────────────
 
+// Body indices for the phase panel (outer→inner)
+const PHASE_BODIES = [2, 3, 5, 4]; // Primus, Secundus, Tertius, Quartus
+
 let sim, renderer;
 let running        = false;
 let orbitBodyIndex = 2;  // default: first moon (Primus)
@@ -127,6 +130,8 @@ function updateHUD() {
   document.getElementById('hud-time').textContent   = `T: ${timeStr}`;
   document.getElementById('hud-energy').textContent = `ΔE/E₀: ${sign}${err.toExponential(2)}`;
 
+  updateMoonPhases();
+
   // Orbital elements panel
   const body    = sim.bodies[orbitBodyIndex];
   const primary = sim.bodies[1]; // Qaia
@@ -144,6 +149,123 @@ function updateHUD() {
         document.getElementById(id).textContent = 'unbound');
     }
   }
+}
+
+// ─── Moon phases ─────────────────────────────────────────────────────────────
+
+function buildPhasePanel() {
+  const panel = document.getElementById('phase-panel');
+  PHASE_BODIES.forEach(bi => {
+    const body = sim.bodies[bi];
+    const cell = document.createElement('div');
+    cell.className = 'phase-cell';
+
+    const canvas = document.createElement('canvas');
+    canvas.id = `phase-canvas-${bi}`;
+    canvas.width  = 64;
+    canvas.height = 64;
+    canvas.className = 'phase-canvas';
+
+    const name = document.createElement('span');
+    name.className   = 'phase-name';
+    name.textContent = body.name;
+
+    cell.appendChild(canvas);
+    cell.appendChild(name);
+    panel.appendChild(cell);
+  });
+}
+
+function updateMoonPhases() {
+  const sun  = sim.bodies[0];
+  const qaia = sim.bodies[1];
+
+  const dsx = sun.x - qaia.x;
+  const dsy = sun.y - qaia.y;
+  // Angle from Qaia toward Sun in screen space (y-axis flipped)
+  const sunScreenAngle = Math.atan2(-dsy, dsx);
+  const sunDist = Math.hypot(dsx, dsy);
+
+  PHASE_BODIES.forEach(bi => {
+    const body   = sim.bodies[bi];
+    const canvas = document.getElementById(`phase-canvas-${bi}`);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const dmx  = body.x - qaia.x;
+    const dmy  = body.y - qaia.y;
+    const moonDist = Math.hypot(dmx, dmy);
+    if (moonDist === 0) return;
+
+    const cosElong = Math.max(-1, Math.min(1,
+      (dmx * dsx + dmy * dsy) / (moonDist * sunDist)));
+
+    // Orient the disc in the moon's orbital frame so the terminator
+    // sweeps continuously in one direction as the moon orbits, rather
+    // than flapping back and forth.
+    const moonScreenAngle = Math.atan2(-dmy, dmx);
+    const discAngle = sunScreenAngle - moonScreenAngle;
+
+    drawPhaseDisc(ctx, 32, 32, 26, cosElong, discAngle, body.color);
+  });
+}
+
+// Draw a phase disc centered at (cx, cy) with radius R.
+// cosElong = cos of Sun-Qaia-Moon elongation angle.
+// sunScreenAngle = atan2(-dy, dx) from Qaia to Sun in screen coords.
+function drawPhaseDisc(ctx, cx, cy, R, cosElong, sunScreenAngle, moonColor) {
+  const PI = Math.PI;
+  // Phase angle at moon: 0 = full, PI = new
+  const alpha = Math.acos(-cosElong);
+  // Terminator ellipse x semi-axis
+  const tx = R * Math.abs(Math.cos(alpha));
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(sunScreenAngle); // +x now points toward sun
+
+  // Clip to disc
+  ctx.beginPath();
+  ctx.arc(0, 0, R, 0, 2 * PI);
+  ctx.clip();
+
+  // Dark base
+  ctx.fillStyle = '#0e0e1e';
+  ctx.fillRect(-R, -R, 2 * R, 2 * R);
+
+  // Lit right semicircle (sun side)
+  ctx.fillStyle = moonColor;
+  ctx.beginPath();
+  ctx.arc(0, 0, R, -PI / 2, PI / 2, false); // clockwise through right
+  ctx.closePath();
+  ctx.fill();
+
+  // Terminator ellipse adjustment
+  if (alpha < PI / 2) {
+    // Gibbous: fill left half of terminator ellipse with moon color (extends lit area)
+    ctx.fillStyle = moonColor;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, tx, R, 0, PI / 2, -PI / 2, false); // clockwise through left
+    ctx.closePath();
+    ctx.fill();
+  } else if (alpha > PI / 2) {
+    // Crescent: fill right half of terminator ellipse dark (cuts into lit area)
+    ctx.fillStyle = '#0e0e1e';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, tx, R, 0, -PI / 2, PI / 2, false); // clockwise through right
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Subtle ring outline
+  ctx.strokeStyle = 'rgba(100,150,200,0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(0, 0, R, 0, 2 * PI);
+  ctx.stroke();
+
+  ctx.restore();
 }
 
 // ─── UI setup ────────────────────────────────────────────────────────────────
@@ -190,6 +312,9 @@ function buildUI(canvas) {
 
   // Follow select
   buildFollowSelect();
+
+  // Phase panel
+  buildPhasePanel();
 
   // Orbit select — skip Sun (0) and Qaia (1)
   const orbitSel = document.getElementById('orbit-select');
