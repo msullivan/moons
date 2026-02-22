@@ -244,13 +244,6 @@ function drawPhaseDisc(ctx, cx, cy, R, cosElong, moonColor, waning = false) {
     ctx.fill();
   }
 
-  // Subtle ring outline
-  ctx.strokeStyle = 'rgba(100,150,200,0.25)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(0, 0, R, 0, 2 * PI);
-  ctx.stroke();
-
   ctx.restore();
 }
 
