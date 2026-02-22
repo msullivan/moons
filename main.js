@@ -199,14 +199,17 @@ function updateMoonPhases() {
     const cosElong = Math.max(-1, Math.min(1,
       (dmx * dsx + dmy * dsy) / (moonDist * sunDist)));
 
-    drawPhaseDisc(ctx, 32, 32, 26, cosElong, body.color);
+    // Cross product: positive = moon CCW from sun (waxing), negative = waning
+    const waning = (dsx * dmy - dsy * dmx) < 0;
+
+    drawPhaseDisc(ctx, 32, 32, 26, cosElong, body.color, waning);
   });
 }
 
 // Draw a phase disc centered at (cx, cy) with radius R.
 // cosElong = cos of Sun-Qaia-Moon elongation angle.
 // Lit side is on the right (+x). cosElong=-1 → full, cosElong=1 → new.
-function drawPhaseDisc(ctx, cx, cy, R, cosElong, moonColor) {
+function drawPhaseDisc(ctx, cx, cy, R, cosElong, moonColor, waning = false) {
   const PI = Math.PI;
   // Phase angle at moon: 0 = full, PI = new
   const alpha = Math.acos(-cosElong);
@@ -215,6 +218,9 @@ function drawPhaseDisc(ctx, cx, cy, R, cosElong, moonColor) {
 
   ctx.save();
   ctx.translate(cx, cy);
+  // Flip disc when waning so dark fills in from the same side as light did,
+  // producing a continuous one-directional sweep rather than back-and-forth.
+  if (waning) ctx.rotate(PI);
 
   // Clip to disc
   ctx.beginPath();
