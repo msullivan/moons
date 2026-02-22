@@ -187,10 +187,11 @@ class Renderer {
       for (let i = 1; i < c1.length; i++) ctx.lineTo(c1[i][0] * r, c1[i][1] * r);
       ctx.closePath();
       ctx.fill();
-      // Second continent
+      // Second continent — wider, just clockwise of the first
       const c2 = [
-        [-0.22, -0.32], [-0.48, -0.18], [-0.70, -0.32],
-        [-0.65, -0.62], [-0.42, -0.75], [-0.18, -0.58],
+        [ 0.05,  0.45], [-0.20,  0.58], [-0.52,  0.65],
+        [-0.68,  0.48], [-0.62,  0.20], [-0.35,  0.12],
+        [-0.10,  0.25], [ 0.08,  0.38],
       ];
       ctx.beginPath();
       ctx.moveTo(c2[0][0] * r, c2[0][1] * r);
