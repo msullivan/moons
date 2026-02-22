@@ -165,6 +165,41 @@ class Renderer {
     ctx.arc(sx, sy, r, 0, Math.PI * 2);
     ctx.fill();
 
+    // Continent rotation marker (Qaia only)
+    if (body === this.sim.bodies[1]) {
+      const SIDEREAL_DAY = 86164; // seconds
+      const angle = (this.sim.time / SIDEREAL_DAY) * Math.PI * 2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.translate(sx, sy);
+      ctx.rotate(angle);
+      ctx.fillStyle = 'rgba(90, 125, 55, 0.88)';
+      // Main continent
+      const c1 = [
+        [ 0.18,  0.55], [ 0.40,  0.78], [ 0.65,  0.70],
+        [ 0.80,  0.42], [ 0.78,  0.10], [ 0.58, -0.08],
+        [ 0.32, -0.12], [ 0.15,  0.12], [ 0.08,  0.35],
+      ];
+      ctx.beginPath();
+      ctx.moveTo(c1[0][0] * r, c1[0][1] * r);
+      for (let i = 1; i < c1.length; i++) ctx.lineTo(c1[i][0] * r, c1[i][1] * r);
+      ctx.closePath();
+      ctx.fill();
+      // Second continent
+      const c2 = [
+        [-0.22, -0.32], [-0.48, -0.18], [-0.70, -0.32],
+        [-0.65, -0.62], [-0.42, -0.75], [-0.18, -0.58],
+      ];
+      ctx.beginPath();
+      ctx.moveTo(c2[0][0] * r, c2[0][1] * r);
+      for (let i = 1; i < c2.length; i++) ctx.lineTo(c2[i][0] * r, c2[i][1] * r);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
     // Night-side shadow (skip for the Sun itself)
     const sun = this.sim.bodies[0];
     if (body !== sun) {
