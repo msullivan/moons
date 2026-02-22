@@ -27,8 +27,9 @@ const PRIMUS_INCLINATION = 5.14 * Math.PI / 180;
 
 // Three outer moons, all retrograde, e=0.10, spread 120° apart
 const OUTER = [
-  { name: 'Sextus',  mass: M_MOON * 0.01, a_ld: 1.9, phase_deg:  90, retro: true },
-  { name: 'Septimus',mass: M_MOON * 0.01, a_ld: 2.2, phase_deg: 270, retro: true },
+  { name: 'Octavus',  mass: M_MOON * 0.005, a_ld: 1.6, phase_deg:   0, retro: true },
+  { name: 'Sextus',   mass: M_MOON * 0.01,  a_ld: 1.9, phase_deg: 120, retro: true },
+  { name: 'Septimus', mass: M_MOON * 0.01,  a_ld: 2.2, phase_deg: 240, retro: true },
 ];
 
 function createBodies() {
