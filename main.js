@@ -4,6 +4,7 @@
 
 let sim, renderer;
 let running        = false;
+let orbitBodyIndex = 2;  // default: first moon (Primus)
 let lastTs         = null;
 let stepAccum      = 0;      // fractional steps carried over between frames
 
@@ -81,6 +82,36 @@ function tick(ts) {
 
 // ─── HUD ─────────────────────────────────────────────────────────────────────
 
+function orbitalElements(body, primary) {
+  const mu = G * primary.mass;
+  const rx = body.x - primary.x, ry = body.y - primary.y, rz = body.z - primary.z;
+  const vx = body.vx - primary.vx, vy = body.vy - primary.vy, vz = body.vz - primary.vz;
+  const r = Math.sqrt(rx*rx + ry*ry + rz*rz);
+  const v2 = vx*vx + vy*vy + vz*vz;
+
+  // Specific orbital energy → semi-major axis
+  const eps = v2 / 2 - mu / r;
+  if (eps >= 0) return null; // unbound
+  const a = -mu / (2 * eps);
+
+  // Angular momentum vector → inclination
+  const hx = ry*vz - rz*vy, hy = rz*vx - rx*vz, hz = rx*vy - ry*vx;
+  const h = Math.sqrt(hx*hx + hy*hy + hz*hz);
+  const inc = Math.acos(Math.max(-1, Math.min(1, hz / h)));
+
+  // Eccentricity vector magnitude
+  const rdotv = rx*vx + ry*vy + rz*vz;
+  const ex = (v2/mu - 1/r)*rx - (rdotv/mu)*vx;
+  const ey = (v2/mu - 1/r)*ry - (rdotv/mu)*vy;
+  const ez = (v2/mu - 1/r)*rz - (rdotv/mu)*vz;
+  const e = Math.sqrt(ex*ex + ey*ey + ez*ez);
+
+  // Period
+  const T = 2 * Math.PI * Math.sqrt(a*a*a / mu);
+
+  return { a, e, inc, T, r };
+}
+
 function updateHUD() {
   const days  = sim.time / 86400;
   const years = days / 365.25;
@@ -95,6 +126,24 @@ function updateHUD() {
 
   document.getElementById('hud-time').textContent   = `T: ${timeStr}`;
   document.getElementById('hud-energy').textContent = `ΔE/E₀: ${sign}${err.toExponential(2)}`;
+
+  // Orbital elements panel
+  const body    = sim.bodies[orbitBodyIndex];
+  const primary = sim.bodies[1]; // Qaia
+  if (body && body !== primary) {
+    const oe = orbitalElements(body, primary);
+    if (oe) {
+      const LD = LUNAR_DIST;
+      document.getElementById('oe-a').textContent = (oe.a / LD).toFixed(3) + ' LD';
+      document.getElementById('oe-e').textContent = oe.e.toFixed(4);
+      document.getElementById('oe-i').textContent = (oe.inc * 180 / Math.PI).toFixed(2) + '°';
+      document.getElementById('oe-T').textContent = (oe.T / 86400).toFixed(2) + ' d';
+      document.getElementById('oe-r').textContent = (oe.r / LD).toFixed(3) + ' LD';
+    } else {
+      ['oe-a','oe-e','oe-i','oe-T','oe-r'].forEach(id =>
+        document.getElementById(id).textContent = 'unbound');
+    }
+  }
 }
 
 // ─── UI setup ────────────────────────────────────────────────────────────────
@@ -141,6 +190,20 @@ function buildUI(canvas) {
 
   // Follow select
   buildFollowSelect();
+
+  // Orbit select — skip Sun (0) and Qaia (1)
+  const orbitSel = document.getElementById('orbit-select');
+  sim.bodies.forEach((b, i) => {
+    if (i < 2) return;
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = b.name;
+    orbitSel.appendChild(opt);
+  });
+  orbitSel.value = String(orbitBodyIndex);
+  orbitSel.addEventListener('change', () => {
+    orbitBodyIndex = parseInt(orbitSel.value);
+  });
 
   // Trails toggle
   const trailBtn = document.getElementById('btn-trails');
