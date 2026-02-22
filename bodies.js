@@ -16,6 +16,7 @@ const R_MOON  = 1.737e6;   // meters
 // Masses 0.02 / 0.04 / 0.25 / 1.00 LM, all e=0.10.
 // Quartus at 0.12 LD (period ≈ 1.14 d), Tertius at 0.24 LD (≈ 3.23 d),
 // Secundus at 0.45 LD (≈ 8.3 d), Primus at 1.00 LD (≈ 27.5 d).
+// Quartus and Tertius orbit retrograde (clockwise); Secundus and Primus prograde.
 const M_QUARTUS      = M_MOON * 0.02;
 const R_QUARTUS      = R_MOON * Math.cbrt(0.02);
 const QUARTUS_E      = 0.10;
@@ -98,9 +99,9 @@ function createInitialBodies() {
     new Body({
       name: 'Quartus',
       mass: M_QUARTUS,
-      // Periapsis at 180° (in −x from Qaia). Prograde v points in −y in Qaia's frame.
+      // Periapsis at 180° (in −x from Qaia). Retrograde v points in +y in Qaia's frame.
       x: AU - QUARTUS_R_PERI, y: 0, z: 0,
-      vx: 0, vy: v_earth - v_quartus_peri, vz: 0,
+      vx: 0, vy: v_earth + v_quartus_peri, vz: 0,
       physicalRadius: R_QUARTUS,
       minDisplayPx: 3,
       color: '#FFAA66',
@@ -111,9 +112,9 @@ function createInitialBodies() {
     new Body({
       name: 'Tertius',
       mass: M_TERTIUS,
-      // Periapsis at 270° (in −y from Qaia). Prograde v points in +x in Qaia's frame.
+      // Periapsis at 270° (in −y from Qaia). Retrograde v points in −x in Qaia's frame.
       x: AU, y: -TERTIUS_R_PERI, z: 0,
-      vx: v_tertius_peri, vy: v_earth, vz: 0,
+      vx: -v_tertius_peri, vy: v_earth, vz: 0,
       physicalRadius: R_TERTIUS,
       minDisplayPx: 3,
       color: '#88CCAA',
