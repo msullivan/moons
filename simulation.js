@@ -15,8 +15,8 @@ const R_MOON  = 1.737e6;   // meters
 
 // Four-moon system stable past 1000 simulated years.
 // Masses 0.02 / 0.04 / 0.25 / 1.00 LM, all e=0.10.
-// Inner1 at 0.12 LD (period ≈ 0.36 d), Inner2 at 0.24 LD (≈ 1.0 d),
-// Secundus at 0.45 LD (≈ 8.3 d), Primus at 1.00 LD (≈ 27.3 d).
+// Quartus at 0.12 LD (period ≈ 1.14 d), Tertius at 0.24 LD (≈ 3.23 d),
+// Secundus at 0.45 LD (≈ 8.3 d), Primus at 1.00 LD (≈ 27.5 d).
 const M_INNER1        = M_MOON * 0.02;
 const R_INNER1        = R_MOON * Math.cbrt(0.02);
 const INNER1_E        = 0.10;
@@ -253,7 +253,7 @@ function createInitialBodies() {
       trailMaxLen: 1400,
     }),
     new Body({
-      name: 'Inner1',
+      name: 'Quartus',
       mass: M_INNER1,
       // Periapsis at 180° (in −x from Qaia). Prograde v points in −y in Qaia's frame.
       x: AU - INNER1_R_PERI, y: 0, z: 0,
@@ -262,11 +262,11 @@ function createInitialBodies() {
       minDisplayPx: 3,
       color: '#FFAA66',
       trailColor: '#FFAA66',
-      // 300 points × 10 × 360 s ≈ 12 days ≈ 34 Inner1 orbits
+      // 300 points × 10 × 360 s ≈ 12 days ≈ 10 Inner1 orbits
       trailMaxLen: 300,
     }),
     new Body({
-      name: 'Inner2',
+      name: 'Tertius',
       mass: M_INNER2,
       // Periapsis at 77° from Qaia (+x/+y diagonal). Phase chosen to maximise
       // mutual stability — sweeps show this gives ~790 yr before first ejection,
@@ -279,7 +279,7 @@ function createInitialBodies() {
       minDisplayPx: 3,
       color: '#88CCAA',
       trailColor: '#88CCAA',
-      // 500 points × 10 × 360 s ≈ 20 days ≈ 20 Inner2 orbits
+      // 500 points × 10 × 360 s ≈ 20 days ≈ 6 Inner2 orbits
       trailMaxLen: 500,
     }),
   ];
