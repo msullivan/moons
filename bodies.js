@@ -96,8 +96,8 @@ export function createInitialBodies() {
       vx: 0, vy: v_earth + v_primus_peri, vz: 0,
       physicalRadius: R_PRIMUS,
       minDisplayPx: 3,
-      color: '#FFAA66',
-      trailColor: '#FFAA66',
+      color: '#4466CC',
+      trailColor: '#4466CC',
       trailMaxLen: 300,
     }),
     new Body({
