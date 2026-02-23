@@ -1,16 +1,16 @@
-'use strict';
+import { G, Body } from './simulation.js';
 
 // Physical constants used in initial condition setup
-const AU         = 1.496e11;       // meters (1 astronomical unit)
-const LUNAR_DIST = 3.844e8;        // meters (Earth-Moon mean distance)
+export const AU             = 1.496e11;  // meters (1 astronomical unit)
+export const LUNAR_DIST     = 3.844e8;   // meters (Earth-Moon mean distance)
 
 // Body physical data
 const M_SUN   = 1.989e30;  // kg
 const M_EARTH = 5.972e24;  // kg
 const M_MOON  = 7.342e22;  // kg
-const R_SUN   = 6.96e8;    // meters
-const R_EARTH = 6.371e6;   // meters
-const R_MOON  = 1.737e6;   // meters
+const R_SUN             = 6.96e8;   // meters
+const R_EARTH           = 6.371e6;  // meters
+export const R_MOON     = 1.737e6;  // meters
 
 // Six-moon system stable past 1000 simulated years.
 // Inner four (all e=0.10): Primus 0.02 LM at 0.12 LD (≈ 1.14 d), Secundus 0.04 LM at 0.24 LD (≈ 3.23 d),
@@ -55,7 +55,7 @@ const SEPTIMUS_E      = 0.10;
 const SEPTIMUS_A      = 2.2 * LUNAR_DIST;
 const SEPTIMUS_R_PERI = SEPTIMUS_A * (1 - SEPTIMUS_E);
 
-function createInitialBodies() {
+export function createInitialBodies() {
   const v_earth         = Math.sqrt(G * M_SUN   / AU);
   const v_moon_rel      = Math.sqrt(G * M_EARTH / LUNAR_DIST);
   // Periapsis speeds from vis-viva: v = sqrt(G M (1+e) / r_peri)

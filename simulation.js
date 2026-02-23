@@ -1,9 +1,7 @@
-'use strict';
-
 // Gravitational constant — used by both the integrator and bodies.js
-const G = 6.674e-11;  // m³ kg⁻¹ s⁻²
+export const G = 6.674e-11;  // m³ kg⁻¹ s⁻²
 
-class Body {
+export class Body {
   constructor(cfg) {
     this.name            = cfg.name;
     this.mass            = cfg.mass;
@@ -50,11 +48,11 @@ class Body {
   }
 }
 
-class Simulation {
-  constructor() {
+export class Simulation {
+  constructor(bodies) {
     this.dt     = 360;   // simulation timestep: 6 minutes in seconds
     this.time   = 0;     // elapsed simulation seconds
-    this.bodies = createInitialBodies();
+    this.bodies = bodies;
     this._computeAccelerations();
     this.initialEnergy = this.totalEnergy();
   }

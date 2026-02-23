@@ -1,6 +1,6 @@
-'use strict';
+import { AU, LUNAR_DIST } from './bodies.js';
 
-class Renderer {
+export class Renderer {
   constructor(canvas, sim) {
     this.canvas          = canvas;
     this.ctx             = canvas.getContext('2d');

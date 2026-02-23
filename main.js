@@ -1,4 +1,6 @@
-'use strict';
+import { G, Simulation } from './simulation.js';
+import { createInitialBodies, LUNAR_DIST, R_MOON } from './bodies.js';
+import { Renderer } from './renderer.js';
 
 // ─── globals ────────────────────────────────────────────────────────────────
 
@@ -36,8 +38,9 @@ function init() {
   resizeCanvas(canvas);
   window.addEventListener('resize', () => resizeCanvas(canvas));
 
-  sim      = new Simulation();
+  sim      = new Simulation(createInitialBodies());
   renderer = new Renderer(canvas, sim);
+  window.sim = sim; window.renderer = renderer; // expose for Playwright tests
 
   buildUI(canvas);
 
@@ -268,7 +271,8 @@ function buildUI(canvas) {
 
   // Reset
   document.getElementById('btn-reset').addEventListener('click', () => {
-    sim = new Simulation();
+    sim = new Simulation(createInitialBodies());
+    window.sim = sim;
     renderer.sim = sim;
     stepAccum = 0;
   });

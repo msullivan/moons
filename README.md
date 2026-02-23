@@ -5,7 +5,14 @@ applications for my RPG setting.
 
 Vibed up with Sonnet 4.6 ([initial transcript](https://gisthost.github.io/?387d19e00351e1b50ffcf47e880c5ef1/)).
 
-Open `index.html` directly in a browser. No build step, no server required.
+Requires a local HTTP server (ES modules are blocked on `file://` URLs in Chrome).
+The simplest option:
+
+```
+python3 -m http.server
+```
+
+Then open `http://localhost:8000` in a browser. No build step needed.
 
 ## Physics
 
