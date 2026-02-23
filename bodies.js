@@ -38,6 +38,10 @@ const TERTIUS_R_PERI = TERTIUS_A * (1 - TERTIUS_E);
 // Quartus: 1.00 LD, 1 lunar mass, prograde with slight inclination
 const QUARTUS_INCLINATION = 5.14 * Math.PI / 180;
 
+// Quintus: Sun-Qaia L4 trojan (60° ahead of Qaia)
+const M_QUINTUS      = M_MOON * 0.1;
+const R_QUINTUS      = R_MOON * Math.cbrt(0.1);
+
 const M_SEXTUS       = M_MOON * 0.01;
 const R_SEXTUS       = R_MOON * Math.cbrt(0.01);
 const SEXTUS_E       = 0.10;
@@ -155,6 +159,18 @@ function createInitialBodies() {
       color: '#FF88AA',
       trailColor: '#FF88AA',
       trailMaxLen: 2200,
+    }),
+    new Body({
+      name: 'Quintus',
+      mass: M_QUINTUS,
+      // Sun-Qaia L4 point: 60° ahead of Qaia in its orbit
+      x: AU * Math.cos(Math.PI / 3), y: AU * Math.sin(Math.PI / 3),
+      vx: -v_earth * Math.sin(Math.PI / 3), vy: v_earth * Math.cos(Math.PI / 3),
+      physicalRadius: R_QUINTUS,
+      minDisplayPx: 4,
+      color: '#FFDD55',
+      trailColor: '#FFDD55',
+      trailMaxLen: 2500,
     }),
   ];
 
