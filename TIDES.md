@@ -2,13 +2,34 @@
 
 Generated from `bodies.js` parameters. Re-run `node analysis/tide_sim.mjs` after any changes.
 
-Assumes Qaia has a 24-hour solar day (matching Earth). Equilibrium tide formula:
+Assumes Qaia has a 24-hour solar day (matching Earth).
+
+### Equilibrium tide model
+
+The [equilibrium tide](https://en.wikipedia.org/wiki/Tide#Tidal_physics) is the theoretical
+water-surface shape if the ocean responded instantly to tidal forcing with no friction or
+basin dynamics. The half-amplitude of the tidal bulge is:
 
 ```
-h = (3/4) × (M_moon / M_Qaia) × (R_Qaia / a)³ × R_Qaia
+h_eq = (3/4) × (M_moon / M_planet) × (R_planet / a)³ × R_planet
 ```
 
 Validated against Earth-Moon system (gives ~0.27 m, matching the known theoretical value).
+
+### Simulation method
+
+The tidal height at a fixed surface location is modelled as a sum of cosines, one per body:
+
+```
+h(t) = Σ  h_eq_i × cos(2π t / T_tide_i)
+```
+
+where `T_tide_i = T_syn_i / 2` is the semi-diurnal tidal period (two bulges per synodic
+pass). `t = 0` is set to maximum alignment (all bodies at opposition), so each cosine starts
+at its peak. This is the simplest possible model — it ignores ocean basin resonance, friction,
+eccentricity-driven amplitude variation, and latitude effects. Real tides on Qaia would differ
+substantially in amplitude (resonance can multiply the equilibrium value by ~10×) but the
+periods and their interference structure would be the same.
 
 ---
 
