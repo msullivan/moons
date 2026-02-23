@@ -3,7 +3,7 @@
 // ─── globals ────────────────────────────────────────────────────────────────
 
 // Body indices for the phase panel (outer→inner)
-const PHASE_BODIES = [2, 3, 5, 4]; // Primus, Secundus, Tertius, Quartus
+const PHASE_BODIES = [7, 6, 2, 3, 5, 4]; // Septimus, Sextus, Primus, Secundus, Tertius, Quartus
 
 let sim, renderer;
 let running        = false;
@@ -151,7 +151,7 @@ function buildPhasePanel() {
 
     const canvas = document.createElement('canvas');
     canvas.id = `phase-canvas-${bi}`;
-    canvas.width  = 64;
+    canvas.width  = 124;
     canvas.height = 64;
     canvas.className = 'phase-canvas';
 
@@ -197,7 +197,7 @@ function updateMoonPhases() {
       11 * body.physicalRadius * LUNAR_DIST / (moonDist * R_MOON)
     )));
 
-    drawPhaseDisc(ctx, 32, 32, R, cosElong, body.color, waning);
+    drawPhaseDisc(ctx, 62, 32, R, cosElong, body.color, waning);
   });
 }
 
