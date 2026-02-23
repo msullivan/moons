@@ -52,21 +52,25 @@ for (const [n1, n2] of pairs) {
   console.log(`  ${n1} + ${n2}: beat every ${beat_h.toFixed(1)}h = ${(beat_h/24).toFixed(2)} days`);
 }
 
-console.log('\n=== 72-hour tide simulation (all moons at opposition, t=0) ===');
-const dt = 0.25;
+// ── simulation ───────────────────────────────────────────────────────────────
+const SIM_H = 720; // 30 days
+const dt    = 0.25;
+
 let maxH = -Infinity, minH = Infinity;
 const heights = [];
-for (let t = 0; t <= 72; t += dt) {
+for (let t = 0; t <= SIM_H; t += dt) {
   const h = bodies.reduce((s, b) => s + b.h * Math.cos(2*Math.PI * t / b.T_syn_h), 0);
   heights.push({ t, h });
   if (h > maxH) maxH = h;
   if (h < minH) minH = h;
 }
-console.log(`  Range: ${(minH*100).toFixed(0)} cm to +${(maxH*100).toFixed(0)} cm`);
-console.log(`  Max single-cycle range: ${((maxH-minH)*100).toFixed(0)} cm`);
+
+console.log(`\n=== ${SIM_H/24}-day tide simulation (all moons at opposition, t=0) ===`);
+console.log(`  Overall range: ${(minH*100).toFixed(0)} cm to +${(maxH*100).toFixed(0)} cm`);
+console.log(`  Max single-cycle swing: ${((maxH-minH)*100).toFixed(0)} cm`);
 console.log('\n  t(h)   tide');
-for (let i = 0; i < heights.length; i += 4) {
+for (let i = 0; i < heights.length; i += 4) { // 1h steps
   const { t, h } = heights[i];
   const bar = '█'.repeat(Math.round((h - minH) / (maxH - minH) * 30));
-  console.log(`  ${t.toFixed(0).padStart(3)}h  ${(h >= 0 ? '+' : '') + (h*100).toFixed(0).padStart(5)}cm  ${bar}`);
+  console.log(`  ${t.toFixed(0).padStart(4)}h  ${(h >= 0 ? '+' : '') + (h*100).toFixed(0).padStart(5)}cm  ${bar}`);
 }
