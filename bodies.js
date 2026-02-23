@@ -5,11 +5,11 @@ export const AU             = 1.496e11;  // meters (1 astronomical unit)
 export const LUNAR_DIST     = 3.844e8;   // meters (Earth-Moon mean distance)
 
 // Body physical data
-const M_SUN   = 1.989e30;  // kg
-const M_EARTH = 5.972e24;  // kg
-const M_MOON  = 7.342e22;  // kg
-const R_SUN             = 6.96e8;   // meters
-const R_EARTH           = 6.371e6;  // meters
+export const M_SUN   = 1.989e30;  // kg
+export const M_EARTH = 5.972e24;  // kg
+export const M_MOON  = 7.342e22;  // kg
+const R_SUN                     = 6.96e8;   // meters
+export const R_EARTH            = 6.371e6;  // meters
 export const R_MOON     = 1.737e6;  // meters
 
 // Six-moon system stable past 1000 simulated years.

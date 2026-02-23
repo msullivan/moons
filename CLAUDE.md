@@ -93,15 +93,37 @@ solar orbit can pass close to Qaia by coincidence, giving a false "stable" readi
 ## File structure
 
 ```
-simulation.js  — Body class, Simulation class, Velocity Verlet integrator, G constant
-bodies.js      — Physical constants (AU, masses, radii), moon orbital params, createInitialBodies()
-renderer.js    — Canvas rendering (trails, glow, shadow, scale bar)
-main.js        — Animation loop, UI, zoom/pan, keyboard handling
-tests/         — Standalone Node.js stability and screenshot scripts
+simulation.js   — Body class, Simulation class, Velocity Verlet integrator, G constant
+bodies.js       — Physical constants (AU, masses, radii), moon orbital params, createInitialBodies()
+renderer.js     — Canvas rendering (trails, glow, shadow, scale bar)
+main.js         — Animation loop, UI, zoom/pan, keyboard handling
+tests/          — Playwright screenshot and stability scripts
+analysis/       — Node.js analysis scripts (no browser needed)
+  moon_stats.mjs  — Physical/observational stats for all moons → MOONS.md
+  tide_sim.mjs    — Tidal periods and 72h simulation → TIDES.md
 ```
 
 Files use ES modules — imports are explicit. To add or change a moon, edit `bodies.js` only.
 For running the simulation headlessly (no browser), use `tests/save_state_node.mjs`.
+
+## Updating MOONS.md and TIDES.md after parameter changes
+
+After editing any moon parameters in `bodies.js` (mass, radius/density, semi-major axis,
+eccentricity), regenerate the reference docs:
+
+```bash
+node analysis/moon_stats.mjs   # recompute physical/observational stats
+node analysis/tide_sim.mjs     # recompute tidal periods and simulation
+```
+
+Then update `MOONS.md` and `TIDES.md` with the new output. The scripts read directly from
+`bodies.js` exports, so the numbers stay in sync as long as the exported constants
+(`M_MOON`, `R_MOON`, `LUNAR_DIST`, `M_EARTH`, `R_EARTH`, `M_SUN`, `AU`) are kept current.
+
+The moon definitions inside each analysis script (mass fraction, density ratio, semi-major
+axis) are **duplicated** from `bodies.js` and must be kept in sync by hand — they are not
+automatically read from `createInitialBodies()`. If you change a moon's mass or density,
+update the corresponding entry in `analysis/moon_stats.mjs` and `analysis/tide_sim.mjs`.
 
 ### What we learned about stability
 
