@@ -308,12 +308,16 @@ class Renderer {
 // ─── helpers ──────────────────────────────────────────────────────────────
 
 function buildStars(count) {
+  // Seeded PRNG (mulberry32) so the star field is identical every page load.
+  let s = 0xdeadbeef;
+  const rand = () => { s |= 0; s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
   const stars = [];
   for (let i = 0; i < count; i++) {
-    const fx    = Math.random();
-    const fy    = Math.random();
-    const r     = Math.random() < 0.85 ? 0.5 : Math.random() * 1.2 + 0.6;
-    const alpha = 0.3 + Math.random() * 0.6;
+    const fx    = rand();
+    const fy    = rand();
+    const r     = rand() < 0.85 ? 0.5 : rand() * 1.2 + 0.6;
+    const alpha = 0.3 + rand() * 0.6;
     stars.push([fx, fy, r, alpha]);
   }
   return stars;
