@@ -5,8 +5,11 @@ const page = await browser.newPage();
 await page.setViewportSize({ width: 1280, height: 800 });
 await page.goto('file:///home/sully/src/moons/index.html');
 await page.waitForFunction(() => typeof renderer !== 'undefined');
-await page.click('text=Qaia-Primus');
-await page.waitForTimeout(500);
+await page.evaluate(() => {
+  renderer.scale = 2e6; renderer.followIndex = 1; renderer.panX = 0; renderer.panY = 0;
+  renderer.render(); updateHUD();
+});
+await page.waitForTimeout(200);
 
 // t=0: Primus starts opposite sun → full moon
 await page.screenshot({ path: '/tmp/phase_t0.png' });

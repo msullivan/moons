@@ -191,7 +191,13 @@ function updateMoonPhases() {
     // Cross product: positive = moon CCW from sun (waxing), negative = waning
     const waning = (dsx * dmy - dsy * dmx) < 0;
 
-    drawPhaseDisc(ctx, 32, 32, 26, cosElong, body.color, waning);
+    // Disc radius scaled by apparent angular size (physicalRadius / distance),
+    // normalised so Primus at 1 LD gets R = 11 px.
+    const R = Math.max(4, Math.min(28, Math.round(
+      11 * body.physicalRadius * LUNAR_DIST / (moonDist * R_MOON)
+    )));
+
+    drawPhaseDisc(ctx, 32, 32, R, cosElong, body.color, waning);
   });
 }
 
