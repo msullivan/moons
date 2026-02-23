@@ -48,7 +48,7 @@ const pairs = [
 for (const [n1, n2] of pairs) {
   const b1 = bodies.find(b => b.name === n1);
   const b2 = bodies.find(b => b.name === n2);
-  const beat_h = 1 / Math.abs(1/b1.T_syn_h - 1/b2.T_syn_h);
+  const beat_h = 1 / Math.abs(1/b1.T_tide_h - 1/b2.T_tide_h);
   console.log(`  ${n1} + ${n2}: beat every ${beat_h.toFixed(1)}h = ${(beat_h/24).toFixed(2)} days`);
 }
 
@@ -59,7 +59,7 @@ const dt    = 0.25;
 let maxH = -Infinity, minH = Infinity;
 const heights = [];
 for (let t = 0; t <= SIM_H; t += dt) {
-  const h = bodies.reduce((s, b) => s + b.h * Math.cos(2*Math.PI * t / b.T_syn_h), 0);
+  const h = bodies.reduce((s, b) => s + b.h * Math.cos(2*Math.PI * t / b.T_tide_h), 0);
   heights.push({ t, h });
   if (h > maxH) maxH = h;
   if (h < minH) minH = h;
@@ -72,5 +72,6 @@ console.log('\n  t(h)   tide');
 for (let i = 0; i < heights.length; i += 4) { // 1h steps
   const { t, h } = heights[i];
   const bar = '█'.repeat(Math.round((h - minH) / (maxH - minH) * 30));
-  console.log(`  ${t.toFixed(0).padStart(4)}h  ${(h >= 0 ? '+' : '') + (h*100).toFixed(0).padStart(5)}cm  ${bar}`);
+  const hStr = (h >= 0 ? '+' : '') + (h*100).toFixed(0);
+  console.log(`  ${t.toFixed(0).padStart(4)}h  ${hStr.padStart(6)}cm  ${bar}`);
 }
