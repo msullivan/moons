@@ -12,17 +12,11 @@ const R_SUN                     = 6.96e8;   // meters
 export const R_EARTH            = 6.371e6;  // meters
 export const R_MOON     = 1.737e6;  // meters
 
-// Six-moon system stable past 1000 simulated years.
-// Inner four (all e=0.10): Primus 0.02 LM at 0.12 LD (≈ 1.14 d), Secundus 0.04 LM at 0.24 LD (≈ 3.23 d),
+// Five-moon system stable past 1000 simulated years.
+// Inner three (all e=0.10): Secundus 0.04 LM at 0.24 LD (≈ 3.23 d),
 //   Tertius 0.25 LM at 0.45 LD (≈ 8.3 d), Quartus 1.00 LM at 1.00 LD (≈ 27.5 d).
-//   Primus and Secundus retrograde, 2× lunar density; Tertius and Quartus prograde.
+//   Secundus retrograde, 2× lunar density; Tertius and Quartus prograde.
 // Outer two (retrograde): Sextus 0.01 LM at 1.9 LD (≈ 72 d), Septimus 0.01 LM at 2.2 LD (≈ 90 d).
-const M_PRIMUS       = M_MOON * 0.02;
-const R_PRIMUS       = R_MOON * Math.cbrt(0.02 / 2);  // 2× lunar density
-const PRIMUS_E       = 0.10;
-const PRIMUS_A       = 0.12 * LUNAR_DIST;
-const PRIMUS_R_PERI  = PRIMUS_A * (1 - PRIMUS_E);
-
 const M_SECUNDUS      = M_MOON * 0.04;
 const R_SECUNDUS      = R_MOON * Math.cbrt(0.04 / 2);  // 2× lunar density
 const SECUNDUS_E      = 0.10;
@@ -59,7 +53,6 @@ export function createInitialBodies() {
   const v_earth         = Math.sqrt(G * M_SUN   / AU);
   const v_moon_rel      = Math.sqrt(G * M_EARTH / LUNAR_DIST);
   // Periapsis speeds from vis-viva: v = sqrt(G M (1+e) / r_peri)
-  const v_primus_peri   = Math.sqrt(G * M_EARTH * (1 + PRIMUS_E)   / PRIMUS_R_PERI);
   const v_secundus_peri = Math.sqrt(G * M_EARTH * (1 + SECUNDUS_E) / SECUNDUS_R_PERI);
   const v_tertius_peri  = Math.sqrt(G * M_EARTH * (1 + TERTIUS_E)  / TERTIUS_R_PERI);
   const v_sextus_peri   = Math.sqrt(G * M_EARTH * (1 + SEXTUS_E)   / SEXTUS_R_PERI);
@@ -87,18 +80,6 @@ export function createInitialBodies() {
       color: '#4499FF',
       trailColor: '#4499FF',
       trailMaxLen: 2500,
-    }),
-    new Body({
-      name: 'Primus',
-      mass: M_PRIMUS,
-      // Periapsis at 180° (in −x from Qaia). Retrograde v points in +y in Qaia's frame.
-      x: AU - PRIMUS_R_PERI, y: 0, z: 0,
-      vx: 0, vy: v_earth + v_primus_peri, vz: 0,
-      physicalRadius: R_PRIMUS,
-      minDisplayPx: 3,
-      color: '#4466CC',
-      trailColor: '#4466CC',
-      trailMaxLen: 300,
     }),
     new Body({
       name: 'Secundus',

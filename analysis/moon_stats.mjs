@@ -16,7 +16,6 @@ const R_HILL = AU * (M_EARTH / (3 * M_SUN)) ** (1/3);
 // mass_frac: M / M_moon
 // density_ratio: rho / rho_moon  (radius derived from these two)
 const moons = [
-  { name: 'Primus',   mass_frac: 0.02, density_ratio: 2, a_LD: 0.12, e: 0.10, dir: 'retrograde' },
   { name: 'Secundus', mass_frac: 0.04, density_ratio: 2, a_LD: 0.24, e: 0.10, dir: 'retrograde' },
   { name: 'Tertius',  mass_frac: 0.25, density_ratio: 1, a_LD: 0.45, e: 0.10, dir: 'prograde'   },
   { name: 'Quartus',  mass_frac: 1.00, density_ratio: 1, a_LD: 1.00, e: 0.10, dir: 'prograde'   },

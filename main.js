@@ -5,13 +5,13 @@ import { Renderer } from './renderer.js';
 // ─── globals ────────────────────────────────────────────────────────────────
 
 // Body indices for the phase panel (outer→inner)
-const PHASE_BODIES = [2, 3, 4, 5, 6, 7]; // Primus, Secundus, Tertius, Quartus, Sextus, Septimus
+const PHASE_BODIES = [2, 3, 4, 5, 6]; // Secundus, Tertius, Quartus, Sextus, Septimus
 
 const PHASE_R_BASE = 16;
 
 let sim, renderer;
 let running        = false;
-let orbitBodyIndex = 5;  // default: Quartus (1.00 LD)
+let orbitBodyIndex = 4;  // default: Quartus (1.00 LD)
 let lastTs         = null;
 let stepAccum      = 0;      // fractional steps carried over between frames
 
