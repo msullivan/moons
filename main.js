@@ -3,7 +3,7 @@
 // ─── globals ────────────────────────────────────────────────────────────────
 
 // Body indices for the phase panel (outer→inner)
-const PHASE_BODIES = [7, 6, 5, 4, 3, 2]; // Septimus, Sextus, Quartus, Tertius, Secundus, Primus
+const PHASE_BODIES = [2, 3, 4, 5, 6, 7]; // Primus, Secundus, Tertius, Quartus, Sextus, Septimus
 
 const PHASE_R_BASE = 16;
 
