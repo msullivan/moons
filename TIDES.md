@@ -90,7 +90,7 @@ All moons at opposition (maximum alignment) at t=0. Height is equilibrium water 
 
 ![Qaia 30-day tide chart](analysis/tide_plot.png)
 
-Regenerate with `node analysis/tide_plot.mjs`. ASCII table (1-hour resolution):
+Regenerate with `node analysis/tide_sim.mjs`. ASCII table (1-hour resolution):
 
 ```
   t(h)   tide
