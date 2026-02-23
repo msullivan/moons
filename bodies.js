@@ -39,7 +39,8 @@ const TERTIUS_R_PERI = TERTIUS_A * (1 - TERTIUS_E);
 const QUARTUS_INCLINATION = 5.14 * Math.PI / 180;
 
 // Quintus: Sun-Qaia L4 trojan (60° ahead of Qaia)
-const M_QUINTUS      = M_MOON * 0.1;
+// Mass set to trace particle (1 kg) to avoid perturbing the moon system.
+const M_QUINTUS      = 1;
 const R_QUINTUS      = R_MOON * Math.cbrt(0.1);
 
 const M_SEXTUS       = M_MOON * 0.01;
