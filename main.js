@@ -3,13 +3,13 @@
 // ─── globals ────────────────────────────────────────────────────────────────
 
 // Body indices for the phase panel (outer→inner)
-const PHASE_BODIES = [7, 6, 2, 3, 5, 4]; // Septimus, Sextus, Primus, Secundus, Tertius, Quartus
+const PHASE_BODIES = [7, 6, 5, 4, 3, 2]; // Septimus, Sextus, Quartus, Tertius, Secundus, Primus
 
 const PHASE_R_BASE = 16;
 
 let sim, renderer;
 let running        = false;
-let orbitBodyIndex = 2;  // default: first moon (Primus)
+let orbitBodyIndex = 5;  // default: Quartus (1.00 LD)
 let lastTs         = null;
 let stepAccum      = 0;      // fractional steps carried over between frames
 
