@@ -19,13 +19,13 @@ const R_MOON  = 1.737e6;   // meters
 //   Quartus and Tertius retrograde; Secundus and Primus prograde.
 // Outer two (retrograde): Sextus 0.01 LM at 1.9 LD (≈ 72 d), Septimus 0.01 LM at 2.2 LD (≈ 90 d).
 const M_QUARTUS      = M_MOON * 0.02;
-const R_QUARTUS      = R_MOON * Math.cbrt(0.02);
+const R_QUARTUS      = R_MOON * Math.cbrt(0.02 / 2);  // 2× lunar density
 const QUARTUS_E      = 0.10;
 const QUARTUS_A      = 0.12 * LUNAR_DIST;
 const QUARTUS_R_PERI = QUARTUS_A * (1 - QUARTUS_E);
 
 const M_TERTIUS      = M_MOON * 0.04;
-const R_TERTIUS      = R_MOON * Math.cbrt(0.04);
+const R_TERTIUS      = R_MOON * Math.cbrt(0.04 / 2);  // 2× lunar density
 const TERTIUS_E      = 0.10;
 const TERTIUS_A      = 0.24 * LUNAR_DIST;
 const TERTIUS_R_PERI = TERTIUS_A * (1 - TERTIUS_E);

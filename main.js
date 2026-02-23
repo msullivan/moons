@@ -5,6 +5,8 @@
 // Body indices for the phase panel (outer→inner)
 const PHASE_BODIES = [7, 6, 2, 3, 5, 4]; // Septimus, Sextus, Primus, Secundus, Tertius, Quartus
 
+const PHASE_R_BASE = 16;
+
 let sim, renderer;
 let running        = false;
 let orbitBodyIndex = 2;  // default: first moon (Primus)
@@ -191,10 +193,9 @@ function updateMoonPhases() {
     // Cross product: positive = moon CCW from sun (waxing), negative = waning
     const waning = (dsx * dmy - dsy * dmx) < 0;
 
-    // Disc radius scaled by apparent angular size (physicalRadius / distance),
-    // normalised so Primus at 1 LD gets R = 11 px.
+    // Disc radius scaled by apparent angular size (physicalRadius / distance).
     const R = Math.max(4, Math.min(28, Math.round(
-      11 * body.physicalRadius * LUNAR_DIST / (moonDist * R_MOON)
+      PHASE_R_BASE * body.physicalRadius * LUNAR_DIST / (moonDist * R_MOON)
     )));
 
     drawPhaseDisc(ctx, 62, 32, R, cosElong, body.color, waning);
