@@ -10,25 +10,37 @@ Playwright is a dev dependency — run `npm install` once if `node_modules/` is 
 parser flags `${obj.property}` as bad substitutions even inside single-quoted heredocs.
 Scripts must live under the project directory so Node can resolve `node_modules/playwright`.
 
+The project uses ES modules, so Playwright must serve the files over HTTP (Chrome blocks
+module imports on `file://` URLs). Spin up a server in the script itself:
+
 ```javascript
-// screenshot.mjs (run with: node screenshot.mjs)
+// screenshot.mjs (run with: node tests/screenshot.mjs)
 import { chromium } from 'playwright';
+import { createServer } from 'http';
+import { createReadStream, statSync } from 'fs';
+import { extname, join } from 'path';
+
+const MIME = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css' };
+const ROOT = new URL('..', import.meta.url).pathname;
+const server = createServer((req, res) => {
+  const file = join(ROOT, req.url === '/' ? 'index.html' : req.url);
+  try { statSync(file); } catch { res.writeHead(404); res.end(); return; }
+  res.writeHead(200, { 'Content-Type': MIME[extname(file)] ?? 'text/plain' });
+  createReadStream(file).pipe(res);
+}).listen(0);
+const port = await new Promise(r => server.once('listening', () => r(server.address().port)));
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.setViewportSize({ width: 1280, height: 800 });
-await page.goto('file:///home/sully/src/moons/index.html');
-await page.waitForFunction(() => typeof renderer !== 'undefined');
+await page.goto(`http://localhost:${port}/`);
+await page.waitForFunction(() => typeof sim !== 'undefined');
 
 await page.waitForTimeout(1500);
 await page.screenshot({ path: '/tmp/sim_solar.png' });
 
-// Switch views, interact with buttons
-await page.click('text=Qaia-Primus');
-await page.waitForTimeout(1500);
-await page.screenshot({ path: '/tmp/sim_qaia.png' });
-
 await browser.close();
+server.close();
 ```
 
 Then read the screenshots with the Read tool to view them.
@@ -53,7 +65,7 @@ await page.click('#btn-play');
 // Scroll to zoom (on the canvas)
 await page.mouse.wheel(0, -300);   // scroll up = zoom in
 
-// Evaluate JS in the page context
+// Evaluate JS in the page context (sim and renderer are exposed on window)
 const time = await page.evaluate(() => sim.time / 86400); // elapsed days
 const energyErr = await page.evaluate(() => sim.energyError());
 
@@ -88,13 +100,14 @@ main.js        — Animation loop, UI, zoom/pan, keyboard handling
 tests/         — Standalone Node.js stability and screenshot scripts
 ```
 
-`simulation.js` loads first (defines `G` and `Body`), then `bodies.js` (uses both).
-To add or change a moon, edit `bodies.js` only.
+Files use ES modules — imports are explicit. To add or change a moon, edit `bodies.js` only.
+For running the simulation headlessly (no browser), use `tests/save_state_node.mjs`.
 
 ### What we learned about stability
 
-- Outer prograde moons (outside Primus at 1 LD) are very hard to keep stable. Primus
+- Outer prograde moons (outside Quartus at 1 LD) are very hard to keep stable. Quartus
   perturbs them via resonances and they escape within years even if initially bound.
-- Inner moons (inside Primus's orbit, a ≤ 0.45 LD) are individually stable.
-- Current 4-moon system (all e=0.10): Quartus a=0.12, Tertius a=0.24, Secundus a=0.45,
-  Primus a=1.00 LD — all stable past 1000 simulated years. See plans/moon-stability.md.
+- Inner moons (inside Quartus's orbit, a ≤ 0.45 LD) are individually stable.
+- Current naming by distance from Qaia: Primus 0.12 LD, Secundus 0.24 LD, Tertius 0.45 LD,
+  Quartus 1.00 LD, Sextus 1.9 LD, Septimus 2.2 LD — all stable past 1000 simulated years.
+- Quintus is a trace particle (1 kg) at the Sun-Qaia L4 point; librates ~45–80° over ~2000 yr.
