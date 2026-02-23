@@ -87,7 +87,10 @@ but Primus-driven beats at sub-day timescales dominate the experience.
 ## 30-Day Simulation
 
 All moons at opposition (maximum alignment) at t=0. Height is equilibrium water level.
-1-hour resolution, 720 hours total.
+
+![Qaia 30-day tide chart](analysis/tide_plot.png)
+
+Regenerate with `node analysis/tide_plot.mjs`. ASCII table (1-hour resolution):
 
 ```
   t(h)   tide
