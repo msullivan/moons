@@ -174,7 +174,7 @@ export class Renderer {
       ctx.arc(sx, sy, r, 0, Math.PI * 2);
       ctx.clip();
       ctx.translate(sx, sy);
-      ctx.rotate(angle);
+      ctx.rotate(-angle);
       ctx.fillStyle = 'rgba(90, 125, 55, 0.88)';
       // Main continent
       const c1 = [
