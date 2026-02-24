@@ -166,4 +166,6 @@ Physically identical to Sextus but 27% farther out — slightly smaller and dimm
 
 **Tidal locking**: The three freely-orbiting inner moons are almost certainly synchronously rotating — tidal locking timescale scales as a⁶.
 
+**Triple-moon alignment eras**: because the synodic periods of Secundus, Tertius, and Quartus are incommensurate, all three moons are simultaneously full (or new) only rarely — but these events cluster into multi-year eras separated by ~13 years. The pattern alternates between a ~5–6 year "full-moon era" (all-full alignments common, all-new rare) and a ~5–6 year "new-moon era" (the reverse), driven by a beat between Quartus's synodic period (~29.7 days) and the Qaia year: 365.25 / 29.68 ≈ 12.31 synodic periods per year, so the phase slips ~9.2 days/year and resets after ~13 years. Within either era, near-perfect alignments (all three within 1% of new or full) occur roughly once per year; the best are essentially exact, with each moon within 0.1% of syzygy simultaneously.
+
 **Quintus** is a trace particle at the Sun-Qaia L4 point (60° ahead of Qaia). It librates between ~45° and ~80° from Qaia with a period of ~2,000 years. Effectively massless — included for worldbuilding purposes.
