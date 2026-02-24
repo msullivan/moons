@@ -17,7 +17,7 @@ const h_eq = (M, a) => (3/4) * (M / M_EARTH) * (R_EARTH / a)**3 * R_EARTH;
 // Primus is omitted: as a geosynchronous moon it creates a permanent static tidal bulge,
 // not an oscillating tide. It does not contribute to the daily tidal cycle.
 const bodies = [
-  { name: 'Secundus', M: 0.04 * M_MOON, a: 0.24 * LUNAR_DIST, T_d: 3.23,   dir: -1, color: '#44bbaa' },
+  { name: 'Secundus', M: 0.04 * M_MOON, a: 0.30 * LUNAR_DIST, T_d: 4.51,   dir: -1, color: '#44bbaa' },
   { name: 'Tertius',  M: 0.25 * M_MOON, a: 0.45 * LUNAR_DIST, T_d: 8.29,   dir:  1, color: '#cc8844' },
   { name: 'Quartus',  M: 1.00 * M_MOON, a: 1.00 * LUNAR_DIST, T_d: 27.45,  dir:  1, color: '#aaaaaa' },
   { name: 'Sun',      M: M_SUN,          a: AU,                 T_d: 365.25, dir:  1, color: '#ffdd44' },

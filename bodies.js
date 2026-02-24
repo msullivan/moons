@@ -14,9 +14,9 @@ export const R_MOON     = 1.737e6;  // meters
 
 // Six-moon system stable past 1000 simulated years.
 // Primus: geosynchronous prograde (magically anchored, ~0.11 LD), 0.001 LM, 2× lunar density.
-// Inner three (all e=0.10): Secundus 0.04 LM at 0.24 LD (≈ 3.23 d) retrograde,
+// Inner three (all e=0.10): Secundus 0.04 LM at 0.30 LD (≈ 4.51 d) retrograde,
 //   Tertius 0.25 LM at 0.45 LD (≈ 8.3 d) prograde, Quartus 1.00 LM at 1.00 LD (≈ 27.5 d) prograde.
-// Outer two (retrograde): Sextus 0.01 LM at 1.7 LD (≈ 60.8 d), Septimus 0.01 LM at 2.2 LD (≈ 90 d).
+// Outer two (retrograde): Sextus 0.01 LM at 1.65 LD (≈ 58.2 d), Septimus 0.01 LM at 2.1 LD (≈ 83.5 d).
 export const QAIA_SIDEREAL_DAY = 86164;  // seconds — Qaia's sidereal rotation period
 
 const M_PRIMUS       = M_MOON * 0.001;

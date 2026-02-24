@@ -22,11 +22,11 @@ const PRIMUS_GEO_A = Math.cbrt(mu / (PRIMUS_OMEGA * PRIMUS_OMEGA));
 // T_d_override: if set, use this period (days) instead of Kepler's law (for anchored bodies)
 const moons = [
   { name: 'Primus',   mass_frac: 0.001, density_ratio: 2, a_LD: PRIMUS_GEO_A / LUNAR_DIST, e: 0, dir: 'prograde', T_d_override: QAIA_SIDEREAL_DAY / 86400 },
-  { name: 'Secundus', mass_frac: 0.04, density_ratio: 2, a_LD: 0.24, e: 0.10, dir: 'retrograde' },
+  { name: 'Secundus', mass_frac: 0.04, density_ratio: 2, a_LD: 0.30, e: 0.10, dir: 'retrograde' },
   { name: 'Tertius',  mass_frac: 0.25, density_ratio: 1, a_LD: 0.45, e: 0.10, dir: 'prograde'   },
   { name: 'Quartus',  mass_frac: 1.00, density_ratio: 1, a_LD: 1.00, e: 0.10, dir: 'prograde'   },
-  { name: 'Sextus',   mass_frac: 0.01, density_ratio: 1, a_LD: 1.70, e: 0.10, dir: 'retrograde' },
-  { name: 'Septimus', mass_frac: 0.01, density_ratio: 1, a_LD: 2.20, e: 0.10, dir: 'retrograde' },
+  { name: 'Sextus',   mass_frac: 0.01, density_ratio: 1, a_LD: 1.65, e: 0.10, dir: 'retrograde' },
+  { name: 'Septimus', mass_frac: 0.01, density_ratio: 1, a_LD: 2.10, e: 0.10, dir: 'retrograde' },
 ];
 
 // First pass: compute intrinsic properties
