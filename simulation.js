@@ -95,16 +95,33 @@ export class Simulation {
 
   // Override anchored bodies to exact geosynchronous positions and velocities.
   // Called at construction and after each Velocity Verlet step.
+  // If cfg.inclination is set, the circular orbit is tilted out of the xy-plane by that
+  // angle (ascending node along the x-axis, i.e. Ω = 0). This causes the body to trace
+  // a figure-8 (analemma) in the sky of an observer on the reference body's surface.
   _enforceAnchors() {
     const PI2 = 2 * Math.PI;
     for (const { body: b, ref, cfg } of this._anchors) {
       // Wrap angle to [0, 2π] to keep trig args small (avoids costly range reduction).
       const θ    = (cfg.phase + cfg.omega * this.time) % PI2;
       const cosθ = Math.cos(θ), sinθ = Math.sin(θ);
-      b.x  = ref.x  + cfg.radius * cosθ;
-      b.y  = ref.y  + cfg.radius * sinθ;
-      b.vx = ref.vx - cfg.radius * cfg.omega * sinθ;
-      b.vy = ref.vy + cfg.radius * cfg.omega * cosθ;
+      const r    = cfg.radius, ω = cfg.omega;
+      if (cfg.inclination) {
+        // Inclined orbit: rotate the standard xy-plane orbit by inclination i around x-axis.
+        // Position:  x = r·cos θ,  y = r·sin θ·cos i,  z = r·sin θ·sin i
+        // Velocity: vx = −r·ω·sin θ, vy = r·ω·cos θ·cos i, vz = r·ω·cos θ·sin i
+        const cosI = Math.cos(cfg.inclination), sinI = Math.sin(cfg.inclination);
+        b.x  = ref.x  + r * cosθ;
+        b.y  = ref.y  + r * sinθ * cosI;
+        b.z  = ref.z  + r * sinθ * sinI;
+        b.vx = ref.vx - r * ω * sinθ;
+        b.vy = ref.vy + r * ω * cosθ * cosI;
+        b.vz = ref.vz + r * ω * cosθ * sinI;
+      } else {
+        b.x  = ref.x  + r * cosθ;
+        b.y  = ref.y  + r * sinθ;
+        b.vx = ref.vx - r * ω * sinθ;
+        b.vy = ref.vy + r * ω * cosθ;
+      }
     }
   }
 

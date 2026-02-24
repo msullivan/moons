@@ -19,11 +19,12 @@ export const R_MOON     = 1.737e6;  // meters
 // Outer two (retrograde): Sextus 0.01 LM at 1.65 LD (≈ 58.2 d), Septimus 0.01 LM at 2.1 LD (≈ 83.5 d).
 export const QAIA_SIDEREAL_DAY = 86164;  // seconds — Qaia's sidereal rotation period
 
-const M_PRIMUS       = M_MOON * 0.001;
-const R_PRIMUS       = R_MOON * Math.cbrt(0.001 / 2);  // 2× lunar density
-const PRIMUS_OMEGA   = 2 * Math.PI / QAIA_SIDEREAL_DAY;  // geosynchronous angular velocity
-const PRIMUS_A       = Math.cbrt(G * M_EARTH / (PRIMUS_OMEGA * PRIMUS_OMEGA));  // ~42,160 km
-const PRIMUS_PHASE   = Math.PI;  // initial angle in inertial frame (toward Sun side at t=0)
+const M_PRIMUS            = M_MOON * 0.001;
+const R_PRIMUS            = R_MOON * Math.cbrt(0.001 / 2);  // 2× lunar density
+const PRIMUS_OMEGA        = 2 * Math.PI / QAIA_SIDEREAL_DAY;  // geosynchronous angular velocity
+const PRIMUS_A            = Math.cbrt(G * M_EARTH / (PRIMUS_OMEGA * PRIMUS_OMEGA));  // ~42,160 km
+const PRIMUS_PHASE        = Math.PI;  // initial angle in inertial frame (toward Sun side at t=0)
+export const PRIMUS_INCLINATION = 5.0 * Math.PI / 180;  // 5° orbital inclination — traces figure-8 in Qaia's sky
 
 const M_SECUNDUS      = M_MOON * 0.04;
 const R_SECUNDUS      = R_MOON * Math.cbrt(0.04 / 2);  // 2× lunar density
@@ -101,7 +102,7 @@ export function createInitialBodies() {
       color: '#4466CC',
       trailColor: '#4466CC',
       trailMaxLen: 300,
-      anchor: { toIndex: 1, radius: PRIMUS_A, omega: PRIMUS_OMEGA, phase: PRIMUS_PHASE },
+      anchor: { toIndex: 1, radius: PRIMUS_A, omega: PRIMUS_OMEGA, phase: PRIMUS_PHASE, inclination: PRIMUS_INCLINATION },
     }),
     new Body({
       name: 'Secundus',

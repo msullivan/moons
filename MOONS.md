@@ -7,7 +7,7 @@ Quartus (1.00 LD, 1 M_moon) is used as the reference body throughout.
 
 ---
 
-## Primus — geosynchronous prograde *(magically anchored)*
+## Primus — geosynchronous prograde, 5° inclined *(magically anchored)*
 
 | Property | Value |
 |---|---|
@@ -17,6 +17,7 @@ Quartus (1.00 LD, 1 M_moon) is used as the reference body throughout.
 | Orbital radius | 0.110 LD (~42,160 km) — geosynchronous |
 | Period | 1.00 days (= Qaia sidereal day) |
 | Eccentricity | 0 (circular by construction) |
+| Inclination | **5.0°** — ascending node along x-axis (Ω = 0) |
 | Angular diameter | **22.5′** — **0.72× Quartus** |
 | Full-moon brightness | **−12.04** (0.70 mag brighter than Quartus) |
 | Surface gravity | 0.258 m/s² (0.16× Quartus) |
@@ -27,11 +28,11 @@ Quartus (1.00 LD, 1 M_moon) is used as the reference body throughout.
 | Hill sphere fraction | 2.8% |
 | Roche margin | ×5.6 (rigid body) |
 
-Primus is fixed over a single point on Qaia's surface — it neither rises nor sets for the hemisphere beneath it, and is never visible from the opposite hemisphere. Despite being close (0.11 LD), its small mass (0.001 M_moon) makes it modest in the sky: **22.5′ apparent diameter** (smaller than Quartus) and magnitude −12.04. At 6,690 kg/m³ it is nearly iron-density, likely a fragment of a differentiated parent body.
+Primus is near-stationary in Qaia's sky but not perfectly fixed. Its 5° orbital inclination causes it to trace a slow daily arc spanning **±5° in declination** — a north-south oscillation completing once per sidereal day. From any point on the near-side hemisphere it remains in the same general region of sky and never rises or sets, but it drifts visibly north and south over the course of a day. Despite being close (0.11 LD), its small mass (0.001 M_moon) makes it modest in the sky: **22.5′ apparent diameter** (smaller than Quartus) and magnitude −12.04. At 6,690 kg/m³ it is nearly iron-density, likely a fragment of a differentiated parent body.
 
-**Navigation**: Primus is a revolutionary longitude reference. Because it is fixed in the sky at a known point above the equator, measuring its elevation from any location (with known latitude) immediately yields longitude — no chronometer required. Latitude is easily found by the usual methods (pole star, noon sun); elevation to Primus then places the observer on a circle of known angular radius around the sub-Primus point, and the intersection of that circle with the latitude line gives a longitude fix. This is structurally similar to finding latitude from the pole star, but with the "pole" on the equator instead of at the celestial pole — the difference being that Primus is close enough (0.11 LD) that its parallax is significant and position-dependent, so the geometry requires tables or calculation rather than a direct angle readout. Qaian navigators would have solved the longitude problem far earlier than Earth's — the main limitation is that Primus is visible only from one hemisphere.
+**Navigation**: Primus is a powerful longitude reference. Because it remains locked to the same longitude and oscillates predictably in latitude, measuring its position in the sky (with knowledge of the time in the sidereal day) immediately yields longitude. Latitude is easily found by the usual methods (pole star, noon sun). The 5° inclination means a navigator must account for Primus's current declination, requiring a simple table or calculation — but this is straightforward given any reliable time-keeping. Qaian navigators would have solved the longitude problem far earlier than Earth's — the main limitation is that Primus is visible only from one hemisphere.
 
-**Tidal signature**: because Primus co-rotates with Qaia, it does not sweep across the sky and produces no oscillating tide. Instead it raises a **permanent ~20 cm static bulge** in Qaia's oceans — sea level is slightly higher along the Primus–antiprimus axis. This is a permanent geographic feature, not a daily cycle. The daily tidal rhythm on Qaia is driven entirely by Secundus, Tertius, and Quartus.
+**Tidal signature**: because Primus co-rotates with Qaia, it does not sweep across the sky and produces no oscillating tide. The 5° inclination means the static bulge axis slowly oscillates a few degrees north and south over each sidereal day, but the effect is small. Primus still raises a **permanent ~20 cm static bulge** in Qaia's oceans at roughly the sub-Primus longitude. The daily tidal rhythm on Qaia is driven entirely by Secundus, Tertius, and Quartus.
 
 ---
 
