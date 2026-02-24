@@ -26,17 +26,20 @@ for (let yr = CHECK_EVERY; yr <= MAX_YEARS; yr += CHECK_EVERY) {
 
   for (const b of checkBodies) {
     if (escaped[b.name]) continue;
-    const dx = b.x - qaia.x, dy = b.y - qaia.y;
-    const r  = Math.sqrt(dx*dx + dy*dy);
-    const dvx = b.vx - qaia.vx, dvy = b.vy - qaia.vy;
-    const eps = 0.5*(dvx*dvx + dvy*dvy) - G*M_EARTH/r;
+    const dx = b.x - qaia.x, dy = b.y - qaia.y, dz = b.z - qaia.z;
+    const r  = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    const dvx = b.vx - qaia.vx, dvy = b.vy - qaia.vy, dvz = b.vz - qaia.vz;
+    const eps = 0.5*(dvx*dvx + dvy*dvy + dvz*dvz) - G*M_EARTH/r;
+    b._lastDist = r / 3.844e8;  // in LD
+    b._lastEps  = eps;
     if (eps > 0) escaped[b.name] = yr;
   }
 
   const elapsed = ((Date.now() - t0) / 1000).toFixed(0) + 's';
-  const status  = checkBodies.map(b =>
-    escaped[b.name] ? `ESCAPED@${escaped[b.name]}yr` : 'ok'
-  ).join('  ');
+  const status  = checkBodies.map(b => {
+    if (escaped[b.name]) return `ESCAPED@${escaped[b.name]}yr(${b._lastDist.toFixed(2)}LD)`;
+    return 'ok';
+  }).join('  ');
   console.log(`yr ${String(yr).padStart(4)}  [${elapsed}]  ${status}`);
 
   if (Object.keys(escaped).length === checkBodies.length) break;

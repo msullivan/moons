@@ -11,10 +11,10 @@ const MAX_YEARS = 1000;
 const LUNAR_DIST = 3.844e8;
 
 function isEscaped(b, qaia) {
-  const dx = b.x - qaia.x, dy = b.y - qaia.y;
-  const r  = Math.sqrt(dx*dx + dy*dy);
-  const dvx = b.vx - qaia.vx, dvy = b.vy - qaia.vy;
-  return 0.5*(dvx*dvx + dvy*dvy) - G*M_EARTH/r > 0;
+  const dx = b.x - qaia.x, dy = b.y - qaia.y, dz = b.z - qaia.z;
+  const r  = Math.sqrt(dx*dx + dy*dy + dz*dz);
+  const dvx = b.vx - qaia.vx, dvy = b.vy - qaia.vy, dvz = b.vz - qaia.vz;
+  return 0.5*(dvx*dvx + dvy*dvy + dvz*dvz) - G*M_EARTH/r > 0;
 }
 
 for (const sec_a of [0.24, 0.26, 0.28, 0.30, 0.32, 0.34, 0.36, 0.38]) {
