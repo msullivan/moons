@@ -29,7 +29,7 @@ trace-particle trojan at the Sun-Qaia L4 point):
 
 1 LD = 1 lunar distance = 384,400 km. All orbits verified stable past 1000 simulated years.
 
-Primus is fixed in geosynchronous orbit by a "magical" anchor (space-elevator justification).
+Primus is fixed in geosynchronous orbit by a magical anchor.
 It never rises or sets for one hemisphere, enables longitude determination without a
 chronometer, and raises a small permanent tidal bulge rather than oscillating tides.
 
