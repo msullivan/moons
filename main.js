@@ -7,7 +7,7 @@ import { Renderer } from './renderer.js';
 // Body indices for the phase panel (outer→inner)
 const PHASE_BODIES = [2, 3, 4, 5, 6, 7]; // Primus, Secundus, Tertius, Quartus, Sextus, Septimus
 
-const PHASE_R_BASE = 16;
+const PHASE_R_BASE = 24;
 
 let sim, renderer;
 let running        = false;
@@ -157,7 +157,7 @@ function buildPhasePanel() {
     const canvas = document.createElement('canvas');
     canvas.id = `phase-canvas-${bi}`;
     canvas.width  = 124;
-    canvas.height = 64;
+    canvas.height = 96;
     canvas.className = 'phase-canvas';
 
     const name = document.createElement('span');
@@ -187,7 +187,8 @@ function updateMoonPhases() {
 
     const dmx  = body.x - qaia.x;
     const dmy  = body.y - qaia.y;
-    const moonDist = Math.hypot(dmx, dmy);
+    const dmz  = body.z - qaia.z;
+    const moonDist = Math.hypot(dmx, dmy, dmz);
     if (moonDist === 0) return;
 
     const cosElong = Math.max(-1, Math.min(1,
@@ -197,11 +198,9 @@ function updateMoonPhases() {
     const waning = (dsx * dmy - dsy * dmx) < 0;
 
     // Disc radius scaled by apparent angular size (physicalRadius / distance).
-    const R = Math.max(4, Math.min(28, Math.round(
-      PHASE_R_BASE * body.physicalRadius * LUNAR_DIST / (moonDist * R_MOON)
-    )));
+    const R = Math.min(42, PHASE_R_BASE * body.physicalRadius * LUNAR_DIST / (moonDist * R_MOON));
 
-    drawPhaseDisc(ctx, 62, 32, R, cosElong, body.color, waning);
+    drawPhaseDisc(ctx, 62, 48, R, cosElong, body.color, waning);
   });
 }
 
