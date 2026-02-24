@@ -7,26 +7,28 @@ Quartus (1.00 LD, 1 M_moon) is used as the reference body throughout.
 
 ---
 
-## Primus — retrograde
+## Primus — geosynchronous prograde *(magically anchored)*
 
 | Property | Value |
 |---|---|
 | Mass | 0.020 M_moon |
 | Radius | 374 km (0.215 R_moon) |
 | Density | 6,689 kg/m³ — **2× lunar**, near-iron |
-| Semi-major axis | 0.12 LD |
-| Period | 1.14 days |
-| Eccentricity | 0.10 |
-| Angular diameter | 55.8′ mean (50.7′–62.0′) — **1.80× Quartus** |
-| Full-moon brightness | **−14.0** (1.27 mag brighter than Quartus) |
+| Orbital radius | 0.110 LD (~42,160 km) — geosynchronous |
+| Period | 1.00 days (= Qaia sidereal day) |
+| Eccentricity | 0 (circular by construction) |
+| Angular diameter | **61.0′** — **1.96× Quartus** |
+| Full-moon brightness | **−14.2** (1.47 mag brighter than Quartus) |
 | Surface gravity | 0.700 m/s² (0.43× Quartus) |
 | Surface area | 1.76 M km² (4.6% of Quartus) |
 | Escape velocity | 724 m/s |
-| Tidal force on Qaia | **11.6× Quartus** |
-| Hill sphere fraction | 3.1% |
-| Roche margin | 6.1× (rigid body) |
+| Static tidal bulge | **~4 m** permanent ocean offset (not an oscillating tide) |
+| Hill sphere fraction | 2.8% |
+| Roche margin | 5.6× (rigid body) |
 
-Despite being a tiny body, Primus is the most visually dominant moon — it appears nearly twice the angular size of Quartus and is brighter, because it's so close. Its 1.14-day period and retrograde direction mean it **rises in the west and sets in the east**. At 6,690 kg/m³ it is denser than Earth (5,510) and nearly as dense as iron. Its tidal effect on Qaia is 11.6× that of Quartus — by far the dominant tide-driver despite its small mass.
+Primus is fixed over a single point on Qaia's surface — it neither rises nor sets for the hemisphere beneath it, and is never visible from the opposite hemisphere. It is by far the dominant object in the sky from its sublunar region: **61′ apparent diameter** (nearly twice Quartus / our Moon) and magnitude −14.2. At 6,690 kg/m³ it is nearly iron-density, likely a fragment of a differentiated parent body.
+
+**Tidal signature**: because Primus co-rotates with Qaia, it does not sweep across the sky and produces no oscillating tide. Instead it raises a **permanent ~4 m static bulge** in Qaia's oceans — sea level is ~4 m higher along the Primus–antiprimus axis and ~4 m lower at the 90° ring. This is a permanent geographic feature, not a daily cycle. The daily tidal rhythm on Qaia is driven entirely by Secundus, Tertius, and Quartus.
 
 ---
 
@@ -49,7 +51,7 @@ Despite being a tiny body, Primus is the most visually dominant moon — it appe
 | Hill sphere fraction | 6.2% |
 | Roche margin | 7.7× |
 
-At mean distance Secundus appears almost exactly the same angular size as Quartus; near periapsis it is noticeably larger. Also retrograde — likely a sibling body to Primus, same density suggesting shared origin or composition. Contributes nearly 3× Quartus's tidal effect.
+At mean distance Secundus appears almost exactly the same angular size as Quartus; near periapsis it is noticeably larger. Retrograde — same 2× lunar density as Primus, suggesting shared origin or composition (both iron-rich fragments of the same progenitor). Contributes nearly 3× Quartus's tidal effect.
 
 ---
 
@@ -95,7 +97,7 @@ A substantial rocky world — larger in the sky than our Moon. Prograde, 8.3-day
 | Hill sphere fraction | 25.7% |
 | Roche margin | 40.5× |
 
-A clone of Earth's Moon at the same distance and mass. The natural calendar body. Appears the smallest of the four inner moons in the sky.
+A clone of Earth's Moon at the same distance and mass. The natural calendar body. Appears the smallest of the four inner moons in the sky — only 31′ vs Primus's 61′.
 
 ---
 
@@ -147,16 +149,18 @@ Physically identical to Sextus but 16% farther out — slightly smaller and dimm
 
 ## System Notes
 
-**Combined tidal load**: Primus (×11.6) + Secundus (×2.9) + Tertius (×2.7) + Quartus (×1.0) ≈ **18× our Moon's total tidal force**. Ocean tides on Qaia are extreme and complex.
+**Oscillating tidal load**: Secundus (×2.9) + Tertius (×2.7) + Quartus (×1.0) ≈ **6.6× our Moon's total tidal force**. Primus contributes a separate static ~4 m bulge but no daily tidal cycle. Total tidal complexity comes from three incommensurate oscillating drivers (9.2h, 13.7h, 12.5h).
 
-**All four inner moons appear larger than our Moon** in Qaia's sky. Quartus at 31′ is the *smallest* of the four.
+**All four inner moons appear larger than our Moon** in Qaia's sky. Quartus at 31′ is the *smallest* of the four; Primus at 61′ is the largest.
 
-**Retrograde moons** (Primus, Secundus, Sextus, Septimus) rise in the west. A nighttime observer sees two dense, fast metallic moons sweeping east-to-west and two larger ones moving west-to-east.
+**Primus visibility**: fixed over one hemisphere. Observers on the sublunar face see a 61′ moon that never moves. Observers on the far side never see it. This creates a profound day/night asymmetry on Qaia — one hemisphere has a permanent "second sun" (in brightness terms) overhead.
 
-**Density split**: Primus and Secundus at 6,690 kg/m³ are likely iron-rich captured bodies or fragments of a differentiated progenitor. The rest are standard rocky at lunar density.
+**Retrograde moons** (Secundus, Sextus, Septimus) rise in the west. A nighttime observer on the near side sees the dominant stationary Primus plus Secundus sweeping east-to-west, while Tertius and Quartus move west-to-east.
 
-**Tidal migration**: Retrograde moons lose energy to tidal friction and spiral *inward* over geological time (opposite to our Moon). Primus and Secundus are very slowly approaching Qaia. Primus is 6.1× outside its Roche limit and in no near-term danger.
+**Density split**: Primus and Secundus at 6,690 kg/m³ are likely iron-rich fragments of a differentiated progenitor. The rest are standard rocky at lunar density.
 
-**Tidal locking**: All inner moons are almost certainly synchronously rotating — tidal locking timescale scales as a⁶, so Primus at 0.12 LD locks in a tiny fraction of the time needed for Quartus.
+**Tidal migration**: Primus is magically anchored — no tidal torque, no migration. Secundus (retrograde) slowly spirals inward over geological time. Roche margin is comfortable for all moons.
+
+**Tidal locking**: The three freely-orbiting inner moons are almost certainly synchronously rotating — tidal locking timescale scales as a⁶.
 
 **Quintus** is a trace particle at the Sun-Qaia L4 point (60° ahead of Qaia). It librates between ~45° and ~80° from Qaia with a period of ~2,000 years. Effectively massless — included for worldbuilding purposes.

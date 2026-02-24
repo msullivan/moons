@@ -23,6 +23,9 @@ export class Body {
     this.trailBuf        = [];
     this.trailHead       = 0;  // index of oldest point
     this.trailCount      = 0;  // number of valid points
+    // Anchor: magically lock body to a circular orbit around another body.
+    // { toIndex: int, radius: m, omega: rad/s, phase: rad (angle at t=0) }
+    this.anchor          = cfg.anchor || null;
   }
 
   recordTrail(refX = 0, refY = 0) {
@@ -53,6 +56,11 @@ export class Simulation {
     this.dt     = 360;   // simulation timestep: 6 minutes in seconds
     this.time   = 0;     // elapsed simulation seconds
     this.bodies = bodies;
+    // Cache anchored bodies to avoid scanning all bodies every step.
+    this._anchors = bodies
+      .filter(b => b.anchor)
+      .map(b => ({ body: b, ref: bodies[b.anchor.toIndex], cfg: b.anchor }));
+    this._enforceAnchors();
     this._computeAccelerations();
     this.initialEnergy = this.totalEnergy();
   }
@@ -85,6 +93,21 @@ export class Simulation {
     }
   }
 
+  // Override anchored bodies to exact geosynchronous positions and velocities.
+  // Called at construction and after each Velocity Verlet step.
+  _enforceAnchors() {
+    const PI2 = 2 * Math.PI;
+    for (const { body: b, ref, cfg } of this._anchors) {
+      // Wrap angle to [0, 2π] to keep trig args small (avoids costly range reduction).
+      const θ    = (cfg.phase + cfg.omega * this.time) % PI2;
+      const cosθ = Math.cos(θ), sinθ = Math.sin(θ);
+      b.x  = ref.x  + cfg.radius * cosθ;
+      b.y  = ref.y  + cfg.radius * sinθ;
+      b.vx = ref.vx - cfg.radius * cfg.omega * sinθ;
+      b.vy = ref.vy + cfg.radius * cfg.omega * cosθ;
+    }
+  }
+
   // Velocity Verlet (symplectic, 2nd-order, conserves energy well for orbits)
   _step() {
     const dt   = this.dt;
@@ -114,6 +137,9 @@ export class Simulation {
     }
 
     this.time += dt;
+
+    // Enforce anchors at t+dt so trails record exact positions.
+    this._enforceAnchors();
   }
 
   // Advance by n steps, recording trail every trailInterval steps.
