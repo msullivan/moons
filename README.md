@@ -1,28 +1,48 @@
 # Qaia Moon Simulation
 
-A browser-based n-body gravitational simulator with eventual
-applications for my RPG setting.
+A browser-based n-body gravitational simulator for Qaia, the Earth-like planet in my RPG
+setting. Models Qaia's six-moon system with real physics and a live moon-phase panel.
 
 Vibed up with Sonnet 4.6 ([initial transcript](https://gisthost.github.io/?387d19e00351e1b50ffcf47e880c5ef1/), [continued](https://gisthost.github.io/?5b2c5293779deb574323e1161ee72a38/index.html)).
 
-Requires a local HTTP server (ES modules are blocked on `file://` URLs in Chrome).
-The simplest option:
+Requires a local HTTP server (ES modules are blocked on `file://` URLs in Chrome):
 
 ```
 python3 -m http.server
 ```
 
-Then open `http://localhost:8000` in a browser. No build step needed.
+Then open `http://localhost:8000`. No build step needed.
+
+## The System
+
+Six moons orbiting Qaia (an Earth-mass planet at 1 AU), plus the Sun and Quintus (a
+trace-particle trojan at the Sun-Qaia L4 point):
+
+| Moon | Distance | Period | Direction | Notes |
+|---|---|---|---|---|
+| Primus | 0.11 LD | 1.00 d | prograde | Geosynchronous, magically anchored |
+| Secundus | 0.30 LD | 4.51 d | retrograde | Iron-density, slightly smaller than our Moon in the sky |
+| Tertius | 0.45 LD | 8.29 d | prograde | Largest in sky (43.5′ vs Moon's 31′) |
+| Quartus | 1.00 LD | 27.45 d | prograde | Identical to Earth's Moon |
+| Sextus | 1.65 LD | 58.2 d | retrograde | Small disc, naked-eye visible |
+| Septimus | 2.10 LD | 83.5 d | retrograde | Long-calendar body |
+
+1 LD = 1 lunar distance = 384,400 km. All orbits verified stable past 1000 simulated years.
+
+Primus is fixed in geosynchronous orbit by a "magical" anchor (space-elevator justification).
+It never rises or sets for one hemisphere, enables longitude determination without a
+chronometer, and raises a small permanent tidal bulge rather than oscillating tides.
+
+See [MOONS.md](MOONS.md) for full physical stats and [TIDES.md](TIDES.md) for tidal analysis.
 
 ## Physics
 
-- **Velocity Verlet integration** (symplectic, 2nd-order) — conserves energy far
-  better than RK4 for long orbital runs. Energy drift is typically < 1e-8 over
-  decades of simulated time.
-- Real physical constants: SI units throughout (metres, kilograms, seconds).
-- Initial conditions in the centre-of-mass frame with correct circular orbit
-  velocities for Earth and Moon.
-- Energy error displayed live in the HUD as a sanity check.
+- **Velocity Verlet integration** (symplectic, 2nd-order) — energy drift typically < 1×10⁻⁸
+  over 1000 simulated years.
+- Real SI units throughout. Initial conditions in the centre-of-mass frame.
+- Primus anchor: position and velocity overridden each step to enforce circular
+  geosynchronous orbit; non-conservative but negligible drift at 0.001 lunar masses.
+- Energy error displayed live as a sanity check.
 
 ## Controls
 
@@ -34,30 +54,27 @@ Then open `http://localhost:8000` in a browser. No build step needed.
 | `+` / `-` | Zoom in / out |
 | `R` | Reset simulation |
 | `T` | Toggle trails |
+| `L` | Toggle labels |
 
-The control panel also has speed presets (1 day/s → 100 yr/s), view presets
-(Solar System / Earth-Moon), a Follow dropdown, and zoom buttons.
+Speed presets: 6 h/s · 1 day/s · 1 wk/s · 1 mo/s · 1 yr/s · 10 yr/s · 100 yr/s
+
+Follow dropdown tracks any body. Orbit panel (top-right) shows live orbital elements
+for the selected body. Moon-phase panel (right) shows current phase and apparent size
+for all six moons, updated every frame.
 
 ## Files
 
 ```
-index.html      — HTML skeleton
-style.css       — Dark space theme
-simulation.js   — N-body physics (Velocity Verlet, initial conditions)
-renderer.js     — Canvas rendering (trails, glow, scale bar)
-main.js         — Animation loop, UI, zoom/pan, keyboard handling
+index.html          — HTML skeleton
+style.css           — Dark space theme
+simulation.js       — N-body physics (Velocity Verlet, anchor mechanism)
+bodies.js           — Physical constants, moon parameters, createInitialBodies()
+renderer.js         — Canvas rendering (trails, glow, Qaia continents, scale bar)
+main.js             — Animation loop, UI, phase panel, keyboard handling
+MOONS.md            — Physical and observational reference for all moons
+TIDES.md            — Tidal period analysis and 30-day simulation
+tests/              — Playwright stability and screenshot scripts
+analysis/           — Headless analysis scripts
+  moon_stats.mjs    — Regenerates MOONS.md data
+  tide_sim.mjs      — Regenerates TIDES.md data and tide_plot.png
 ```
-
-## Sonnet's ideas for next steps
-
-- **More moons** — the n-body engine already handles arbitrary N; just needs UI
-  to add and configure additional moons
-- **Configurable initial conditions** — set moon mass, orbital radius, and
-  eccentricity interactively
-- **Eccentric / inclined orbits** — non-circular starting velocities, out-of-plane
-  inclination for a 3D view
-- **3D view** — render with perspective, allow rotating the orbital plane
-- **Lagrange points / stability visualization** — mark L1–L5, colour-code regions
-  by stability
-- **Long-run stability stats** — plot energy error over time, track orbital
-  elements (semi-major axis, eccentricity) to watch for secular drift
