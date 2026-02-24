@@ -130,6 +130,30 @@ update the corresponding entry in `analysis/moon_stats.mjs` and `analysis/tide_s
 - Outer prograde moons (outside Quartus at 1 LD) are very hard to keep stable. Quartus
   perturbs them via resonances and they escape within years even if initially bound.
 - Inner moons (inside Quartus's orbit, a ≤ 0.45 LD) are individually stable.
-- Current naming by distance from Qaia: Primus 0.12 LD, Secundus 0.24 LD, Tertius 0.45 LD,
-  Quartus 1.00 LD, Sextus 1.9 LD, Septimus 2.2 LD — all stable past 1000 simulated years.
+- Current naming by distance from Qaia: Primus 0.11 LD, Secundus 0.30 LD, Tertius 0.45 LD,
+  Quartus 1.00 LD, Sextus 1.65 LD, Septimus 2.10 LD — all stable past 1000 simulated years.
 - Quintus is a trace particle (1 kg) at the Sun-Qaia L4 point; librates ~45–80° over ~2000 yr.
+- Tertius at 0.55 LD hits a 5:2 mean-motion resonance with Quartus → catastrophic instability.
+  Keep Tertius at 0.45 LD.
+- V8 (Chrome/Node) and SpiderMonkey (Firefox) produce divergent trajectories in chaotic
+  near-unstable configurations — this is expected, not a bug. Only robustly stable configs
+  (wide margins from resonances) give consistent results across engines.
+- Binding energy checks must include the z-component (Quartus has 5.14° inclination).
+- Exclude Quintus from stability tests — it's a trace particle and costs ~22% runtime.
+
+### Primus anchor mechanism
+
+Primus is enforced to a circular geosynchronous orbit after each integrator step via
+`_enforceAnchors()` in `simulation.js`. The anchor config lives on the Body:
+```javascript
+anchor: { toIndex: 1, radius: PRIMUS_A, omega: PRIMUS_OMEGA, phase: PRIMUS_PHASE }
+```
+This is non-conservative (no reaction force on Qaia) but energy drift is negligible at
+0.001 M_moon. The anchor is called in the Simulation constructor and at the end of `_step()`.
+
+### Tidal notes
+
+- Primus is geosynchronous → raises a static ~20 cm tidal bulge, not an oscillating tide.
+  It is excluded from `tide_sim.mjs`.
+- Oscillating drivers: Secundus 9.82 h ±40 cm, Tertius 13.65 h ±73 cm, Quartus 12.45 h ±27 cm.
+- Maximum aligned equilibrium range: ±152 cm.
