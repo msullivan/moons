@@ -28,7 +28,7 @@ const PRIMUS_PHASE   = Math.PI;  // initial angle in inertial frame (toward Sun 
 const M_SECUNDUS      = M_MOON * 0.04;
 const R_SECUNDUS      = R_MOON * Math.cbrt(0.04 / 2);  // 2× lunar density
 const SECUNDUS_E      = 0.10;
-const SECUNDUS_A      = 0.24 * LUNAR_DIST;
+const SECUNDUS_A      = 0.30 * LUNAR_DIST;
 const SECUNDUS_R_PERI = SECUNDUS_A * (1 - SECUNDUS_E);
 
 const M_TERTIUS      = M_MOON / 4;
@@ -48,13 +48,13 @@ const R_QUINTUS      = R_MOON * Math.cbrt(0.1);
 const M_SEXTUS       = M_MOON * 0.01;
 const R_SEXTUS       = R_MOON * Math.cbrt(0.01);
 const SEXTUS_E       = 0.10;
-const SEXTUS_A       = 1.7 * LUNAR_DIST;
+const SEXTUS_A       = 1.65 * LUNAR_DIST;
 const SEXTUS_R_PERI  = SEXTUS_A * (1 - SEXTUS_E);
 
 const M_SEPTIMUS      = M_MOON * 0.01;
 const R_SEPTIMUS      = R_MOON * Math.cbrt(0.01);
 const SEPTIMUS_E      = 0.10;
-const SEPTIMUS_A      = 2.2 * LUNAR_DIST;
+const SEPTIMUS_A      = 2.1 * LUNAR_DIST;
 const SEPTIMUS_R_PERI = SEPTIMUS_A * (1 - SEPTIMUS_E);
 
 export function createInitialBodies() {
