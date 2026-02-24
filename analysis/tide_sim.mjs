@@ -114,14 +114,14 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 
 function drawPanel(x0, y0, w, h, tMin, tMax, label) {
-  const yMax = 560, yMin = -560;
+  const yMax = 175, yMin = -175;
 
   ctx.fillStyle = '#0a0f20';
   ctx.fillRect(x0, y0, w, h);
 
   ctx.strokeStyle = 'rgba(100,120,180,0.15)';
   ctx.lineWidth = 1;
-  for (let y = -500; y <= 500; y += 100) {
+  for (let y = -150; y <= 150; y += 50) {
     const pyMapped = y0 + h * (1 - (y - yMin) / (yMax - yMin));
     ctx.beginPath(); ctx.moveTo(x0, pyMapped); ctx.lineTo(x0 + w, pyMapped); ctx.stroke();
   }
@@ -171,7 +171,7 @@ function drawPanel(x0, y0, w, h, tMin, tMax, label) {
   ctx.fillStyle = '#8899cc';
   ctx.font = '12px monospace';
   ctx.textAlign = 'right';
-  for (let v = -500; v <= 500; v += 100) {
+  for (let v = -150; v <= 150; v += 50) {
     const py = toY(v);
     if (py < y0 || py > y0 + h) continue;
     ctx.fillText((v >= 0 ? '+' : '') + v + 'cm', x0 - 6, py + 4);
