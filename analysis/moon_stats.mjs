@@ -42,6 +42,9 @@ const moons = MOON_PARAMS.map(m => {
 const ref = moons.find(m => m.name === 'Quartus');
 for (const m of moons) {
   m.tidal_ratio  = (m.M / ref.M) * (ref.a / m.a)**3;
+  // TODO: bright_ratio uses ref.a from the snapshot, but -12.74 is calibrated for
+  // Quartus at exactly 1.00 LD. Should use mp.Quartus.a (nominal) here instead so
+  // magnitudes don't shift spuriously when Quartus drifts.
   m.bright_ratio = (m.albedo / ref.albedo) * (m.R * ref.a)**2 / (ref.R * m.a)**2;
   m.delta_mag    = -2.5 * Math.log10(m.bright_ratio);
   m.app_mag      = -12.74 + m.delta_mag;
