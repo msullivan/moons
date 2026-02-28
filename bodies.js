@@ -164,3 +164,18 @@ export function createInitialBodies() {
 
   return bodies;
 }
+
+// Overlay positions and velocities from a saved snapshot onto a bodies array.
+// Physical properties (mass, radius, color, etc.) stay from createInitialBodies();
+// only kinematics are replaced.  Returns the same bodies array.
+export function applySnapshot(bodies, snapshot) {
+  const byName = Object.fromEntries(snapshot.bodies.map(s => [s.name, s]));
+  for (const b of bodies) {
+    const s = byName[b.name];
+    if (s) {
+      b.x = s.x; b.y = s.y; b.z = s.z;
+      b.vx = s.vx; b.vy = s.vy; b.vz = s.vz;
+    }
+  }
+  return bodies;
+}

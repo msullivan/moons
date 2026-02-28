@@ -1,5 +1,5 @@
 import { G, Simulation } from './simulation.js';
-import { createInitialBodies, LUNAR_DIST, R_MOON } from './bodies.js';
+import { createInitialBodies, applySnapshot, LUNAR_DIST, R_MOON } from './bodies.js';
 import { Renderer } from './renderer.js';
 
 // ─── globals ────────────────────────────────────────────────────────────────
@@ -10,6 +10,7 @@ const PHASE_BODIES = [2, 3, 4, 5, 6, 7]; // Primus, Secundus, Tertius, Quartus, 
 const PHASE_R_BASE = 24;
 
 let sim, renderer;
+let snapshot       = null;  // loaded from state_200yr.json, or null
 let running        = false;
 let orbitBodyIndex = 5;  // default: Quartus (1.00 LD)
 let lastTs         = null;
@@ -33,12 +34,19 @@ const SPEED_PRESETS = [
 
 // ─── init ───────────────────────────────────────────────────────────────────
 
-function init() {
+async function init() {
   const canvas = document.getElementById('sim-canvas');
   resizeCanvas(canvas);
   window.addEventListener('resize', () => resizeCanvas(canvas));
 
-  sim      = new Simulation(createInitialBodies());
+  // Try to load 200-year snapshot; fall back to t=0 if not available.
+  try {
+    const resp = await fetch('state_200yr.json');
+    if (resp.ok) snapshot = await resp.json();
+  } catch (_) {}
+
+  sim      = new Simulation(makeBodies());
+  if (snapshot) sim.time = snapshot.time;
   renderer = new Renderer(canvas, sim);
   window.sim = sim; window.renderer = renderer; // expose for Playwright tests
 
@@ -47,6 +55,12 @@ function init() {
   running = true;
   updatePlayBtn();
   requestAnimationFrame(tick);
+}
+
+function makeBodies() {
+  const bodies = createInitialBodies();
+  if (snapshot) applySnapshot(bodies, snapshot);
+  return bodies;
 }
 
 function resizeCanvas(canvas) {
@@ -270,7 +284,8 @@ function buildUI(canvas) {
 
   // Reset
   document.getElementById('btn-reset').addEventListener('click', () => {
-    sim = new Simulation(createInitialBodies());
+    sim = new Simulation(makeBodies());
+    if (snapshot) sim.time = snapshot.time;
     window.sim = sim;
     renderer.sim = sim;
     stepAccum = 0;
@@ -465,7 +480,8 @@ function handleKey(e) {
       renderer.zoomAt(2, renderer.W / 2, renderer.H / 2);
       break;
     case 'r': case 'R':
-      sim = new Simulation();
+      sim = new Simulation(makeBodies());
+      if (snapshot) sim.time = snapshot.time;
       renderer.sim = sim;
       stepAccum = 0;
       break;
