@@ -28,7 +28,7 @@ const moons = MOON_PARAMS.map(m => ({
 const ref = moons.find(m => m.name === 'Quartus');
 for (const m of moons) {
   m.tidal_ratio  = (m.M / ref.M) * (ref.a / m.a)**3;
-  m.bright_ratio = (m.R * ref.a)**2 / (ref.R * m.a)**2;
+  m.bright_ratio = (m.albedo / ref.albedo) * (m.R * ref.a)**2 / (ref.R * m.a)**2;
   m.delta_mag    = -2.5 * Math.log10(m.bright_ratio);
   m.app_mag      = -12.74 + m.delta_mag;
   m.roche_margin = m.a / m.roche_rigid;

@@ -31,17 +31,18 @@ const _mu = G * M_EARTH;
 //                 condition uses circular velocity — eccentricity grows from N-body perturbations)
 // prograde:       true = counterclockwise (same as Qaia's orbit)
 // isAnchor:       true = geosynchronous, position overridden each step (Primus only)
+// albedo:         geometric albedo (fraction of light reflected); iron-rich moons are darker
 // color:          display and plot color
 // trailMaxLen:    renderer trail buffer length (points)
 //
 // Derived fields added by the .map(): M (kg), R (m), a (m), T_d (days)
 export const MOON_PARAMS = [
-  { name: 'Primus',   mass_frac: 0.0001, density_ratio: 2, a_LD: PRIMUS_A / LUNAR_DIST, e: 0,    prograde: true,  isAnchor: true,  color: '#4466CC', trailMaxLen:  300 },
-  { name: 'Secundus', mass_frac: 0.04,   density_ratio: 2, a_LD: 0.30,                  e: 0.10, prograde: false, isAnchor: false, color: '#88CCAA', trailMaxLen:  500 },
-  { name: 'Tertius',  mass_frac: 0.25,   density_ratio: 1, a_LD: 0.45,                  e: 0.10, prograde: true,  isAnchor: false, color: '#CC9966', trailMaxLen: 1400 },
-  { name: 'Quartus',  mass_frac: 1.00,   density_ratio: 1, a_LD: 1.00,                  e: 0.10, prograde: true,  isAnchor: false, color: '#CCCCCC', trailMaxLen: 1400 },
-  { name: 'Sextus',   mass_frac: 0.01,   density_ratio: 1, a_LD: 1.60,                  e: 0.10, prograde: false, isAnchor: false, color: '#AA88FF', trailMaxLen: 1800 },
-  { name: 'Septimus', mass_frac: 0.01,   density_ratio: 1, a_LD: 2.10,                  e: 0.10, prograde: false, isAnchor: false, color: '#FF88AA', trailMaxLen: 2200 },
+  { name: 'Primus',   mass_frac: 0.0001, density_ratio: 2, a_LD: PRIMUS_A / LUNAR_DIST, e: 0,    prograde: true,  isAnchor: true,  albedo: 0.06, color: '#4466CC', trailMaxLen:  300 },
+  { name: 'Secundus', mass_frac: 0.04,   density_ratio: 2, a_LD: 0.30,                  e: 0.10, prograde: false, isAnchor: false, albedo: 0.06, color: '#88CCAA', trailMaxLen:  500 },
+  { name: 'Tertius',  mass_frac: 0.25,   density_ratio: 1, a_LD: 0.45,                  e: 0.10, prograde: true,  isAnchor: false, albedo: 0.12, color: '#CC9966', trailMaxLen: 1400 },
+  { name: 'Quartus',  mass_frac: 1.00,   density_ratio: 1, a_LD: 1.00,                  e: 0.10, prograde: true,  isAnchor: false, albedo: 0.12, color: '#CCCCCC', trailMaxLen: 1400 },
+  { name: 'Sextus',   mass_frac: 0.01,   density_ratio: 1, a_LD: 1.60,                  e: 0.10, prograde: false, isAnchor: false, albedo: 0.09, color: '#AA88FF', trailMaxLen: 1800 },
+  { name: 'Septimus', mass_frac: 0.01,   density_ratio: 1, a_LD: 2.10,                  e: 0.10, prograde: false, isAnchor: false, albedo: 0.09, color: '#FF88AA', trailMaxLen: 2200 },
 ].map(m => ({
   ...m,
   M:   m.mass_frac * M_MOON,
