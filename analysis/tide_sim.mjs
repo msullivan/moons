@@ -7,18 +7,27 @@
 // Validated against Earth-Moon system (gives ~0.27 m, matching theory).
 
 import { chromium } from 'playwright';
-import { AU, M_EARTH, R_EARTH, M_SUN, MOON_PARAMS } from '../bodies.js';
+import { AU, M_EARTH, R_EARTH, M_SUN, MOON_PARAMS, createInitialBodies } from '../bodies.js';
+import { orbitalElements } from './orbital_elements.mjs';
 
 const T_QAIA_H = 24; // Qaia solar day in hours (matches Earth)
 
 const h_eq = (M, a) => (3/4) * (M / M_EARTH) * (R_EARTH / a)**3 * R_EARTH;
+
+// Snapshot of body positions/velocities (replace to use a saved state after N years)
+const snapshot = createInitialBodies();
+const qaia     = snapshot.find(b => b.name === 'Qaia');
 
 // Primus is omitted: geosynchronous → permanent static bulge, not an oscillating tide.
 // Outer moons (Sextus, Septimus) omitted: tidal amplitude < 1 cm, negligible.
 const bodies = [
   ...MOON_PARAMS
     .filter(m => !m.isAnchor && h_eq(m.M, m.a) * 100 >= 1)
-    .map(m => ({ name: m.name, M: m.M, a: m.a, T_d: m.T_d, dir: m.prograde ? 1 : -1, color: m.color })),
+    .map(m => {
+      const body      = snapshot.find(b => b.name === m.name);
+      const { a, T_d } = orbitalElements(body, qaia);
+      return { name: m.name, M: m.M, a, T_d, dir: m.prograde ? 1 : -1, color: m.color };
+    }),
   { name: 'Sun', M: M_SUN, a: AU, T_d: 365.25, dir: 1, color: '#ffdd44' },
 ];
 

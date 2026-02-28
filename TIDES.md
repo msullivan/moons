@@ -97,8 +97,8 @@ Regenerate with `node analysis/tide_sim.mjs`. ASCII table (1-hour resolution):
 
 ```
 === 30-day tide simulation (all moons at opposition, t=0) ===
-  Overall range: -145 cm to +152 cm
-  Max single-cycle swing: 297 cm
+  Overall range: -146 cm to +152 cm
+  Max single-cycle swing: 298 cm
 
   t(h)   tide
      0h    +152cm  ██████████████████████████████
@@ -129,7 +129,7 @@ Regenerate with `node analysis/tide_sim.mjs`. ASCII table (1-hour resolution):
     25h     +36cm  ██████████████████
     26h     +66cm  █████████████████████
     27h     +86cm  ███████████████████████
-    28h     +88cm  ███████████████████████
+    28h     +87cm  ███████████████████████
     29h     +67cm  █████████████████████
     30h     +26cm  █████████████████
     31h     -26cm  ████████████

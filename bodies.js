@@ -84,7 +84,7 @@ export function createInitialBodies() {
     new Body({
       name: 'Primus', mass: mp.Primus.M,
       x: AU - PRIMUS_A, y: 0, z: 0,
-      vx: 0, vy: v_earth - PRIMUS_A * PRIMUS_OMEGA, vz: 0,
+      vx: 0, vy: v_earth - PRIMUS_A * PRIMUS_OMEGA * Math.cos(PRIMUS_INCLINATION), vz: -PRIMUS_A * PRIMUS_OMEGA * Math.sin(PRIMUS_INCLINATION),
       physicalRadius: mp.Primus.R, minDisplayPx: 3,
       color: mp.Primus.color, trailColor: mp.Primus.color, trailMaxLen: mp.Primus.trailMaxLen,
       anchor: { toIndex: 1, radius: PRIMUS_A, omega: PRIMUS_OMEGA, phase: PRIMUS_PHASE, inclination: PRIMUS_INCLINATION },
