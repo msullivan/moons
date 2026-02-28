@@ -13,14 +13,14 @@ export const R_EARTH            = 6.371e6;  // meters
 export const R_MOON     = 1.737e6;  // meters
 
 // Six-moon system stable past 1000 simulated years.
-// Primus: geosynchronous prograde (magically anchored, ~0.11 LD), 0.001 LM, 2× lunar density.
+// Primus: geosynchronous prograde (magically anchored, ~0.11 LD), 0.0001 LM, 2× lunar density.
 // Inner three (all e=0.10): Secundus 0.04 LM at 0.30 LD (≈ 4.51 d) retrograde,
 //   Tertius 0.25 LM at 0.45 LD (≈ 8.3 d) prograde, Quartus 1.00 LM at 1.00 LD (≈ 27.5 d) prograde.
-// Outer two (retrograde): Sextus 0.01 LM at 1.65 LD (≈ 58.2 d), Septimus 0.01 LM at 2.1 LD (≈ 83.5 d).
+// Outer two (retrograde): Sextus 0.01 LM at 1.60 LD (≈ 56.0 d), Septimus 0.01 LM at 2.1 LD (≈ 83.5 d).
 export const QAIA_SIDEREAL_DAY = 86164;  // seconds — Qaia's sidereal rotation period
 
-const M_PRIMUS       = M_MOON * 0.001;
-const R_PRIMUS       = R_MOON * Math.cbrt(0.001 / 2);  // 2× lunar density
+const M_PRIMUS       = M_MOON * 0.0001;
+const R_PRIMUS       = R_MOON * Math.cbrt(0.0001 / 2);  // 2× lunar density
 const PRIMUS_OMEGA       = 2 * Math.PI / QAIA_SIDEREAL_DAY;  // geosynchronous angular velocity
 const PRIMUS_A           = Math.cbrt(G * M_EARTH / (PRIMUS_OMEGA * PRIMUS_OMEGA));  // ~42,160 km
 const PRIMUS_PHASE       = Math.PI;  // initial angle in inertial frame (toward Sun side at t=0)
@@ -49,7 +49,7 @@ const R_QUINTUS      = R_MOON * Math.cbrt(0.1);
 const M_SEXTUS       = M_MOON * 0.01;
 const R_SEXTUS       = R_MOON * Math.cbrt(0.01);
 const SEXTUS_E       = 0.10;
-const SEXTUS_A       = 1.65 * LUNAR_DIST;
+const SEXTUS_A       = 1.60 * LUNAR_DIST;
 const SEXTUS_R_PERI  = SEXTUS_A * (1 - SEXTUS_E);
 
 const M_SEPTIMUS      = M_MOON * 0.01;
