@@ -11,27 +11,27 @@ Quartus (1.00 LD, 1 M_moon) is used as the reference body throughout.
 
 | Property | Value |
 |---|---|
-| Mass | 0.001 M_moon |
-| Radius | 138 km (0.079 R_moon) |
+| Mass | 0.0001 M_moon |
+| Radius | 64 km (0.037 R_moon) |
 | Density | 6,689 kg/m³ — **2× lunar**, near-iron |
 | Orbital radius | 0.110 LD (~42,160 km) — geosynchronous |
 | Period | 1.00 days (= Qaia sidereal day) |
 | Eccentricity | 0 (circular by construction) |
-| Angular diameter | **22.5′** — **0.72× Quartus** |
-| Full-moon brightness | **−12.04** (0.70 mag brighter than Quartus) |
-| Surface gravity | 0.258 m/s² (0.16× Quartus) |
-| Surface area | 0.24 M km² (0.6% of Quartus) |
-| Escape velocity | 267 m/s |
-| Static tidal bulge | **~20 cm** permanent ocean offset (not an oscillating tide) |
-| Tidal force (gradient) | ×0.758 vs Quartus |
+| Angular diameter | **10.4′** — **0.34× Quartus** |
+| Full-moon brightness | **−10.37** (2.37 mag dimmer than Quartus) |
+| Surface gravity | 0.120 m/s² (0.074× Quartus) |
+| Surface area | 0.05 M km² (0.1% of Quartus) |
+| Escape velocity | 124 m/s |
+| Static tidal bulge | **~2 cm** permanent ocean offset (not an oscillating tide) |
+| Tidal force (gradient) | ×0.076 vs Quartus |
 | Hill sphere fraction | 2.8% |
 | Roche margin | ×5.6 (rigid body) |
 
-Primus is fixed over a single point on Qaia's surface — it neither rises nor sets for the hemisphere beneath it, and is never visible from the opposite hemisphere. Despite being close (0.11 LD), its small mass (0.001 M_moon) makes it modest in the sky: **22.5′ apparent diameter** (smaller than Quartus) and magnitude −12.04. At 6,690 kg/m³ it is nearly iron-density, likely a fragment of a differentiated parent body.
+Primus is fixed over a single point on Qaia's surface — it neither rises nor sets for the hemisphere beneath it, and is never visible from the opposite hemisphere. Despite being close (0.11 LD), its tiny mass (0.0001 M_moon) makes it a minor object in the sky: **10.4′ apparent diameter** (one-third of Quartus) and magnitude −10.37 — dimmer than Quartus by 2.4 magnitudes. At 6,690 kg/m³ it is nearly iron-density, likely a fragment of a differentiated parent body.
 
 **Navigation**: Primus is a revolutionary longitude reference. Because it is fixed in the sky at a known point above the equator, measuring its elevation from any location (with known latitude) immediately yields longitude — no chronometer required. Latitude is easily found by the usual methods (pole star, noon sun); elevation to Primus then places the observer on a circle of known angular radius around the sub-Primus point, and the intersection of that circle with the latitude line gives a longitude fix. This is structurally similar to finding latitude from the pole star, but with the "pole" on the equator instead of at the celestial pole — the difference being that Primus is close enough (0.11 LD) that its parallax is significant and position-dependent, so the geometry requires tables or calculation rather than a direct angle readout. Qaian navigators would have solved the longitude problem far earlier than Earth's — the main limitation is that Primus is visible only from one hemisphere.
 
-**Tidal signature**: because Primus co-rotates with Qaia, it does not sweep across the sky and produces no oscillating tide. Instead it raises a **permanent ~20 cm static bulge** in Qaia's oceans — sea level is slightly higher along the Primus–antiprimus axis. This is a permanent geographic feature, not a daily cycle. The daily tidal rhythm on Qaia is driven entirely by Secundus, Tertius, and Quartus.
+**Tidal signature**: because Primus co-rotates with Qaia, it does not sweep across the sky and produces no oscillating tide. Instead it raises a **permanent ~2 cm static bulge** in Qaia's oceans — sea level is slightly higher along the Primus–antiprimus axis. This is a permanent geographic feature, not a daily cycle. The daily tidal rhythm on Qaia is driven entirely by Secundus, Tertius, and Quartus.
 
 ---
 
@@ -111,19 +111,19 @@ A clone of Earth's Moon at the same distance and mass. The natural calendar body
 | Mass | 0.010 M_moon |
 | Radius | 374 km (0.215 R_moon) |
 | Density | 3,344 kg/m³ — lunar |
-| Semi-major axis | 1.65 LD |
-| Period | 58.19 days |
+| Semi-major axis | 1.60 LD |
+| Period | 55.56 days |
 | Eccentricity | 0.10 |
-| Angular diameter | 4.1′ mean (3.7′–4.5′) — 0.13× Quartus |
-| Full-moon brightness | **−8.32** (4.42 mag dimmer than Quartus) |
-| Surface gravity | 0.350 m/s² (0.22× Quartus) |
+| Angular diameter | 4.2′ mean (3.8′–4.6′) — 0.135× Quartus |
+| Full-moon brightness | **−8.39** (4.35 mag dimmer than Quartus) |
+| Surface gravity | 0.350 m/s² (0.215× Quartus) |
 | Surface area | 1.76 M km² (4.6% of Quartus) |
 | Escape velocity | 512 m/s |
 | Tidal force on Qaia | ~0.002× Quartus |
-| Hill sphere fraction | 42.4% |
-| Roche margin | ×66.9 |
+| Hill sphere fraction | 41.1% |
+| Roche margin | ×64.9 |
 
-Visible as a small disc (~5× the apparent diameter of Jupiter from Earth). At −8.3 dramatically brighter than any planet but clearly not a full moon. Retrograde. At 42.4% of the Hill sphere, stable for a retrograde orbit (retrograde limit ~70%).
+Visible as a small disc (~5× the apparent diameter of Jupiter from Earth). At −8.4 dramatically brighter than any planet but clearly not a full moon. Retrograde. At 41.1% of the Hill sphere, stable for a retrograde orbit (retrograde limit ~70%).
 
 ---
 
@@ -152,11 +152,11 @@ Physically identical to Sextus but 27% farther out — slightly smaller and dimm
 
 ## System Notes
 
-**Sky appearance by size** (largest→smallest): Tertius 43.5′ > Quartus 31.1′ > Secundus 28.1′ > Primus 22.5′ (stationary). Only Tertius is meaningfully larger than our Moon; Primus is the smallest of the four inner moons.
+**Sky appearance by size** (largest→smallest): Tertius 43.5′ > Quartus 31.1′ > Secundus 28.1′ > Primus 10.4′ (stationary). Primus is small and faint — roughly one-third the angular size of Quartus and 2.4 magnitudes dimmer.
 
-**Oscillating tidal load**: Secundus (×1.48) + Tertius (×2.74) + Quartus (×1.0) ≈ **5.2× our Moon's total tidal force**. Primus contributes a separate static ~20 cm bulge but no daily tidal cycle. Total tidal complexity comes from three incommensurate oscillating drivers (9.82h, 13.65h, 12.45h) plus the solar tide (12.03h).
+**Oscillating tidal load**: Secundus (×1.48) + Tertius (×2.74) + Quartus (×1.0) ≈ **5.2× our Moon's total tidal force**. Primus contributes a separate static ~2 cm bulge but no daily tidal cycle. Total tidal complexity comes from three incommensurate oscillating drivers (9.82h, 13.65h, 12.45h) plus the solar tide (12.03h).
 
-**Primus visibility**: fixed over one hemisphere. Observers on the sublunar face see a 22.5′ moon that never moves. Observers on the far side never see it. A bright but small permanent fixture — brighter than Quartus by 0.7 magnitudes, but smaller in the sky.
+**Primus visibility**: fixed over one hemisphere. Observers on the sublunar face see a 10.4′ moon that never moves. Observers on the far side never see it. A minor but permanent fixture — dimmer than Quartus and about the size of a large asteroid seen up close.
 
 **Retrograde moons** (Secundus, Sextus, Septimus) rise in the west. A nighttime observer on the near side sees the stationary Primus plus Secundus sweeping east-to-west, while Tertius and Quartus move west-to-east.
 

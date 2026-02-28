@@ -19,7 +19,7 @@ Validated against Earth-Moon system (gives ~0.27 m, matching the known theoretic
 ### Primus — static, not oscillating
 
 Primus is geosynchronous: it co-rotates with Qaia and does not sweep across the sky. It
-raises a **permanent ~20 cm static tidal bulge** along the Primus–antiprimus axis — a fixed
+raises a **permanent ~2 cm static tidal bulge** along the Primus–antiprimus axis — a fixed
 geographic feature, not a daily cycle. It is excluded from the oscillating tide simulation.
 
 ### Simulation method
@@ -835,7 +835,7 @@ requires written tidal tables, though the tides are far less violent than if Pri
 oscillating.
 
 **Primus's geosynchronous effect**: Instead of contributing a fast, large oscillating tide,
-Primus raises only a small (~20 cm) permanent bulge on the sub-Primus side of Qaia. This
+Primus raises only a small (~2 cm) permanent bulge on the sub-Primus side of Qaia. This
 is a permanent feature of sea level geography — the ocean is very slightly deeper beneath
 Primus.
 
