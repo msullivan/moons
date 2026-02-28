@@ -47,7 +47,7 @@ Primus is fixed over a single point on Qaia's surface — it neither rises nor s
 | Albedo | 0.06 (dark iron surface) |
 | Semi-major axis | 0.30 LD |
 | Period | 4.51 days |
-| Inclination | 0.00° |
+| Inclination | 8.00° |
 | Eccentricity | 0.10 |
 | Angular diameter | 28.1′ mean (25.6′–31.2′) — 0.91× Quartus |
 | Full-moon brightness | **−11.77** (0.97 mag dimmer than Quartus) |
@@ -72,7 +72,7 @@ Slightly smaller than Quartus in the sky at mean distance; near periapsis it app
 | Albedo | 0.12 (lunar) |
 | Semi-major axis | 0.45 LD |
 | Period | 8.29 days |
-| Inclination | 0.00° |
+| Inclination | 3.00° |
 | Eccentricity | 0.10 |
 | Angular diameter | 43.5′ mean (39.5′–48.3′) — 1.40× Quartus |
 | Full-moon brightness | **−13.47** (0.73 mag brighter than Quartus) |
@@ -122,7 +122,7 @@ A clone of Earth's Moon at the same distance and mass. The natural calendar body
 | Albedo | 0.09 |
 | Semi-major axis | 1.60 LD |
 | Period | 55.56 days |
-| Inclination | 0.00° |
+| Inclination | 18.00° |
 | Eccentricity | 0.10 |
 | Angular diameter | 4.2′ mean (3.8′–4.6′) — 0.135× Quartus |
 | Full-moon brightness | **−8.07** (4.67 mag dimmer than Quartus) |
@@ -147,7 +147,7 @@ Visible as a small disc (~5× the apparent diameter of Jupiter from Earth). At �
 | Albedo | 0.09 |
 | Semi-major axis | 2.10 LD |
 | Period | 83.54 days |
-| Inclination | 0.00° |
+| Inclination | 22.00° |
 | Eccentricity | 0.10 |
 | Angular diameter | 3.2′ mean (2.9′–3.5′) — 0.10× Quartus |
 | Full-moon brightness | **−7.48** (5.26 mag dimmer than Quartus) |
@@ -175,6 +175,8 @@ Physically identical to Sextus but 27% farther out — slightly smaller and dimm
 **Density split**: Primus and Secundus at 6,690 kg/m³ are likely iron-rich fragments of a differentiated progenitor. The rest are standard rocky at lunar density.
 
 **Tidal migration**: Primus is magically anchored — no tidal torque, no migration. Secundus (retrograde) slowly spirals inward over geological time. Roche margin is comfortable for all moons.
+
+**Long-term stability**: 10,000-year simulation shows Tertius, Quartus, and Septimus are stable; Sextus escapes ~yr 1210 and Secundus ~yr 1860 via chaotic ejection (no gradual drift — stable for centuries then suddenly unbound). The system is not naturally stable on civilizational timescales.
 
 **Tidal locking**: The three freely-orbiting inner moons are almost certainly synchronously rotating — tidal locking timescale scales as a⁶.
 
