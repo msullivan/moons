@@ -7,20 +7,19 @@
 // Validated against Earth-Moon system (gives ~0.27 m, matching theory).
 
 import { chromium } from 'playwright';
-import { M_MOON, LUNAR_DIST, AU, M_EARTH, R_EARTH, M_SUN } from '../bodies.js';
+import { AU, M_EARTH, R_EARTH, M_SUN, MOON_PARAMS } from '../bodies.js';
 
 const T_QAIA_H = 24; // Qaia solar day in hours (matches Earth)
 
 const h_eq = (M, a) => (3/4) * (M / M_EARTH) * (R_EARTH / a)**3 * R_EARTH;
 
-// Moon definitions — keep in sync with bodies.js
-// Primus is omitted: as a geosynchronous moon it creates a permanent static tidal bulge,
-// not an oscillating tide. It does not contribute to the daily tidal cycle.
+// Primus is omitted: geosynchronous → permanent static bulge, not an oscillating tide.
+// Outer moons (Sextus, Septimus) omitted: tidal amplitude < 1 cm, negligible.
 const bodies = [
-  { name: 'Secundus', M: 0.04 * M_MOON, a: 0.30 * LUNAR_DIST, T_d: 4.51,   dir: -1, color: '#44bbaa' },
-  { name: 'Tertius',  M: 0.25 * M_MOON, a: 0.45 * LUNAR_DIST, T_d: 8.29,   dir:  1, color: '#cc8844' },
-  { name: 'Quartus',  M: 1.00 * M_MOON, a: 1.00 * LUNAR_DIST, T_d: 27.45,  dir:  1, color: '#aaaaaa' },
-  { name: 'Sun',      M: M_SUN,          a: AU,                 T_d: 365.25, dir:  1, color: '#ffdd44' },
+  ...MOON_PARAMS
+    .filter(m => !m.isAnchor && h_eq(m.M, m.a) * 100 >= 1)
+    .map(m => ({ name: m.name, M: m.M, a: m.a, T_d: m.T_d, dir: m.prograde ? 1 : -1, color: m.color })),
+  { name: 'Sun', M: M_SUN, a: AU, T_d: 365.25, dir: 1, color: '#ffdd44' },
 ];
 
 // Tidal period as experienced on Qaia's surface.
