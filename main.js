@@ -42,7 +42,7 @@ async function init() {
 
   // Try to load 200-year snapshot; fall back to t=0 if not available.
   try {
-    const resp = await fetch('state_200yr.json?v=2');
+    const resp = await fetch('state_200yr.json?v=3');
     if (resp.ok) snapshot = await resp.json();
   } catch (_) {}
 

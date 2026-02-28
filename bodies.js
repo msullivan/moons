@@ -83,11 +83,12 @@ export function createInitialBodies() {
       physicalRadius: R_EARTH, minDisplayPx: 6,
       color: '#4499FF', trailColor: '#4499FF', trailMaxLen: 2500,
     }),
-    // Primus: geosynchronous prograde — anchor overrides position each step
+    // Primus: geosynchronous prograde — anchor overrides position each step.
+    // Initial conditions below match _enforceAnchors() at θ=π (PRIMUS_PHASE).
     new Body({
       name: 'Primus', mass: mp.Primus.M,
-      x: AU - PRIMUS_A, y: 0, z: 0,
-      vx: 0, vy: v_earth - PRIMUS_A * PRIMUS_OMEGA * Math.cos(PRIMUS_INCLINATION), vz: -PRIMUS_A * PRIMUS_OMEGA * Math.sin(PRIMUS_INCLINATION),
+      x: AU - PRIMUS_A * Math.cos(PRIMUS_INCLINATION), y: 0, z: -PRIMUS_A * Math.sin(PRIMUS_INCLINATION),
+      vx: 0, vy: v_earth - PRIMUS_A * PRIMUS_OMEGA, vz: 0,
       physicalRadius: mp.Primus.R, minDisplayPx: 3,
       color: mp.Primus.color, trailColor: mp.Primus.color, trailMaxLen: mp.Primus.trailMaxLen,
       anchor: { toIndex: 1, radius: PRIMUS_A, omega: PRIMUS_OMEGA, phase: PRIMUS_PHASE, inclination: PRIMUS_INCLINATION },
