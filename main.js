@@ -145,14 +145,6 @@ function simDate(t) {
 }
 
 function updateHUD() {
-  const days  = sim.time / 86400;
-  const years = days / 365.25;
-
-  let timeStr;
-  if (years >= 2)      timeStr = `${years.toFixed(1)} yr`;
-  else if (days >= 60) timeStr = `${(days / 30.4375).toFixed(1)} mo`;
-  else                 timeStr = `${days.toFixed(1)} days`;
-
   const err  = sim.energyError() * 100;
   const sign = err >= 0 ? '+' : '';
 
