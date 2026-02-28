@@ -123,6 +123,27 @@ function orbitalElements(body, primary) {
   return { a, e, inc, T, r };
 }
 
+// Calendar: t=0 = 1 Jan 2053 AD (Arrival of Dragons). Gregorian rules.
+const EPOCH_YEAR = 2053;
+const MON_DAYS   = [31,28,31,30,31,30,31,31,30,31,30,31];
+const MON_NAMES  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function simDate(t) {
+  let d = Math.floor(t / 86400);
+  let y = EPOCH_YEAR;
+  while (true) {
+    const leap = (y % 4 === 0) && (y % 100 !== 0 || y % 400 === 0);
+    const diy  = leap ? 366 : 365;
+    if (d < diy) break;
+    d -= diy; y++;
+  }
+  const leap = (y % 4 === 0) && (y % 100 !== 0 || y % 400 === 0);
+  for (let m = 0; m < 12; m++) {
+    const dim = MON_DAYS[m] + (m === 1 && leap ? 1 : 0);
+    if (d < dim) return `${d + 1} ${MON_NAMES[m]} ${y} AD`;
+    d -= dim;
+  }
+}
+
 function updateHUD() {
   const days  = sim.time / 86400;
   const years = days / 365.25;
@@ -135,6 +156,7 @@ function updateHUD() {
   const err  = sim.energyError() * 100;
   const sign = err >= 0 ? '+' : '';
 
+  document.getElementById('hud-date').textContent   = simDate(sim.time);
   document.getElementById('hud-time').textContent   = `T: ${timeStr}`;
   document.getElementById('hud-energy').textContent = `ΔE/E₀: ${sign}${err.toExponential(2)}`;
 
