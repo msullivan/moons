@@ -18,6 +18,7 @@ let stepAccum      = 0;      // fractional steps carried over between frames
 
 // sim-seconds per real-second
 let simSpeed = 86400;  // default: 1 day / second
+let seekTarget = null; // sim-seconds to fast-forward to, or null
 
 // Maximum steps per frame (prevents tab from freezing at very high speeds)
 const MAX_STEPS_PER_FRAME = 80000;
@@ -75,7 +76,20 @@ function tick(ts) {
   const dtReal = Math.min((ts - lastTs) / 1000, 0.1); // cap at 100 ms
   lastTs = ts;
 
-  if (running) {
+  if (seekTarget !== null) {
+    if (sim.time >= seekTarget) {
+      seekTarget = null;
+      running = false;
+      updatePlayBtn();
+    } else {
+      const remaining = Math.min(MAX_STEPS_PER_FRAME,
+                                 Math.ceil((seekTarget - sim.time) / sim.dt));
+      // Use same trail density as "1 day/s" (1 point per simulated hour)
+      // so the trail looks natural after seek rather than showing every orbit.
+      const trailInterval = Math.max(1, Math.round(3600 / sim.dt));
+      sim.advance(remaining, trailInterval, renderer.followIndex);
+    }
+  } else if (running) {
     stepAccum += (dtReal * simSpeed) / sim.dt;
     const steps = Math.floor(stepAccum);
     stepAccum  -= steps;
@@ -124,7 +138,8 @@ function orbitalElements(body, primary) {
 }
 
 // Calendar: t=0 = 1 Jan 2053 AD (Arrival of Dragons). Gregorian rules.
-const EPOCH_YEAR = 2053;
+const EPOCH_YEAR  = 2053;
+const EPOCH_MS    = Date.UTC(EPOCH_YEAR, 0, 1); // ms since Unix epoch
 const MON_DAYS   = [31,28,31,30,31,30,31,31,30,31,30,31];
 const MON_NAMES  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function simDate(t) {
@@ -142,6 +157,11 @@ function simDate(t) {
     if (d < dim) return `${d + 1} ${MON_NAMES[m]} ${y} AD`;
     d -= dim;
   }
+}
+
+// Convert year/month(0-indexed)/day(1-indexed) → sim seconds via Date.UTC
+function calToSimTime(year, month0, day) {
+  return (Date.UTC(year, month0, day) - EPOCH_MS) / 1000;
 }
 
 function updateHUD() {
@@ -302,6 +322,27 @@ function buildUI(canvas) {
     window.sim = sim;
     renderer.sim = sim;
     stepAccum = 0;
+  });
+
+  // Go-to-date popup
+  const gotoPopup = document.getElementById('goto-popup');
+  document.getElementById('btn-goto').addEventListener('click', () => {
+    gotoPopup.classList.toggle('open');
+  });
+  document.getElementById('goto-cancel').addEventListener('click', () => {
+    gotoPopup.classList.remove('open');
+  });
+  document.getElementById('goto-go').addEventListener('click', () => {
+    const val = document.getElementById('goto-date').value; // "YYYY-MM-DD"
+    if (!val) return;
+    const [year, month, day] = val.split('-').map(Number);
+    const target = calToSimTime(year, month - 1, day);      // month-1: Date.UTC is 0-indexed
+    if (target > sim.time) {
+      seekTarget = target;
+      running    = true;
+      updatePlayBtn();
+    }
+    gotoPopup.classList.remove('open');
   });
 
   // Speed presets

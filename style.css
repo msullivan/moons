@@ -37,6 +37,37 @@ html, body {
   letter-spacing: 0.04em;
 }
 
+/* ── Go-to-date popup ────────────────────────────────────────── */
+
+#goto-popup {
+  display: none;
+  position: fixed;
+  bottom: 52px;
+  left: 16px;
+  background: rgba(4, 8, 24, 0.92);
+  border: 1px solid rgba(80, 130, 220, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 6px;
+  padding: 8px 10px;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  z-index: 20;
+}
+#goto-popup.open { display: flex; }
+
+#goto-date {
+  background: rgba(20, 45, 100, 0.75);
+  border: 1px solid rgba(80, 130, 220, 0.3);
+  color: rgba(190, 220, 255, 0.9);
+  border-radius: 3px;
+  padding: 2px 5px;
+  font-family: inherit;
+  font-size: 12px;
+  color-scheme: dark;
+}
+
 /* ── Control panel ───────────────────────────────────────────── */
 
 #controls {
