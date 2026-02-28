@@ -55,7 +55,7 @@ for (const m of moons) {
   console.log(`  Semi-major:    ${m.a_LD.toFixed(3)} LD  /  period ${m.T_d.toFixed(2)} days  /  incl ${m.inc_deg.toFixed(2)}°`);
   console.log(`  Angular diam:  ${m.ang_mean.toFixed(1)}′ mean  (${m.ang_peri.toFixed(1)}′ peri – ${m.ang_apo.toFixed(1)}′ apo)`);
   console.log(`  vs Quartus:    ×${(m.ang_mean / ref.ang_mean).toFixed(3)} angular size`);
-  console.log(`  Full-moon mag: ${m.app_mag.toFixed(2)}  (${m.delta_mag >= 0 ? '+' : ''}${m.delta_mag.toFixed(2)} vs Quartus = −12.74)`);
+  console.log(`  Full-moon mag: ${m.app_mag.toFixed(2)}  (${m.delta_mag >= 0 ? '+' : ''}${m.delta_mag.toFixed(2)} vs Quartus = −12.74)  illum ×${m.bright_ratio.toFixed(3)} Quartus`);
   console.log(`  Surface grav:  ${m.g_surf.toFixed(3)} m/s²  (×${(m.g_surf/ref.g_surf).toFixed(3)} Quartus)`);
   console.log(`  Surface area:  ${m.SA_Mkm2.toFixed(2)} M km²  (${(m.SA_Mkm2 / ref.SA_Mkm2 * 100).toFixed(1)}% of Quartus)`);
   console.log(`  Escape vel:    ${m.v_esc.toFixed(0)} m/s`);

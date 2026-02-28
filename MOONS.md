@@ -21,6 +21,7 @@ Quartus (1.00 LD, 1 M_moon) is used as the reference body throughout.
 | Eccentricity | 0 (circular by construction) |
 | Angular diameter | **10.4′** — **0.34× Quartus** |
 | Full-moon brightness | **−9.62** (3.12 mag dimmer than Quartus) |
+| Full-moon illumination | **×0.056 Quartus** (~1/18 of Earth's full moon) |
 | Surface gravity | 0.120 m/s² (0.074× Quartus) |
 | Surface area | 0.05 M km² (0.1% of Quartus) |
 | Escape velocity | 124 m/s |
@@ -51,6 +52,7 @@ Primus is fixed over a single point on Qaia's surface — it neither rises nor s
 | Eccentricity | 0.10 |
 | Angular diameter | 28.1′ mean (25.6′–31.2′) — 0.91× Quartus |
 | Full-moon brightness | **−11.77** (0.97 mag dimmer than Quartus) |
+| Full-moon illumination | **×0.409 Quartus** (~2/5 of Earth's full moon) |
 | Surface gravity | 0.882 m/s² (0.54× Quartus) |
 | Surface area | 2.79 M km² (7.4% of Quartus) |
 | Escape velocity | 912 m/s |
@@ -76,6 +78,7 @@ Slightly smaller than Quartus in the sky at mean distance; near periapsis it app
 | Eccentricity | 0.10 |
 | Angular diameter | 43.5′ mean (39.5′–48.3′) — 1.40× Quartus |
 | Full-moon brightness | **−13.47** (0.73 mag brighter than Quartus) |
+| Full-moon illumination | **×1.960 Quartus** (~2× Earth's full moon) |
 | Surface gravity | 1.023 m/s² (0.63× Quartus) |
 | Surface area | 15.05 M km² (39.7% of Quartus) |
 | Escape velocity | 1,496 m/s |
@@ -101,6 +104,7 @@ The largest and brightest object in Qaia's sky among the free moons — 43.5′,
 | Eccentricity | ~0 initial (develops to ~0.10 via N-body perturbations) |
 | Angular diameter | 31.1′ mean (28.2′–34.5′) |
 | Full-moon brightness | **−12.74** |
+| Full-moon illumination | **×1.000 Quartus** (~Earth's full moon, ~0.1–0.3 lux) |
 | Surface gravity | 1.624 m/s² |
 | Surface area | 37.91 M km² |
 | Escape velocity | 2,375 m/s |
@@ -126,6 +130,7 @@ A clone of Earth's Moon at the same distance and mass. The natural calendar body
 | Eccentricity | 0.10 |
 | Angular diameter | 4.2′ mean (3.8′–4.6′) — 0.135× Quartus |
 | Full-moon brightness | **−8.07** (4.67 mag dimmer than Quartus) |
+| Full-moon illumination | **×0.014 Quartus** (~1/70 of Earth's full moon) |
 | Surface gravity | 0.350 m/s² (0.215× Quartus) |
 | Surface area | 1.76 M km² (4.6% of Quartus) |
 | Escape velocity | 512 m/s |
@@ -151,6 +156,7 @@ Visible as a small disc (~5× the apparent diameter of Jupiter from Earth). At �
 | Eccentricity | 0.10 |
 | Angular diameter | 3.2′ mean (2.9′–3.5′) — 0.10× Quartus |
 | Full-moon brightness | **−7.48** (5.26 mag dimmer than Quartus) |
+| Full-moon illumination | **×0.008 Quartus** (~1/125 of Earth's full moon) |
 | Surface gravity | 0.350 m/s² (0.215× Quartus) |
 | Surface area | 1.76 M km² (4.6% of Quartus) |
 | Escape velocity | 512 m/s |
