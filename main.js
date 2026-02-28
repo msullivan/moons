@@ -157,7 +157,6 @@ function updateHUD() {
   const sign = err >= 0 ? '+' : '';
 
   document.getElementById('hud-date').textContent   = simDate(sim.time);
-  document.getElementById('hud-time').textContent   = `T: ${timeStr}`;
   document.getElementById('hud-energy').textContent = `ΔE/E₀: ${sign}${err.toExponential(2)}`;
 
   updateMoonPhases();
