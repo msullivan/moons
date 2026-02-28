@@ -7,15 +7,18 @@
 // Validated against Earth-Moon system (gives ~0.27 m, matching theory).
 
 import { chromium } from 'playwright';
-import { AU, M_EARTH, R_EARTH, M_SUN, MOON_PARAMS, createInitialBodies } from '../bodies.js';
+import { AU, M_EARTH, R_EARTH, M_SUN, MOON_PARAMS, createInitialBodies, applySnapshot } from '../bodies.js';
 import { orbitalElements } from './orbital_elements.mjs';
+import { readFileSync } from 'fs';
 
 const T_QAIA_H = 24; // Qaia solar day in hours (matches Earth)
 
 const h_eq = (M, a) => (3/4) * (M / M_EARTH) * (R_EARTH / a)**3 * R_EARTH;
 
-// Snapshot of body positions/velocities (replace to use a saved state after N years)
-const snapshot = createInitialBodies();
+// Load 200-year snapshot for orbital element calculations
+const snapshotPath = new URL('../state_200yr.json', import.meta.url).pathname;
+const savedState = JSON.parse(readFileSync(snapshotPath, 'utf8'));
+const snapshot = applySnapshot(createInitialBodies(), savedState);
 const qaia     = snapshot.find(b => b.name === 'Qaia');
 
 // Primus is omitted: geosynchronous → permanent static bulge, not an oscillating tide.

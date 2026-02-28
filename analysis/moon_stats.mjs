@@ -3,15 +3,18 @@
 // Re-run after changing any parameters in bodies.js.
 
 import { G } from '../simulation.js';
-import { M_MOON, R_MOON, LUNAR_DIST, AU, M_EARTH, R_EARTH, M_SUN, MOON_PARAMS, createInitialBodies } from '../bodies.js';
+import { M_MOON, R_MOON, LUNAR_DIST, AU, M_EARTH, R_EARTH, M_SUN, MOON_PARAMS, createInitialBodies, applySnapshot } from '../bodies.js';
 import { orbitalElements } from './orbital_elements.mjs';
+import { readFileSync } from 'fs';
 
 const RHO_MOON  = M_MOON / (4/3 * Math.PI * R_MOON**3);
 const RHO_EARTH = M_EARTH / (4/3 * Math.PI * R_EARTH**3);
 const R_HILL    = AU * (M_EARTH / (3 * M_SUN)) ** (1/3);
 
-// Snapshot of body positions/velocities (replace bodies array to use a saved state)
-const bodies = createInitialBodies();
+// Load 200-year snapshot for orbital element calculations
+const snapshotPath = new URL('../state_200yr.json', import.meta.url).pathname;
+const snapshot = JSON.parse(readFileSync(snapshotPath, 'utf8'));
+const bodies = applySnapshot(createInitialBodies(), snapshot);
 const qaia   = bodies.find(b => b.name === 'Qaia');
 
 // Build analysis objects: physical properties from MOON_PARAMS, orbital elements from snapshot
