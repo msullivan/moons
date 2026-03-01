@@ -7,7 +7,7 @@ Quartus (1.00 LD, 1 M_moon) is used as the reference body throughout.
 
 ---
 
-## Primus — geosynchronous prograde *(magically anchored)*
+## Primus — geostationary prograde *(magically anchored)*
 
 | Property | Value |
 |---|---|
@@ -15,9 +15,9 @@ Quartus (1.00 LD, 1 M_moon) is used as the reference body throughout.
 | Radius | 64 km (0.037 R_moon) |
 | Density | 6,689 kg/m³ — **2× lunar**, near-iron |
 | Albedo | 0.06 (dark iron surface) |
-| Orbital radius | 0.110 LD (~42,160 km) — geosynchronous |
+| Orbital radius | 0.110 LD (~42,160 km) — geostationary |
 | Period | 1.00 days (= Qaia sidereal day) |
-| Inclination | 23.5° (anchored tilt, not computed from orbit) |
+| Inclination | 23.5° to ecliptic (= equatorial orbit; matches Qaia's axial tilt) |
 | Eccentricity | 0 (circular by construction) |
 | Angular diameter | **10.4′** — **0.34× Quartus** |
 | Full-moon brightness | **−9.62** (3.12 mag dimmer than Quartus) |
@@ -30,7 +30,7 @@ Quartus (1.00 LD, 1 M_moon) is used as the reference body throughout.
 | Hill sphere fraction | 2.8% |
 | Roche margin | ×5.6 (rigid body) |
 
-Primus is fixed over a single point on Qaia's surface — it neither rises nor sets for the hemisphere beneath it, and is never visible from the opposite hemisphere. Despite being close (0.11 LD), its tiny mass (0.0001 M_moon) and dark iron surface (albedo 0.06) make it a minor object in the sky: **10.4′ apparent diameter** (one-third of Quartus) and magnitude −9.62 — dimmer than Quartus by 3.1 magnitudes. At 6,690 kg/m³ it is nearly iron-density, likely a fragment of a differentiated parent body. Its 23.5° orbital inclination (matching Qaia's axial tilt) means it traces a figure-eight analemma in the sky as seen from the surface, rather than sitting at a fixed point.
+Primus is fixed over a single point on Qaia's surface — it neither rises nor sets for the hemisphere beneath it, and is never visible from the opposite hemisphere. Despite being close (0.11 LD), its tiny mass (0.0001 M_moon) and dark iron surface (albedo 0.06) make it a minor object in the sky: **10.4′ apparent diameter** (one-third of Quartus) and magnitude −9.62 — dimmer than Quartus by 3.1 magnitudes. At 6,690 kg/m³ it is nearly iron-density, likely a fragment of a differentiated parent body. Its 23.5° orbital inclination (to the ecliptic) exactly matches Qaia's axial tilt — the two cancel, placing Primus's orbit in Qaia's equatorial plane. It is therefore truly **geostationary**: a motionless fixed point in the sky of the near hemisphere, never rising, never setting, never drifting.
 
 **Navigation**: Primus is a revolutionary longitude reference. Because it is fixed in the sky at a known point above the equator, measuring its elevation from any location (with known latitude) immediately yields longitude — no chronometer required. Latitude is easily found by the usual methods (pole star, noon sun); elevation to Primus then places the observer on a circle of known angular radius around the sub-Primus point, and the intersection of that circle with the latitude line gives a longitude fix. This is structurally similar to finding latitude from the pole star, but with the "pole" on the equator instead of at the celestial pole — the difference being that Primus is close enough (0.11 LD) that its parallax is significant and position-dependent, so the geometry requires tables or calculation rather than a direct angle readout. Qaian navigators would have solved the longitude problem far earlier than Earth's — the main limitation is that Primus is visible only from one hemisphere.
 
