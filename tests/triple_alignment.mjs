@@ -7,7 +7,8 @@ import { Simulation } from '../simulation.js';
 import { createInitialBodies, applySnapshot } from '../bodies.js';
 
 const START_DATE = new Date('2253-01-01T00:00:00Z');
-const TEN_YEARS  = 10 * 365.25 * 86400;  // seconds
+const years      = Number(process.argv[2] ?? 10);
+const DURATION   = years * 365.25 * 86400;  // seconds
 
 const snapshot = JSON.parse(readFileSync(new URL('../state_200yr.json', import.meta.url)));
 const bodies   = createInitialBodies();
@@ -38,7 +39,7 @@ const stepsPerSample = Math.round(SAMPLE_S / sim.dt);
 const records = [];
 let elapsed = 0;
 
-while (elapsed < TEN_YEARS) {
+while (elapsed < DURATION) {
   sim.advance(stepsPerSample, stepsPerSample + 1, null);
   elapsed += SAMPLE_S;
 
@@ -70,7 +71,8 @@ for (let i = 1; i < records.length - 1; i++) {
 }
 
 // Print
-console.log('Triple-moon alignments (Secundus + Tertius + Quartus), 2253–2263');
+const endYear = 2253 + years;
+console.log(`Triple-moon alignments (Secundus + Tertius + Quartus), 2253–${endYear}`);
 console.log('All three moons within 5% of full or new  (** = within 1%)\n');
 console.log('Date        Type   Score   Sec     Ter     Qua');
 console.log('─'.repeat(56));
