@@ -190,4 +190,28 @@ Physically identical to Sextus but farther out — slightly smaller and dimmer i
 
 **Triple-moon alignment eras**: all three inner moons (Secundus, Tertius, Quartus) are simultaneously within 5% of full or new roughly every three months, and within 1% about once per year. However, which type dominates alternates in multi-year eras separated by ~13 years: a ~5–6 year "full-moon era" (all-full alignments frequent, all-new absent) followed by a ~5–6 year "new-moon era" (the reverse). The clock is a beat between Quartus's synodic period (~29.7 days) and the Qaia year: 365.25 / 29.68 ≈ 12.31 synodic periods per year, so the phase slips ~9.2 days/year and resets after ~13 years. The best alignments within an era are essentially exact — all three moons within 0.1% of syzygy simultaneously.
 
+### Triple-moon alignment calendar, 2253–2263
+
+The decade 2253–2263 falls in a **full-moon era**: 7 triple-full events reach within 1%, while no triple-new event breaks 1.4%. Closest alignments within 2% (bold = within 1%):
+
+| Date | Type | Sec | Ter | Qua |
+|---|---|---|---|---|
+| 2253 Jul 14 | full | 99.9% | 98.9% | 99.6% |
+| **2254 Jan 8** | **full** | **99.4%** | **99.2%** | **99.9%** |
+| 2254 Oct 30 | full | 99.8% | 98.3% | 99.8% |
+| 2255 Feb 12 | new | 0.7% | 1.8% | 1.7% |
+| **2256 Apr 13** | **full** | **99.4%** | **99.1%** | **99.7%** |
+| 2256 Dec 6 | full | 98.9% | 100.0% | 99.8% |
+| 2257 Mar 21 | new | 0.5% | 1.5% | 1.2% |
+| **2258 Mar 24** | **full** | **99.5%** | **99.8%** | **100.0%** |
+| **2259 Jan 12** | **full** | **99.3%** | **99.8%** | **99.3%** |
+| 2259 Apr 27 | new | 0.0% | 1.4% | 1.1% |
+| 2260 Apr 29 | full | 98.8% | 99.7% | 99.9% |
+| **2261 Feb 18** | **full** | **99.8%** | **100.0%** | **99.2%** |
+| **2261 Oct 12** | **full** | **99.3%** | **99.5%** | **99.3%** |
+| **2262 Jun 6** | **full** | **99.8%** | **99.9%** | **99.3%** |
+| 2262 Sep 19 | new | 0.1% | 0.1% | 1.8% |
+
+**March 24, 2258** is the peak event of the decade: Quartus exactly full, Tertius 99.8%, Secundus 99.5%.
+
 **Quintus** is a trace particle at the Sun-Qaia L4 point (60° ahead of Qaia). It librates between ~45° and ~80° from Qaia with a period of ~2,000 years. Effectively massless — included for worldbuilding purposes.
