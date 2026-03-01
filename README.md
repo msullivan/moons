@@ -3,7 +3,7 @@
 A browser-based n-body gravitational simulator for Qaia, the Earth-like planet in my RPG
 setting. Models Qaia's six-moon system with real physics and a live moon-phase panel.
 
-Vibed up with Sonnet 4.6 ([transcript](https://gisthost.github.io/?4af68f0af71b07f785586c2e525cc3f2/index.html)).
+Vibed up with Sonnet 4.6 ([transcript](https://gisthost.github.io/?e23f59fcafd23ae43f7821c5fdaec068/index.html)).
 
 Requires a local HTTP server (ES modules are blocked on `file://` URLs in Chrome):
 
