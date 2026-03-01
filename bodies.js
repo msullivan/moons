@@ -16,7 +16,7 @@ export const QAIA_SIDEREAL_DAY = 86164;  // seconds — Qaia's sidereal rotation
 // Primus orbital mechanics (geosynchronous anchor)
 const PRIMUS_OMEGA        = 2 * Math.PI / QAIA_SIDEREAL_DAY;
 export const PRIMUS_A     = Math.cbrt(G * M_EARTH / (PRIMUS_OMEGA ** 2));  // ~42,160 km
-const PRIMUS_PHASE        = Math.PI;                    // initial angle (sunward at t=0)
+const PRIMUS_PHASE        = 0;                          // initial angle: anti-sunward = midnight (PMT) at t=0
 export const PRIMUS_INCLINATION  = 23.5 * Math.PI / 180;
 export const QUARTUS_INCLINATION =  5.14 * Math.PI / 180; // kept for external use; matches Quartus inc_deg
 

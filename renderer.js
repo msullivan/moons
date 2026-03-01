@@ -168,7 +168,7 @@ export class Renderer {
     // Continent rotation marker (Qaia only)
     if (body === this.sim.bodies[1]) {
       const SIDEREAL_DAY = 86164; // seconds
-      const angle = (this.sim.time / SIDEREAL_DAY) * Math.PI * 2 - 3 * Math.PI / 4;
+      const angle = (this.sim.time / SIDEREAL_DAY) * Math.PI * 2 + Math.PI / 4;
       ctx.save();
       ctx.beginPath();
       ctx.arc(sx, sy, r, 0, Math.PI * 2);
