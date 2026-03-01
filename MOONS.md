@@ -178,6 +178,8 @@ Physically identical to Sextus but farther out — slightly smaller and dimmer i
 
 **Retrograde moons** (Secundus, Sextus, Septimus) rise in the west. A nighttime observer on the near side sees the stationary Primus plus Secundus sweeping east-to-west, while Tertius and Quartus move west-to-east.
 
+**Inclinations are ecliptic-relative.** All `inc_deg` values in the simulation are measured from the ecliptic plane, not Qaia's equatorial plane. Because Qaia has a 23.5° axial tilt, a moon's equatorial inclination varies over time as the orbital node precesses — just as Earth's Moon oscillates between ~18.3° and ~28.6° to Earth's equator despite its stable 5.14° ecliptic inclination. Primus is the exception: its 23.5° ecliptic inclination exactly cancels Qaia's axial tilt, placing it in the equatorial plane (geostationary orbit requires equatorial alignment).
+
 **Density split**: Primus and Secundus at 6,690 kg/m³ are likely iron-rich fragments of a differentiated progenitor. The rest are standard rocky at lunar density.
 
 **Tidal migration**: Primus is magically anchored — no tidal torque, no migration. Secundus (retrograde) slowly spirals inward over geological time. Roche margin is comfortable for all moons.

@@ -31,7 +31,7 @@ const _mu = G * M_EARTH;
 //                 condition uses circular velocity — eccentricity grows from N-body perturbations)
 // prograde:       true = counterclockwise (same as Qaia's orbit)
 // isAnchor:       true = geosynchronous, position overridden each step (Primus only)
-// inc_deg:        orbital inclination in degrees relative to Qaia's equatorial plane.
+// inc_deg:        orbital inclination in degrees relative to the ecliptic.
 //                 Inner prograde moons are small (tidally damped); outer retrograde moons
 //                 are larger (likely captured objects with random initial inclinations).
 // albedo:         geometric albedo (fraction of light reflected); iron-rich moons are darker
