@@ -17,7 +17,7 @@ export const QAIA_SIDEREAL_DAY = 86164;  // seconds — Qaia's sidereal rotation
 const PRIMUS_OMEGA        = 2 * Math.PI / QAIA_SIDEREAL_DAY;
 export const PRIMUS_A     = Math.cbrt(G * M_EARTH / (PRIMUS_OMEGA ** 2));  // ~42,160 km
 const PRIMUS_PHASE        = Math.PI;                    // initial angle (sunward at t=0)
-export const PRIMUS_INCLINATION  = 75 * Math.PI / 180;
+export const PRIMUS_INCLINATION  = 23.5 * Math.PI / 180;
 export const QUARTUS_INCLINATION =  5.14 * Math.PI / 180; // kept for external use; matches Quartus inc_deg
 
 const _mu = G * M_EARTH;
@@ -40,7 +40,7 @@ const _mu = G * M_EARTH;
 //
 // Derived fields added by the .map(): M (kg), R (m), a (m), T_d (days)
 export const MOON_PARAMS = [
-  { name: 'Primus',   mass_frac: 0.0001, density_ratio: 2, a_LD: PRIMUS_A / LUNAR_DIST, e: 0,    prograde: true,  isAnchor: true,  inc_deg: 75, albedo: 0.06, color: '#4466CC', trailMaxLen:  300 },
+  { name: 'Primus',   mass_frac: 0.0001, density_ratio: 2, a_LD: PRIMUS_A / LUNAR_DIST, e: 0,    prograde: true,  isAnchor: true,  inc_deg: 23.5, albedo: 0.06, color: '#4466CC', trailMaxLen:  300 },
   { name: 'Secundus', mass_frac: 0.04,   density_ratio: 2, a_LD: 0.30,                  e: 0.10, prograde: false, isAnchor: false, inc_deg:  8.0, albedo: 0.06, color: '#88CCAA', trailMaxLen:  500 },
   { name: 'Tertius',  mass_frac: 0.25,   density_ratio: 1, a_LD: 0.45,                  e: 0.10, prograde: true,  isAnchor: false, inc_deg:  3.0, albedo: 0.12, color: '#CC9966', trailMaxLen: 1400 },
   { name: 'Quartus',  mass_frac: 1.00,   density_ratio: 1, a_LD: 1.00,                  e: 0.10, prograde: true,  isAnchor: false, inc_deg:  5.14,albedo: 0.12, color: '#CCCCCC', trailMaxLen: 1400 },
@@ -84,11 +84,15 @@ export function createInitialBodies() {
       color: '#4499FF', trailColor: '#4499FF', trailMaxLen: 2500,
     }),
     // Primus: geosynchronous prograde — anchor overrides position each step.
-    // Initial conditions below match _enforceAnchors() at θ=π (PRIMUS_PHASE).
+    // Initial conditions derived from _enforceAnchors() at θ = PRIMUS_PHASE.
     new Body({
       name: 'Primus', mass: mp.Primus.M,
-      x: AU - PRIMUS_A * Math.cos(PRIMUS_INCLINATION), y: 0, z: -PRIMUS_A * Math.sin(PRIMUS_INCLINATION),
-      vx: 0, vy: v_earth - PRIMUS_A * PRIMUS_OMEGA, vz: 0,
+      x: AU + PRIMUS_A * Math.cos(PRIMUS_PHASE) * Math.cos(PRIMUS_INCLINATION),
+      y:      PRIMUS_A * Math.sin(PRIMUS_PHASE),
+      z:    - PRIMUS_A * Math.cos(PRIMUS_PHASE) * Math.sin(PRIMUS_INCLINATION),
+      vx:           - PRIMUS_A * PRIMUS_OMEGA * Math.sin(PRIMUS_PHASE) * Math.cos(PRIMUS_INCLINATION),
+      vy: v_earth   + PRIMUS_A * PRIMUS_OMEGA * Math.cos(PRIMUS_PHASE),
+      vz:             PRIMUS_A * PRIMUS_OMEGA * Math.sin(PRIMUS_PHASE) * Math.sin(PRIMUS_INCLINATION),
       physicalRadius: mp.Primus.R, minDisplayPx: 3,
       color: mp.Primus.color, trailColor: mp.Primus.color, trailMaxLen: mp.Primus.trailMaxLen,
       anchor: { toIndex: 1, radius: PRIMUS_A, omega: PRIMUS_OMEGA, phase: PRIMUS_PHASE, inclination: PRIMUS_INCLINATION },

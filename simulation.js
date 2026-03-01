@@ -102,16 +102,16 @@ export class Simulation {
       const θ    = (cfg.phase + cfg.omega * this.time) % PI2;
       const cosθ = Math.cos(θ), sinθ = Math.sin(θ);
       // Apply orbital inclination (rotation around y-axis so that the ascending node
-      // is on the ±y axis; at t=0 Qaia is on the x-axis → summer solstice).
-      // North-pole direction = (−sinI, 0, cosI).
+      // is on the ±y axis; at t=0 Qaia is on the x-axis → winter solstice).
+      // North-pole direction = (+sinI, 0, cosI).
       const cosI = cfg.inclination ? Math.cos(cfg.inclination) : 1;
       const sinI = cfg.inclination ? Math.sin(cfg.inclination) : 0;
       b.x  = ref.x  + cfg.radius * cosθ * cosI;
       b.y  = ref.y  + cfg.radius * sinθ;
-      b.z  = ref.z  + cfg.radius * cosθ * sinI;
+      b.z  = ref.z  - cfg.radius * cosθ * sinI;
       b.vx = ref.vx - cfg.radius * cfg.omega * sinθ * cosI;
       b.vy = ref.vy + cfg.radius * cfg.omega * cosθ;
-      b.vz = ref.vz - cfg.radius * cfg.omega * sinθ * sinI;
+      b.vz = ref.vz + cfg.radius * cfg.omega * sinθ * sinI;
     }
   }
 
