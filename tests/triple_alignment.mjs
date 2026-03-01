@@ -33,7 +33,14 @@ function illum(elong) { return (1 - Math.cos(elong)) / 2; }
 // Distance from nearest syzygy: 0 = perfect new/full, 0.5 = quarter
 function syzDev(f) { return Math.min(f, 1 - f); }
 
-const SAMPLE_S       = 6 * 3600;              // sample every 6 hours
+const SAMPLE_S       = 1 * 3600;              // sample every 1 hour
+const SIDEREAL_DAY   = 86164;                 // seconds — Qaia sidereal day = Primus period
+
+function primusMeanTime(elapsed) {
+  const frac = (elapsed % SIDEREAL_DAY) / SIDEREAL_DAY;
+  const h = Math.floor(frac * 24).toString().padStart(2, '0');
+  return `${h}h`;
+}
 const stepsPerSample = Math.round(SAMPLE_S / sim.dt);
 
 const records = [];
@@ -66,7 +73,8 @@ for (let i = 1; i < records.length - 1; i++) {
     const date = new Date(START_DATE.getTime() + r.elapsed * 1000);
     const nFull = [r.fS, r.fT, r.fQ].filter(f => f >= 0.5).length;
     const type  = nFull === 3 ? 'full' : nFull === 0 ? 'new' : 'mixed';
-    events.push({ date, type, score: r.score, fS: r.fS, fT: r.fT, fQ: r.fQ });
+    const pmt = primusMeanTime(r.elapsed);
+    events.push({ date, pmt, type, score: r.score, fS: r.fS, fT: r.fT, fQ: r.fQ });
   }
 }
 
@@ -74,14 +82,14 @@ for (let i = 1; i < records.length - 1; i++) {
 const endYear = 2253 + years;
 console.log(`Triple-moon alignments (Secundus + Tertius + Quartus), 2253–${endYear}`);
 console.log('All three moons within 5% of full or new  (** = within 1%)\n');
-console.log('Date        Type   Score   Sec     Ter     Qua');
-console.log('─'.repeat(56));
+console.log('Date        PMT  Type   Score   Sec     Ter     Qua');
+console.log('─'.repeat(61));
 
 for (const e of events.filter(e => e.type !== 'mixed')) {
   const mark = e.score < 0.01 ? '**' : '  ';
   const ds   = e.date.toISOString().slice(0, 10);
   const fmtF = f => (f * 100).toFixed(1).padStart(5) + '%';
-  console.log(`${mark}${ds}  ${e.type.padEnd(5)}  ${e.score.toFixed(4)}  ${fmtF(e.fS)}  ${fmtF(e.fT)}  ${fmtF(e.fQ)}`);
+  console.log(`${mark}${ds}  ${e.pmt}  ${e.type.padEnd(5)}  ${e.score.toFixed(4)}  ${fmtF(e.fS)}  ${fmtF(e.fT)}  ${fmtF(e.fQ)}`);
 }
 
 const nFull  = events.filter(e => e.type === 'full').length;

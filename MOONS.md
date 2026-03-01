@@ -192,26 +192,34 @@ Physically identical to Sextus but farther out — slightly smaller and dimmer i
 
 ### Triple-moon alignment calendar, 2253–2263
 
-The decade 2253–2263 falls in a **full-moon era**: 7 triple-full events reach within 1%, while no triple-new event breaks 1.4%. Closest alignments within 2% (bold = within 1%):
+The decade 2253–2263 falls in a **full-moon era**: 10 triple-full events reach within 1%, while no triple-new event breaks 1.1%. Closest alignments within 2% (bold = within 1%):
 
-| Date | Type | Sec | Ter | Qua |
-|---|---|---|---|---|
-| 2253 Jul 14 | full | 99.9% | 98.9% | 99.6% |
-| **2254 Jan 8** | **full** | **99.4%** | **99.2%** | **99.9%** |
-| 2254 Oct 30 | full | 99.8% | 98.3% | 99.8% |
-| 2255 Feb 12 | new | 0.7% | 1.8% | 1.7% |
-| **2256 Apr 13** | **full** | **99.4%** | **99.1%** | **99.7%** |
-| 2256 Dec 6 | full | 98.9% | 100.0% | 99.8% |
-| 2257 Mar 21 | new | 0.5% | 1.5% | 1.2% |
-| **2258 Mar 24** | **full** | **99.5%** | **99.8%** | **100.0%** |
-| **2259 Jan 12** | **full** | **99.3%** | **99.8%** | **99.3%** |
-| 2259 Apr 27 | new | 0.0% | 1.4% | 1.1% |
-| 2260 Apr 29 | full | 98.8% | 99.7% | 99.9% |
-| **2261 Feb 18** | **full** | **99.8%** | **100.0%** | **99.2%** |
-| **2261 Oct 12** | **full** | **99.3%** | **99.5%** | **99.3%** |
-| **2262 Jun 6** | **full** | **99.8%** | **99.9%** | **99.3%** |
-| 2262 Sep 19 | new | 0.1% | 0.1% | 1.8% |
+| Date | PMT | Type | Sec | Ter | Qua |
+|---|---|---|---|---|---|
+| **2253 Jul 14** | **02h** | **full** | **99.8%** | **99.4%** | **99.7%** |
+| **2254 Jan 8** | **12h** | **full** | **99.5%** | **99.1%** | **99.9%** |
+| 2254 Mar 7 | 00h | full | 99.0% | 98.5% | 99.7% |
+| 2254 Oct 30 | 03h | full | 99.3% | 98.9% | 99.9% |
+| 2255 Feb 12 | 08h | new | 0.6% | 1.7% | 1.6% |
+| 2255 Aug 21 | 18h | full | 98.4% | 98.5% | 99.0% |
+| 2256 Feb 15 | 10h | full | 98.7% | 99.1% | 100.0% |
+| **2256 Apr 13** | **00h** | **full** | **99.3%** | **99.2%** | **99.7%** |
+| **2256 Dec 6** | **02h** | **full** | **99.8%** | **100.0%** | **99.7%** |
+| 2257 Mar 21 | 05h | new | 0.7% | 1.3% | 1.1% |
+| 2257 Jul 30 | 22h | full | 98.6% | 98.6% | 99.8% |
+| 2257 Sep 26 | 13h | full | 99.2% | 99.1% | 98.6% |
+| **2258 Mar 23** | **03h** | **full** | **99.9%** | **99.9%** | **99.9%** |
+| 2258 Jul 6 | 07h | new | 1.6% | 0.6% | 1.5% |
+| **2259 Jan 12** | **17h** | **full** | **99.4%** | **99.7%** | **99.2%** |
+| 2259 Apr 27 | 02h | new | 0.0% | 0.8% | 1.1% |
+| 2259 Nov 3 | 09h | full | 98.2% | 98.4% | 98.4% |
+| **2260 Apr 29** | **02h** | **full** | **99.7%** | **99.3%** | **99.9%** |
+| 2260 Aug 12 | 03h | new | 0.8% | 0.2% | 1.3% |
+| **2261 Feb 18** | **17h** | **full** | **99.7%** | **99.9%** | **99.3%** |
+| **2261 Oct 12** | **15h** | **full** | **99.6%** | **100.0%** | **99.4%** |
+| **2262 Jun 6** | **20h** | **full** | **99.6%** | **99.9%** | **99.5%** |
+| 2262 Sep 19 | 01h | new | 0.9% | 0.0% | 1.2% |
 
-**March 24, 2258** is the peak event of the decade: Quartus exactly full, Tertius 99.8%, Secundus 99.5%.
+**March 23, 2258 at 03h PMT** is the peak event of the decade: all three moons within 0.1% of full simultaneously.
 
 **Quintus** is a trace particle at the Sun-Qaia L4 point (60° ahead of Qaia). It librates between ~45° and ~80° from Qaia with a period of ~2,000 years. Effectively massless — included for worldbuilding purposes.

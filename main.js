@@ -159,6 +159,13 @@ function simDate(t) {
   }
 }
 
+const SIDEREAL_DAY = 86164; // seconds — Qaia sidereal day = Primus orbital period
+function primusMeanTime(t) {
+  const frac = ((t % SIDEREAL_DAY) + SIDEREAL_DAY) % SIDEREAL_DAY / SIDEREAL_DAY;
+  const h = Math.floor(frac * 24).toString().padStart(2, '0');
+  return `${h}h PMT`;
+}
+
 // Convert year/month(0-indexed)/day(1-indexed) → sim seconds via Date.UTC
 function calToSimTime(year, month0, day) {
   return (Date.UTC(year, month0, day) - EPOCH_MS) / 1000;
@@ -169,6 +176,7 @@ function updateHUD() {
   const sign = err >= 0 ? '+' : '';
 
   document.getElementById('hud-date').textContent   = simDate(sim.time);
+  document.getElementById('hud-pmt').textContent    = primusMeanTime(sim.time);
   document.getElementById('hud-energy').textContent = `ΔE/E₀: ${sign}${err.toExponential(2)}`;
 
   updateMoonPhases();
