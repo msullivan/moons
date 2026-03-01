@@ -187,7 +187,7 @@ The maximum angular separation at which Primus remains above the horizon is
 
 - From the **equator**, Primus is visible to roughly ±81° longitude from the prime meridian.
 - From **higher latitudes**, the longitude range narrows. At 60° latitude, only
-  observers within roughly ±60–65° longitude can see Primus.
+  observers within roughly ±72° longitude can see Primus.
 - Near the visibility boundary, Primus is low on the horizon; atmospheric refraction is
   significant and precision is reduced.
 
