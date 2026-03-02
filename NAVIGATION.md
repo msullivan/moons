@@ -162,9 +162,49 @@ Primus appears to the west → observer is at **30° East** of the prime meridia
 
 ### Navigation tables
 
-Pre-computed tables indexed by (latitude, Primus elevation) → longitude allow instant
-fixes at sea without calculation. A 1° × 0.5° table covers the near-side hemisphere in
-roughly 30,000 entries — a standard nautical almanac size.
+The calculation reduces to three lookups in a single cosine table and one division.
+Sine and cosine are the same function offset by 90° (`sin x = cos(90° − x)`), so a
+cosine table alone covers every step:
+
+| Step | Operation | Table use |
+|---|---|---|
+| 1a | look up `cos e` and `cos²e` | direct lookup at angle `e` |
+| 1b | look up `sin e` | lookup at `90° − e` |
+| 1c | compute `cos ψ` | arithmetic on the above values |
+| 2a | look up `cos φ` | direct lookup at angle `φ` |
+| 2b | divide `cos ψ / cos φ` → `cos λ` | one division |
+| 2c | reverse-lookup `cos λ` → `λ` | read table backwards |
+
+Step 1c is the only arithmetic beyond simple lookups, and for rough fixes the small
+correction term `ρ² cos²e` (at most 2.3%) can be dropped entirely, leaving:
+
+```
+cos ψ ≈ ρ cos²e + sin e
+```
+
+which is two table lookups, one multiplication by the constant 0.1511, and one addition.
+
+For a pre-printed almanac, Step 1 can be eliminated entirely by tabulating `cos ψ`
+directly against `e` — a single column that is computed once and never changes, since
+it depends only on the fixed ratio ρ = R_Qaia / r_Primus:
+
+| Elevation e | cos ψ |
+|---|---|
+| 5° | 0.279 |
+| 10° | 0.398 |
+| 20° | 0.565 |
+| 30° | 0.693 |
+| 45° | 0.837 |
+| 60° | 0.927 |
+| 75° | 0.981 |
+| 90° | 1.000 |
+
+With this table in hand, the complete at-sea procedure is: measure `e`, look up `cos ψ`,
+divide by `cos φ` (looked up from the same cosine table at angle φ), reverse-lookup to
+get `λ`. A 1° × 0.5° version of the `e → cos ψ` column covers every useful elevation
+in under 200 entries. The two-variable `(e, φ) → λ` table that eliminates all
+arithmetic fits the full near-side hemisphere in roughly 30,000 entries — standard
+nautical almanac size.
 
 ### Accuracy
 
