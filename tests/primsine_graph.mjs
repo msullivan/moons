@@ -158,8 +158,8 @@ const page = await browser.newPage();
 await page.setViewportSize({ width: 860, height: 560 });
 await page.goto(`http://localhost:${port}/`);
 await page.waitForTimeout(500);
-await page.screenshot({ path: '/tmp/primsine_graph.png' });
+await page.screenshot({ path: new URL('../analysis/primsine.png', import.meta.url).pathname });
 
-console.log('Screenshot saved to /tmp/primsine_graph.png');
+console.log('Screenshot saved to analysis/primsine.png');
 await browser.close();
 server.close();

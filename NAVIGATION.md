@@ -99,6 +99,8 @@ Two useful properties: primsine(90°) = 1 (Primus directly overhead → you are 
 sub-Primus point); primsine(0°) = ρ (Primus on the horizon → you are at the visibility
 limit).
 
+![Graph of primsine(e) vs elevation](analysis/primsine.png)
+
 ### The longitude formula
 
 Because the sub-Primus point is on the equator, the spherical law of cosines gives:
