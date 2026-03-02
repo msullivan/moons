@@ -79,49 +79,39 @@ west of your local meridian (its **azimuth**) resolves which one.
 No chronometer is needed because the measurement is purely geometric — the position of
 a fixed object relative to your horizon.
 
-### The Calculation
+### The primsine function
 
-**Symbols:**
-
-| Symbol | Meaning |
-|---|---|
-| φ | Observer latitude (+ north, − south) |
-| λ | Observer longitude (unknown; + east of prime meridian) |
-| e | Measured elevation angle to Primus |
-| ψ | Geocentric angular distance from observer to sub-Primus point |
-| ρ | R_Qaia / r_Primus = 6371 / 42160 = **0.1511** |
-
-**Step 1 — Solve for ψ from the measured elevation.**
-
-The standard elevation formula for a body at orbital radius r_P:
+Define **primsine(e)** as the geocentric angular distance from the observer to the
+sub-Primus point, expressed as a cosine, as a function of Primus's measured elevation e:
 
 ```
-tan(e) = (cos ψ − ρ) / sin ψ
+primsine(e) = ρ cos²e + sin(e) × sqrt(1 − ρ² cos²e)
 ```
 
-Rearranging to invert directly from e:
+where ρ = R_Qaia / r_Primus = 6371 / 42160 = **0.1511**.
+
+This is analogous to the haversine: a function of one variable, defined specifically
+to reduce a navigation calculation to a single table lookup. Because ρ is a fixed
+physical constant of the Qaia–Primus system, primsine is a permanent function that
+never needs to be recomputed or revised.
+
+Two useful properties: primsine(90°) = 1 (Primus directly overhead → you are at the
+sub-Primus point); primsine(0°) = ρ (Primus on the horizon → you are at the visibility
+limit).
+
+### The longitude formula
+
+Because the sub-Primus point is on the equator, the spherical law of cosines gives:
 
 ```
-cos ψ = ρ cos²e + sin(e) × sqrt(1 − ρ² cos²e)
+primsine(e) = cos φ × cos λ
 ```
 
-The correction term ρ² cos²e ≤ 0.023; for rough fixes it can be dropped, giving the
-simpler approximation `cos ψ ≈ ρ cos²e + sin(e)`.
-
-**Step 2 — Recover longitude.**
-
-Because the sub-Primus point is on the equator (latitude 0°), the spherical law of
-cosines simplifies to:
+Solving for longitude:
 
 ```
-cos ψ = cos φ × cos λ
-```
-
-Solving for λ:
-
-```
-cos λ = cos ψ / cos φ
-λ = ± arccos( cos ψ / cos φ )
+cos λ = primsine(e) / cos φ
+λ = ± arccos( primsine(e) / cos φ )
 ```
 
 **Sign (east or west)**: if Primus appears to the **east** of due south (or due north),
@@ -134,27 +124,25 @@ you are **west** of the prime meridian. If Primus appears to the west, you are e
 **Observer**: latitude 30° N, Primus appearing slightly to the west. Measured elevation:
 e = 42.2°.
 
-**Step 1 — Solve for ψ:**
+**Primsine lookup (or calculation):**
 ```
 cos(42.2°) = 0.7408    cos²(42.2°) = 0.5488    sin(42.2°) = 0.6717
 
-ρ cos²e        = 0.1511 × 0.5488 = 0.0829
-ρ² cos²e       = 0.0228 × 0.5488 = 0.0125
-sqrt(1 − 0.0125) = 0.9937
+ρ cos²e          = 0.1511 × 0.5488 = 0.0829
+sin(e) sqrt(...)  ≈ 0.6717 × 0.9937 = 0.6675
 
-cos ψ = 0.0829 + 0.6717 × 0.9937 = 0.0829 + 0.6675 = 0.7504
-ψ = 41.4°
+primsine(42.2°) = 0.0829 + 0.6675 = 0.7504
 ```
 
-**Step 2 — Solve for longitude:**
+**Longitude:**
 ```
-cos λ = cos ψ / cos φ = 0.7504 / cos(30°) = 0.7504 / 0.8660 = 0.8666
+cos λ = primsine(e) / cos φ = 0.7504 / cos(30°) = 0.7504 / 0.8660 = 0.8666
 λ = arccos(0.8666) = 30°
 ```
 
 Primus appears to the west → observer is at **30° East** of the prime meridian.
 
-*(Check: cos ψ = cos 30° × cos 30° = 0.8660 × 0.8660 = 0.750 ✓; tan e = (0.750 − 0.151) / sin 41.4° = 0.599 / 0.661 = 0.906; e = 42.2° ✓)*
+*(Check: cos 30° × cos 30° = 0.750 = primsine(42.2°) ✓)*
 
 ---
 
@@ -162,33 +150,10 @@ Primus appears to the west → observer is at **30° East** of the prime meridia
 
 ### Navigation tables
 
-The calculation reduces to three lookups in a single cosine table and one division.
-Sine and cosine are the same function offset by 90° (`sin x = cos(90° − x)`), so a
-cosine table alone covers every step:
+In practice, primsine values are precomputed and printed once in the almanac — a single
+permanent column, since primsine depends only on the fixed ratio ρ:
 
-| Step | Operation | Table use |
-|---|---|---|
-| 1a | look up `cos e` and `cos²e` | direct lookup at angle `e` |
-| 1b | look up `sin e` | lookup at `90° − e` |
-| 1c | compute `cos ψ` | arithmetic on the above values |
-| 2a | look up `cos φ` | direct lookup at angle `φ` |
-| 2b | divide `cos ψ / cos φ` → `cos λ` | one division |
-| 2c | reverse-lookup `cos λ` → `λ` | read table backwards |
-
-Step 1c is the only arithmetic beyond simple lookups, and for rough fixes the small
-correction term `ρ² cos²e` (at most 2.3%) can be dropped entirely, leaving:
-
-```
-cos ψ ≈ ρ cos²e + sin e
-```
-
-which is two table lookups, one multiplication by the constant 0.1511, and one addition.
-
-For a pre-printed almanac, Step 1 can be eliminated entirely by tabulating `cos ψ`
-directly against `e` — a single column that is computed once and never changes, since
-it depends only on the fixed ratio ρ = R_Qaia / r_Primus:
-
-| Elevation e | cos ψ |
+| Elevation e | primsine(e) |
 |---|---|
 | 5° | 0.279 |
 | 10° | 0.398 |
@@ -199,12 +164,20 @@ it depends only on the fixed ratio ρ = R_Qaia / r_Primus:
 | 75° | 0.981 |
 | 90° | 1.000 |
 
-With this table in hand, the complete at-sea procedure is: measure `e`, look up `cos ψ`,
-divide by `cos φ` (looked up from the same cosine table at angle φ), reverse-lookup to
-get `λ`. A 1° × 0.5° version of the `e → cos ψ` column covers every useful elevation
-in under 200 entries. The two-variable `(e, φ) → λ` table that eliminates all
-arithmetic fits the full near-side hemisphere in roughly 30,000 entries — standard
-nautical almanac size.
+With this column in hand, the complete at-sea procedure is three table lookups and one
+division. Since `sin x = cos(90° − x)`, a single cosine table covers all steps:
+
+| Step | Operation | Table use |
+|---|---|---|
+| 1 | look up primsine(e) | primsine column |
+| 2 | look up cos φ | cosine table at φ |
+| 3 | divide primsine(e) / cos φ → cos λ | one division |
+| 4 | reverse-lookup cos λ → λ | cosine table read backwards |
+
+A 1°-resolution primsine column covers every useful elevation in under 200 entries.
+For navigators who want to skip even the division, a two-variable `(e, φ) → λ` table
+fits the full near-side hemisphere in roughly 30,000 entries — standard nautical almanac
+size.
 
 ### Accuracy
 
@@ -222,8 +195,8 @@ visibility boundary (Primus near the horizon, shallow geometry).
 
 ### Horizon visibility limits
 
-The maximum angular separation at which Primus remains above the horizon is
-ψ_max = arccos(ρ) ≈ **81.3°**. In practical terms:
+The maximum geocentric angle at which Primus remains above the horizon is
+ψ_max = arccos(ρ) ≈ **81.3°**, equivalently primsine(e) = ρ at e = 0°. In practice:
 
 - From the **equator**, Primus is visible to roughly ±81° longitude from the prime meridian.
 - From **higher latitudes**, the longitude range narrows. At 60° latitude, only
@@ -234,9 +207,9 @@ The maximum angular separation at which Primus remains above the horizon is
 ### The prime meridian
 
 The sub-Primus point defines longitude 0° — the most natural prime meridian choice on
-Qaia. It requires no inter-national agreement, no reference observatory, and no
-historical convention: any navigator anywhere in the near hemisphere can identify it
-with a plumb line and a clear sky.
+Qaia. It requires no international agreement, no reference observatory, and no
+historical convention: any navigator in the near hemisphere can identify it with a plumb
+line and a clear sky.
 
 ### Far-side hemisphere
 
@@ -252,7 +225,7 @@ analogous to Earth's pre-chronometer longitude difficulty.
 | Step | Observation | Result |
 |---|---|---|
 | 1 | Pole star elevation above north horizon | Latitude φ |
-| 2 | Primus elevation above horizon | Longitude magnitude (via formula or table) |
+| 2 | Primus elevation above horizon | primsine(e) → longitude magnitude |
 | 3 | Primus azimuth (east or west of due south) | Longitude sign (E or W) |
 
 Two angle measurements, no clock, no reference port, no lunar tables. Qaian navigators
