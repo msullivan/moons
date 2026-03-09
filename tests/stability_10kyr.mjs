@@ -51,7 +51,7 @@ const escaped = {};   // name → year of escape
 const t0 = Date.now();
 
 for (let yr = CHECK_EVERY; yr <= MAX_YEARS; yr += CHECK_EVERY) {
-  for (let s = 0; s < stepsPerCheck; s++) sim._step();
+  sim.advance(stepsPerCheck, stepsPerCheck + 1); // trailInterval > n → no trails
 
   // Check each still-bound moon
   for (const m of moons) {
