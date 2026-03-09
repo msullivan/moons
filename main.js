@@ -30,7 +30,6 @@ const SPEED_PRESETS = [
   { label: '1 mo/s',    value: 86400 * 30.4375 },
   { label: '1 yr/s',    value: 86400 * 365.25 },
   { label: '10 yr/s',   value: 86400 * 365.25 * 10 },
-  { label: '100 yr/s',  value: 86400 * 365.25 * 100 },
 ];
 
 // ─── init ───────────────────────────────────────────────────────────────────
@@ -409,6 +408,7 @@ function buildUI(canvas) {
     () => renderer.zoomAt(1 / 2, renderer.W / 2, renderer.H / 2));
   document.getElementById('btn-zoom-out').addEventListener('click',
     () => renderer.zoomAt(2, renderer.W / 2, renderer.H / 2));
+  document.getElementById('btn-system').addEventListener('click', systemView);
 
   // Scroll wheel zoom
   canvas.addEventListener('wheel', (e) => {
@@ -555,7 +555,19 @@ function handleKey(e) {
       renderer.showLabels = !renderer.showLabels;
       document.getElementById('btn-labels').classList.toggle('active', renderer.showLabels);
       break;
+    case 's': case 'S':
+      systemView();
+      break;
   }
+}
+
+function systemView() {
+  renderer.followIndex = 0; // follow Sun
+  renderer.panX = 0;
+  renderer.panY = 0;
+  renderer.scale = 2e9;     // ~5.5 AU fits on screen
+  sim.clearTrails();
+  updateFollowSelect();
 }
 
 function togglePause() {
