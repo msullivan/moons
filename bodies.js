@@ -18,7 +18,7 @@ export const R_SATURN  = 5.823e7;   // m
 
 const QATURN_A = 0.10 * AU;         // hot Saturn — ~11-day orbit
 
-// Qupiter: Jupiter-mass planet 5% beyond Jupiter's 5.2 AU
+// Tiamat: Jupiter-mass planet 5% beyond Jupiter's 5.2 AU
 const QUPITER_A = 5.46 * AU;
 
 // Galilean moon clone distances in exact Laplace 1:2:4 resonance
@@ -186,14 +186,14 @@ export function createInitialBodies() {
     }),
     // Qaturn (9): hot Saturn at 0.1 AU (~11-day orbit)
     new Body({
-      name: 'Qaturn', mass: M_SATURN,
+      name: 'Bahamut', mass: M_SATURN,
       x: QATURN_A, y: 0, vx: 0, vy: Math.sqrt(G * M_SUN / QATURN_A),
       physicalRadius: R_SATURN, minDisplayPx: 8,
       color: '#E8D080', trailColor: '#E8D080', trailMaxLen: 800,
     }),
     // Qupiter (10): Jupiter-mass planet at 5.46 AU
     new Body({
-      name: 'Qupiter', mass: M_JUPITER,
+      name: 'Tiamat', mass: M_JUPITER,
       x: QUPITER_A, y: 0, vx: 0, vy: v_qupiter,
       physicalRadius: R_JUPITER, minDisplayPx: 10,
       color: '#C88B3A', trailColor: '#C88B3A', trailMaxLen: 3000,
@@ -205,7 +205,7 @@ export function createInitialBodies() {
       vx: 0, vy: v_qupiter + v_io,
       physicalRadius: R_IO, minDisplayPx: 3,
       color: '#E8C060', trailColor: '#E8C060', trailMaxLen: 400,
-      parentName: 'Qupiter',
+      parentName: 'Tiamat',
     }),
     new Body({
       name: 'Quropa', mass: M_EUROPA,
@@ -215,7 +215,7 @@ export function createInitialBodies() {
       vy:  v_qupiter + v_eur * Math.cos(PI23),
       physicalRadius: R_EUROPA, minDisplayPx: 3,
       color: '#AACCEE', trailColor: '#AACCEE', trailMaxLen: 500,
-      parentName: 'Qupiter',
+      parentName: 'Tiamat',
     }),
     new Body({
       name: 'Qanymede', mass: M_GANYMEDE,
@@ -225,7 +225,7 @@ export function createInitialBodies() {
       vy:  v_qupiter + v_gan * Math.cos(2 * PI23),
       physicalRadius: R_GANYMEDE, minDisplayPx: 3,
       color: '#998877', trailColor: '#998877', trailMaxLen: 600,
-      parentName: 'Qupiter',
+      parentName: 'Tiamat',
     }),
     new Body({
       name: 'Qallisto', mass: M_CALLISTO,
@@ -233,7 +233,7 @@ export function createInitialBodies() {
       vx: 0, vy: v_qupiter - Math.sqrt(mu_J / A_CALLISTO),
       physicalRadius: R_CALLISTO, minDisplayPx: 3,
       color: '#887766', trailColor: '#887766', trailMaxLen: 700,
-      parentName: 'Qupiter',
+      parentName: 'Tiamat',
     }),
   ];
 
