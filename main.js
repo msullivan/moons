@@ -1,5 +1,5 @@
 import { G, Simulation } from './simulation.js';
-import { createInitialBodies, applySnapshot, LUNAR_DIST, R_MOON } from './bodies.js';
+import { createInitialBodies, applySnapshot, AU, LUNAR_DIST, R_MOON } from './bodies.js';
 import { Renderer } from './renderer.js';
 
 // ─── globals ────────────────────────────────────────────────────────────────
@@ -182,16 +182,22 @@ function updateHUD() {
 
   // Orbital elements panel
   const body    = sim.bodies[orbitBodyIndex];
-  const primary = sim.bodies[1]; // Qaia
+  const sun     = sim.bodies[0];
+  const primary = body?.parentName
+    ? (sim.bodies.find(b => b.name === body.parentName) ?? sun)
+    : sun;
   if (body && body !== primary) {
     const oe = orbitalElements(body, primary);
     if (oe) {
-      const LD = LUNAR_DIST;
-      document.getElementById('oe-a').textContent = (oe.a / LD).toFixed(3) + ' LD';
+      const aroundSun = primary === sun;
+      const distUnit  = aroundSun ? AU        : LUNAR_DIST;
+      const distLabel = aroundSun ? ' AU'     : ' LD';
+      const distDp    = aroundSun ? 3         : 3;
+      document.getElementById('oe-a').textContent = (oe.a / distUnit).toFixed(distDp) + distLabel;
       document.getElementById('oe-e').textContent = oe.e.toFixed(4);
       document.getElementById('oe-i').textContent = (oe.inc * 180 / Math.PI).toFixed(2) + '°';
       document.getElementById('oe-T').textContent = (oe.T / 86400).toFixed(2) + ' d';
-      document.getElementById('oe-r').textContent = (oe.r / LD).toFixed(3) + ' LD';
+      document.getElementById('oe-r').textContent = (oe.r / distUnit).toFixed(distDp) + distLabel;
     } else {
       ['oe-a','oe-e','oe-i','oe-T','oe-r'].forEach(id =>
         document.getElementById(id).textContent = 'unbound');
@@ -373,10 +379,10 @@ function buildUI(canvas) {
   // Phase panel
   buildPhasePanel();
 
-  // Orbit select — skip Sun (0) and Qaia (1)
+  // Orbit select — skip Sun (0) only; all other bodies have a meaningful primary
   const orbitSel = document.getElementById('orbit-select');
   sim.bodies.forEach((b, i) => {
-    if (i < 2) return;
+    if (i === 0) return;
     const opt = document.createElement('option');
     opt.value = String(i);
     opt.textContent = b.name;
