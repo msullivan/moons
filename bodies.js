@@ -11,6 +11,23 @@ const  R_SUN         = 6.96e8;    // meters
 export const R_EARTH = 6.371e6;   // meters
 export const R_MOON  = 1.737e6;   // meters
 
+export const M_JUPITER = 1.898e27;  // kg
+export const R_JUPITER = 7.149e7;   // m
+
+// Qupiter: Jupiter-mass planet 5% beyond Jupiter's 5.2 AU
+const QUPITER_A = 5.46 * AU;
+
+// Galilean moon clone distances in exact Laplace 1:2:4 resonance
+const A_IO       = 4.218e8;                    // m (421,800 km — real Io semi-major axis)
+const A_EUROPA   = A_IO * Math.pow(2, 2 / 3); // exact 2× Io period
+const A_GANYMEDE = A_IO * Math.pow(4, 2 / 3); // exact 4× Io period
+const A_CALLISTO = 1.8827e9;                   // m — outside the resonance (real Callisto)
+
+const M_IO = 8.932e22;  const R_IO = 1.822e6;  // kg, m
+const M_EUROPA = 4.800e22;  const R_EUROPA = 1.561e6;
+const M_GANYMEDE = 1.482e23;  const R_GANYMEDE = 2.631e6;
+const M_CALLISTO = 1.076e23;  const R_CALLISTO = 2.410e6;
+
 export const QAIA_SIDEREAL_DAY = 86164;  // seconds — Qaia's sidereal rotation period
 
 // Primus orbital mechanics (geosynchronous anchor)
@@ -57,7 +74,13 @@ export const MOON_PARAMS = [
 }));
 
 export function createInitialBodies() {
-  const v_earth = Math.sqrt(G * M_SUN / AU);
+  const v_earth   = Math.sqrt(G * M_SUN / AU);
+  const v_qupiter = Math.sqrt(G * M_SUN / QUPITER_A);
+  const mu_J      = G * M_JUPITER;
+  const v_io      = Math.sqrt(mu_J / A_IO);
+  const v_eur     = Math.sqrt(mu_J / A_EUROPA);
+  const v_gan     = Math.sqrt(mu_J / A_GANYMEDE);
+  const PI23      = 2 * Math.PI / 3;
 
   // Index MOON_PARAMS by name for convenient lookup
   const mp = Object.fromEntries(MOON_PARAMS.map(m => [m.name, m]));
@@ -151,18 +174,63 @@ export function createInitialBodies() {
       physicalRadius: R_QUINTUS, minDisplayPx: 4,
       color: '#FFDD55', trailColor: '#FFDD55', trailMaxLen: 2500,
     }),
+    // Qupiter (9): Jupiter-mass planet at 5.46 AU (5% beyond Jupiter's 5.2 AU)
+    new Body({
+      name: 'Qupiter', mass: M_JUPITER,
+      x: QUPITER_A, y: 0, vx: 0, vy: v_qupiter,
+      physicalRadius: R_JUPITER, minDisplayPx: 10,
+      color: '#C88B3A', trailColor: '#C88B3A', trailMaxLen: 3000,
+    }),
+    // Quio (10), Quropa (11), Qanymede (12): Galilean clones in 1:2:4 resonance, 120° apart
+    new Body({
+      name: 'Qio', mass: M_IO,
+      x: QUPITER_A + A_IO, y: 0,
+      vx: 0, vy: v_qupiter + v_io,
+      physicalRadius: R_IO, minDisplayPx: 3,
+      color: '#E8C060', trailColor: '#E8C060', trailMaxLen: 400,
+    }),
+    new Body({
+      name: 'Quropa', mass: M_EUROPA,
+      x: QUPITER_A + A_EUROPA * Math.cos(PI23),
+      y:              A_EUROPA * Math.sin(PI23),
+      vx: -v_eur * Math.sin(PI23),
+      vy:  v_qupiter + v_eur * Math.cos(PI23),
+      physicalRadius: R_EUROPA, minDisplayPx: 3,
+      color: '#AACCEE', trailColor: '#AACCEE', trailMaxLen: 500,
+    }),
+    new Body({
+      name: 'Qanymede', mass: M_GANYMEDE,
+      x: QUPITER_A + A_GANYMEDE * Math.cos(2 * PI23),
+      y:              A_GANYMEDE * Math.sin(2 * PI23),
+      vx: -v_gan * Math.sin(2 * PI23),
+      vy:  v_qupiter + v_gan * Math.cos(2 * PI23),
+      physicalRadius: R_GANYMEDE, minDisplayPx: 3,
+      color: '#998877', trailColor: '#998877', trailMaxLen: 600,
+    }),
+    // Quallisto (13): outside the Laplace resonance, like real Callisto
+    new Body({
+      name: 'Qallisto', mass: M_CALLISTO,
+      x: QUPITER_A - A_CALLISTO, y: 0,
+      vx: 0, vy: v_qupiter - Math.sqrt(mu_J / A_CALLISTO),
+      physicalRadius: R_CALLISTO, minDisplayPx: 3,
+      color: '#887766', trailColor: '#887766', trailMaxLen: 700,
+    }),
   ];
 
-  // Apply Newton's 3rd-law recoil to Qaia so the Qaia+moons barycenter has the
-  // correct circular heliocentric velocity.  Each moon whose vy differs from
-  // v_earth (i.e. has a tangential velocity component relative to Qaia in the
-  // heliocentric y-direction) pushes back on Qaia by that fraction of its mass.
-  // Currently only Quartus starts at +x with vy = v_earth + v_orbit, so it is
-  // the only meaningful contributor, but the loop is general.
+  // Apply Newton's 3rd-law recoil to Qaia (indices 2–7, its own moons only).
+  // Quartus is the only meaningful contributor (starts at +x with vy offset).
+  // Qupiter's subsystem is handled separately below.
   const qaia = bodies[1];
-  for (const b of bodies) {
-    if (b === qaia || b.name === 'Sun' || b.name === 'Quintus') continue;
+  for (let i = 2; i <= 7; i++) {
+    const b = bodies[i];
     qaia.vy -= (b.mass / M_EARTH) * (b.vy - v_earth);
+  }
+
+  // Qupiter recoil: set Qupiter + Galilean moons COM to travel at v_qupiter.
+  for (let i = 10; i <= 13; i++) {
+    const b = bodies[i];
+    bodies[9].vx -= (b.mass / M_JUPITER) * b.vx;
+    bodies[9].vy -= (b.mass / M_JUPITER) * (b.vy - v_qupiter);
   }
 
   // Shift to centre-of-mass frame
