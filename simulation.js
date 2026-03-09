@@ -60,6 +60,20 @@ export class Simulation {
     this._anchors = bodies
       .filter(b => b.anchor)
       .map(b => ({ body: b, ref: bodies[b.anchor.toIndex], cfg: b.anchor }));
+    // Pre-allocated typed arrays for the hot physics loop.
+    const n = bodies.length;
+    this._n    = n;
+    this._px   = new Float64Array(n);
+    this._py   = new Float64Array(n);
+    this._pz   = new Float64Array(n);
+    this._tax  = new Float64Array(n);  // accumulator for _computeAccelerations
+    this._tay  = new Float64Array(n);
+    this._taz  = new Float64Array(n);
+    this._ax0  = new Float64Array(n);  // saved accelerations for Velocity Verlet
+    this._ay0  = new Float64Array(n);
+    this._az0  = new Float64Array(n);
+    this._mass = new Float64Array(n);
+    for (let i = 0; i < n; i++) this._mass[i] = bodies[i].mass;
     this._enforceAnchors();
     this._computeAccelerations();
     this.initialEnergy = this.totalEnergy();
@@ -67,28 +81,29 @@ export class Simulation {
 
   _computeAccelerations() {
     const bodies = this.bodies;
-    for (const b of bodies) {
-      b.ax = 0;
-      b.ay = 0;
-      b.az = 0;
-    }
-    const n = bodies.length;
+    const n   = this._n;
+    const px  = this._px,  py  = this._py,  pz  = this._pz;
+    const tax = this._tax, tay = this._tay, taz = this._taz;
+    const mass = this._mass;
+
     for (let i = 0; i < n; i++) {
+      px[i] = bodies[i].x;
+      py[i] = bodies[i].y;
+      pz[i] = bodies[i].z;
+      tax[i] = tay[i] = taz[i] = 0;
+    }
+    for (let i = 0; i < n; i++) {
+      const xi = px[i], yi = py[i], zi = pz[i], mi = mass[i];
       for (let j = i + 1; j < n; j++) {
-        const bi = bodies[i];
-        const bj = bodies[j];
-        const dx = bj.x - bi.x;
-        const dy = bj.y - bi.y;
-        const dz = bj.z - bi.z;
+        const dx = px[j] - xi;
+        const dy = py[j] - yi;
+        const dz = pz[j] - zi;
         const r2 = dx * dx + dy * dy + dz * dz;
-        const r3 = r2 * Math.sqrt(r2);
-        const f  = G / r3;
-        bi.ax += f * bj.mass * dx;
-        bi.ay += f * bj.mass * dy;
-        bi.az += f * bj.mass * dz;
-        bj.ax -= f * bi.mass * dx;
-        bj.ay -= f * bi.mass * dy;
-        bj.az -= f * bi.mass * dz;
+        const f  = G / (r2 * Math.sqrt(r2));
+        const fj = f * mass[j];
+        const fi = f * mi;
+        tax[i] += fj * dx;  tay[i] += fj * dy;  taz[i] += fj * dz;
+        tax[j] -= fi * dx;  tay[j] -= fi * dy;  taz[j] -= fi * dz;
       }
     }
   }
@@ -121,26 +136,30 @@ export class Simulation {
     const dt2h = 0.5 * dt * dt;
     const bodies = this.bodies;
 
+    const n   = this._n;
+    const tax = this._tax, tay = this._tay, taz = this._taz;
+    const ax0 = this._ax0, ay0 = this._ay0, az0 = this._az0;
+
     // Update positions: x(t+dt) = x(t) + v(t)*dt + 0.5*a(t)*dt²
-    for (const b of bodies) {
-      b.x += b.vx * dt + b.ax * dt2h;
-      b.y += b.vy * dt + b.ay * dt2h;
-      b.z += b.vz * dt + b.az * dt2h;
+    // (current accelerations live in _tax/_tay/_taz from the previous step)
+    for (let i = 0; i < n; i++) {
+      bodies[i].x += bodies[i].vx * dt + tax[i] * dt2h;
+      bodies[i].y += bodies[i].vy * dt + tay[i] * dt2h;
+      bodies[i].z += bodies[i].vz * dt + taz[i] * dt2h;
     }
 
-    // Save old accelerations
-    const ax0 = bodies.map(b => b.ax);
-    const ay0 = bodies.map(b => b.ay);
-    const az0 = bodies.map(b => b.az);
+    // Save a(t) before overwriting with a(t+dt)
+    ax0.set(tax);  ay0.set(tay);  az0.set(taz);
 
-    // Compute new accelerations at x(t+dt)
+    // Compute new accelerations at x(t+dt) — results go into _tax/_tay/_taz
     this._computeAccelerations();
 
     // Update velocities: v(t+dt) = v(t) + 0.5*(a(t) + a(t+dt))*dt
-    for (let i = 0; i < bodies.length; i++) {
-      bodies[i].vx += 0.5 * (ax0[i] + bodies[i].ax) * dt;
-      bodies[i].vy += 0.5 * (ay0[i] + bodies[i].ay) * dt;
-      bodies[i].vz += 0.5 * (az0[i] + bodies[i].az) * dt;
+    const dth = 0.5 * dt;
+    for (let i = 0; i < n; i++) {
+      bodies[i].vx += (ax0[i] + tax[i]) * dth;
+      bodies[i].vy += (ay0[i] + tay[i]) * dth;
+      bodies[i].vz += (az0[i] + taz[i]) * dth;
     }
 
     this.time += dt;
@@ -160,6 +179,12 @@ export class Simulation {
         const refY = refBodyIndex !== null ? this.bodies[refBodyIndex].y : 0;
         for (const b of this.bodies) b.recordTrail(refX, refY);
       }
+    }
+    // Sync accelerations back to body objects so callers see consistent state.
+    for (let i = 0; i < this._n; i++) {
+      this.bodies[i].ax = this._tax[i];
+      this.bodies[i].ay = this._tay[i];
+      this.bodies[i].az = this._taz[i];
     }
   }
 

@@ -131,7 +131,14 @@ update the corresponding entry in `analysis/moon_stats.mjs` and `analysis/tide_s
   perturbs them via resonances and they escape within years even if initially bound.
 - Inner moons (inside Quartus's orbit, a ≤ 0.45 LD) are individually stable.
 - Current naming by distance from Qaia: Primus 0.11 LD, Secundus 0.30 LD, Tertius 0.45 LD,
-  Quartus 1.00 LD, Sextus 1.65 LD, Septimus 2.10 LD — all stable past 1000 simulated years.
+  Quartus 1.00 LD, Sextus 1.65 LD, Septimus 2.10 LD.
+- **Sextus is actually unstable** — it escapes at ~yr 520 in the canonical dt=360s run. This is
+  intentional worldbuilding (kept out of MOONS.md so players discover it themselves). Secundus,
+  Tertius, Quartus, and Septimus are all stable past 10,000 simulated years.
+- **Lore**: Dragons used to magically maintain the moon orbits (Primus's anchor is a remnant of
+  this). The dragons are gone now, which is why Sextus is slowly destabilizing. Quintus (the
+  "fifth moon") is actually a trojan at the Sun-Qaia L4 point — it counts in the naming sequence
+  so that Septimus is legitimately the seventh moon, as referenced in in-world lore.
 - Quintus is a trace particle (1 kg) at the Sun-Qaia L4 point; librates ~45–80° over ~2000 yr.
 - Tertius at 0.55 LD hits a 5:2 mean-motion resonance with Quartus → catastrophic instability.
   Keep Tertius at 0.45 LD.
