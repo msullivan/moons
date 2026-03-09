@@ -26,6 +26,7 @@ export class Body {
     // Anchor: magically lock body to a circular orbit around another body.
     // { toIndex: int, radius: m, omega: rad/s, phase: rad (angle at t=0) }
     this.anchor          = cfg.anchor || null;
+    this.parentName      = cfg.parentName || null;
   }
 
   // x, y default to this.x/y so existing callers still work;

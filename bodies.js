@@ -13,6 +13,10 @@ export const R_MOON  = 1.737e6;   // meters
 
 export const M_JUPITER = 1.898e27;  // kg
 export const R_JUPITER = 7.149e7;   // m
+export const M_SATURN  = 5.683e26;  // kg
+export const R_SATURN  = 5.823e7;   // m
+
+const QATURN_A = 0.10 * AU;         // hot Saturn — ~11-day orbit
 
 // Qupiter: Jupiter-mass planet 5% beyond Jupiter's 5.2 AU
 const QUPITER_A = 5.46 * AU;
@@ -119,6 +123,7 @@ export function createInitialBodies() {
       physicalRadius: mp.Primus.R, minDisplayPx: 3,
       color: mp.Primus.color, trailColor: mp.Primus.color, trailMaxLen: mp.Primus.trailMaxLen,
       anchor: { toIndex: 1, radius: PRIMUS_A, omega: PRIMUS_OMEGA, phase: PRIMUS_PHASE, inclination: PRIMUS_INCLINATION },
+      parentName: 'Qaia',
     }),
     // Secundus: retrograde, periapsis at −y from Qaia
     new Body({
@@ -128,6 +133,7 @@ export function createInitialBodies() {
       vz: vp(mp.Secundus) * Math.sin(mp.Secundus.inc_deg * Math.PI / 180),
       physicalRadius: mp.Secundus.R, minDisplayPx: 3,
       color: mp.Secundus.color, trailColor: mp.Secundus.color, trailMaxLen: mp.Secundus.trailMaxLen,
+      parentName: 'Qaia',
     }),
     // Tertius: prograde, periapsis at +y from Qaia
     new Body({
@@ -137,6 +143,7 @@ export function createInitialBodies() {
       vz: vp(mp.Tertius) * Math.sin(mp.Tertius.inc_deg * Math.PI / 180),
       physicalRadius: mp.Tertius.R, minDisplayPx: 3,
       color: mp.Tertius.color, trailColor: mp.Tertius.color, trailMaxLen: mp.Tertius.trailMaxLen,
+      parentName: 'Qaia',
     }),
     // Quartus: prograde with inclination, starts at mean distance along +x from Qaia
     new Body({
@@ -147,6 +154,7 @@ export function createInitialBodies() {
       vz:             Math.sqrt(_mu / mp.Quartus.a) * Math.sin(QUARTUS_INCLINATION),
       physicalRadius: mp.Quartus.R, minDisplayPx: 3,
       color: mp.Quartus.color, trailColor: mp.Quartus.color, trailMaxLen: mp.Quartus.trailMaxLen,
+      parentName: 'Qaia',
     }),
     // Sextus: retrograde, periapsis at +y from Qaia
     new Body({
@@ -156,6 +164,7 @@ export function createInitialBodies() {
       vz: vp(mp.Sextus) * Math.sin(mp.Sextus.inc_deg * Math.PI / 180),
       physicalRadius: mp.Sextus.R, minDisplayPx: 3,
       color: mp.Sextus.color, trailColor: mp.Sextus.color, trailMaxLen: mp.Sextus.trailMaxLen,
+      parentName: 'Qaia',
     }),
     // Septimus: retrograde, periapsis at −y from Qaia
     new Body({
@@ -165,6 +174,7 @@ export function createInitialBodies() {
       vz: vp(mp.Septimus) * Math.sin(mp.Septimus.inc_deg * Math.PI / 180),
       physicalRadius: mp.Septimus.R, minDisplayPx: 3,
       color: mp.Septimus.color, trailColor: mp.Septimus.color, trailMaxLen: mp.Septimus.trailMaxLen,
+      parentName: 'Qaia',
     }),
     // Quintus: trace particle at Sun-Qaia L4 (60° ahead of Qaia)
     new Body({
@@ -174,20 +184,28 @@ export function createInitialBodies() {
       physicalRadius: R_QUINTUS, minDisplayPx: 4,
       color: '#FFDD55', trailColor: '#FFDD55', trailMaxLen: 2500,
     }),
-    // Qupiter (9): Jupiter-mass planet at 5.46 AU (5% beyond Jupiter's 5.2 AU)
+    // Qaturn (9): hot Saturn at 0.1 AU (~11-day orbit)
+    new Body({
+      name: 'Qaturn', mass: M_SATURN,
+      x: QATURN_A, y: 0, vx: 0, vy: Math.sqrt(G * M_SUN / QATURN_A),
+      physicalRadius: R_SATURN, minDisplayPx: 8,
+      color: '#E8D080', trailColor: '#E8D080', trailMaxLen: 800,
+    }),
+    // Qupiter (10): Jupiter-mass planet at 5.46 AU
     new Body({
       name: 'Qupiter', mass: M_JUPITER,
       x: QUPITER_A, y: 0, vx: 0, vy: v_qupiter,
       physicalRadius: R_JUPITER, minDisplayPx: 10,
       color: '#C88B3A', trailColor: '#C88B3A', trailMaxLen: 3000,
     }),
-    // Quio (10), Quropa (11), Qanymede (12): Galilean clones in 1:2:4 resonance, 120° apart
+    // Quio (11), Quropa (12), Qanymede (13): Galilean clones in 1:2:4 resonance, 120° apart
     new Body({
       name: 'Qio', mass: M_IO,
       x: QUPITER_A + A_IO, y: 0,
       vx: 0, vy: v_qupiter + v_io,
       physicalRadius: R_IO, minDisplayPx: 3,
       color: '#E8C060', trailColor: '#E8C060', trailMaxLen: 400,
+      parentName: 'Qupiter',
     }),
     new Body({
       name: 'Quropa', mass: M_EUROPA,
@@ -197,6 +215,7 @@ export function createInitialBodies() {
       vy:  v_qupiter + v_eur * Math.cos(PI23),
       physicalRadius: R_EUROPA, minDisplayPx: 3,
       color: '#AACCEE', trailColor: '#AACCEE', trailMaxLen: 500,
+      parentName: 'Qupiter',
     }),
     new Body({
       name: 'Qanymede', mass: M_GANYMEDE,
@@ -206,31 +225,34 @@ export function createInitialBodies() {
       vy:  v_qupiter + v_gan * Math.cos(2 * PI23),
       physicalRadius: R_GANYMEDE, minDisplayPx: 3,
       color: '#998877', trailColor: '#998877', trailMaxLen: 600,
+      parentName: 'Qupiter',
     }),
-    // Quallisto (13): outside the Laplace resonance, like real Callisto
     new Body({
       name: 'Qallisto', mass: M_CALLISTO,
       x: QUPITER_A - A_CALLISTO, y: 0,
       vx: 0, vy: v_qupiter - Math.sqrt(mu_J / A_CALLISTO),
       physicalRadius: R_CALLISTO, minDisplayPx: 3,
       color: '#887766', trailColor: '#887766', trailMaxLen: 700,
+      parentName: 'Qupiter',
     }),
   ];
 
-  // Apply Newton's 3rd-law recoil to Qaia (indices 2–7, its own moons only).
-  // Quartus is the only meaningful contributor (starts at +x with vy offset).
-  // Qupiter's subsystem is handled separately below.
-  const qaia = bodies[1];
-  for (let i = 2; i <= 7; i++) {
-    const b = bodies[i];
-    qaia.vy -= (b.mass / M_EARTH) * (b.vy - v_earth);
+  // Apply Newton's 3rd-law recoil to each parent body so that the
+  // parent+children subsystem COM moves at the parent's initial velocity.
+  const bodyByName = Object.fromEntries(bodies.map(b => [b.name, b]));
+  const childrenOf = {};
+  for (const b of bodies) {
+    if (b.parentName) (childrenOf[b.parentName] ??= []).push(b);
   }
-
-  // Qupiter recoil: set Qupiter + Galilean moons COM to travel at v_qupiter.
-  for (let i = 10; i <= 13; i++) {
-    const b = bodies[i];
-    bodies[9].vx -= (b.mass / M_JUPITER) * b.vx;
-    bodies[9].vy -= (b.mass / M_JUPITER) * (b.vy - v_qupiter);
+  for (const [parentName, children] of Object.entries(childrenOf)) {
+    const parent = bodyByName[parentName];
+    if (!parent) continue;
+    const v0x = parent.vx, v0y = parent.vy, v0z = parent.vz;
+    for (const child of children) {
+      parent.vx -= (child.mass / parent.mass) * (child.vx - v0x);
+      parent.vy -= (child.mass / parent.mass) * (child.vy - v0y);
+      parent.vz -= (child.mass / parent.mass) * (child.vz - v0z);
+    }
   }
 
   // Shift to centre-of-mass frame

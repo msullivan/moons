@@ -5,7 +5,7 @@ import { Simulation, G } from '../simulation.js';
 import { createInitialBodies, LUNAR_DIST } from '../bodies.js';
 
 const YEAR          = 365.25 * 86400;
-const MAX_YEARS     = 10_000;
+const MAX_YEARS     = parseInt(process.argv[2]) || 10_000;
 const CHECK_EVERY   = 10;   // years between binding-energy checks
 const PRINT_EVERY   = 100;  // years between progress lines
 
