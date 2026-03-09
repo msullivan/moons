@@ -61,6 +61,16 @@ export class Renderer {
 
   // ─── main render ────────────────────────────────────────────────────────
 
+  // Returns false when a moon is so close to its parent on screen that
+  // rendering it separately adds no information (hide when zoomed out).
+  _shouldDraw(body) {
+    if (!body.parentName) return true;
+    const parent = this.sim.bodies.find(b => b.name === body.parentName);
+    if (!parent) return true;
+    const dx = body.x - parent.x, dy = body.y - parent.y;
+    return Math.sqrt(dx * dx + dy * dy) / this.scale >= 8;
+  }
+
   render() {
     const ctx = this.ctx;
     const W = this.W, H = this.H;
@@ -72,10 +82,14 @@ export class Renderer {
     this._drawStars(W, H);
 
     if (this.showTrails) {
-      for (const b of this.sim.bodies) this._drawTrail(b);
+      for (const b of this.sim.bodies) {
+        if (this._shouldDraw(b)) this._drawTrail(b);
+      }
     }
 
-    for (const b of this.sim.bodies) this._drawBody(b);
+    for (const b of this.sim.bodies) {
+      if (this._shouldDraw(b)) this._drawBody(b);
+    }
 
     this._drawScaleBar(H);
   }
