@@ -191,15 +191,22 @@ export function createInitialBodies() {
       physicalRadius: R_SATURN, minDisplayPx: 8,
       color: '#E8D080', trailColor: '#E8D080', trailMaxLen: 800,
     }),
-    // Qupiter (10): Jupiter-mass planet at 5.46 AU
+    // Qars (10): super-Earth at 1.52 AU (Mars position)
+    new Body({
+      name: 'Qars', mass: 3 * M_EARTH,
+      x: 1.52 * AU, y: 0, vx: 0, vy: Math.sqrt(G * M_SUN / (1.52 * AU)),
+      physicalRadius: R_EARTH * Math.pow(3, 1 / 3), minDisplayPx: 5,
+      color: '#C1440E', trailColor: '#C1440E', trailMaxLen: 2000,
+    }),
+    // Tiamat (11): Jupiter-mass planet at 5.46 AU
     new Body({
       name: 'Tiamat', mass: M_JUPITER,
       x: QUPITER_A, y: 0, vx: 0, vy: v_qupiter,
       physicalRadius: R_JUPITER, minDisplayPx: 10,
       color: '#C88B3A', trailColor: '#C88B3A', trailMaxLen: 3000,
     }),
-    // Red (11), Blue (12), Green (13): in 1:2:4 Laplace resonance, 120° apart
-    // White (14): outside the resonance. Black is missing.
+    // Red (12), Blue (13), Green (14): in 1:2:4 Laplace resonance, 120° apart
+    // White (15): outside the resonance. Black is missing.
     new Body({
       name: 'Red', mass: M_IO,
       x: QUPITER_A + A_IO, y: 0,

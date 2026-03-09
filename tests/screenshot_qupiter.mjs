@@ -41,11 +41,11 @@ console.log('5-year run: /tmp/qupiter_5yr.png');
 
 // Zoom in on Qupiter
 const qupiterPos = await page.evaluate(() => {
-  const q = sim.bodies[9]; // Qupiter
+  const q = sim.bodies.find(b => b.name === 'Tiamat');
   return { x: q.x, y: q.y };
 });
 await page.evaluate((pos) => {
-  renderer.followIndex = 9; // follow Qupiter
+  renderer.followIndex = sim.bodies.findIndex(b => b.name === 'Tiamat');
   renderer.panX = 0; renderer.panY = 0;
   renderer.scale = 2e6; // zoom into Qupiter's moon system
   renderer.render();
