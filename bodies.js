@@ -84,6 +84,8 @@ export function createInitialBodies() {
   const v_io      = Math.sqrt(mu_J / A_IO);
   const v_eur     = Math.sqrt(mu_J / A_EUROPA);
   const v_gan     = Math.sqrt(mu_J / A_GANYMEDE);
+  const PI23      = 2 * Math.PI / 3;  // 120° — Laplace resonance spacing
+
   // Starting phase angles for the outer planets (radians, CCW from +x)
   const QARS_PHASE    =  40 * Math.PI / 180;
   const TIAMAT_PHASE  = 160 * Math.PI / 180;
@@ -226,16 +228,20 @@ export function createInitialBodies() {
     }),
     new Body({
       name: 'Blue', mass: M_EUROPA,
-      x: QUPITER_A * cosT + A_EUROPA, y: QUPITER_A * sinT,
-      vx: -v_qupiter * sinT, vy: v_qupiter * cosT + v_eur,
+      x: QUPITER_A * cosT + A_EUROPA * Math.cos(PI23),
+      y: QUPITER_A * sinT + A_EUROPA * Math.sin(PI23),
+      vx: -v_qupiter * sinT - v_eur * Math.sin(PI23),
+      vy:  v_qupiter * cosT + v_eur * Math.cos(PI23),
       physicalRadius: R_EUROPA, minDisplayPx: 3,
       color: '#4488CC', trailColor: '#4488CC', trailMaxLen: 500,
       parentName: 'Tiamat',
     }),
     new Body({
       name: 'Green', mass: M_GANYMEDE,
-      x: QUPITER_A * cosT + A_GANYMEDE, y: QUPITER_A * sinT,
-      vx: -v_qupiter * sinT, vy: v_qupiter * cosT + v_gan,
+      x: QUPITER_A * cosT + A_GANYMEDE * Math.cos(2 * PI23),
+      y: QUPITER_A * sinT + A_GANYMEDE * Math.sin(2 * PI23),
+      vx: -v_qupiter * sinT - v_gan * Math.sin(2 * PI23),
+      vy:  v_qupiter * cosT + v_gan * Math.cos(2 * PI23),
       physicalRadius: R_GANYMEDE, minDisplayPx: 3,
       color: '#448833', trailColor: '#448833', trailMaxLen: 600,
       parentName: 'Tiamat',
