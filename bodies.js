@@ -84,8 +84,6 @@ export function createInitialBodies() {
   const v_io      = Math.sqrt(mu_J / A_IO);
   const v_eur     = Math.sqrt(mu_J / A_EUROPA);
   const v_gan     = Math.sqrt(mu_J / A_GANYMEDE);
-  const PI23      = 2 * Math.PI / 3;
-
   // Starting phase angles for the outer planets (radians, CCW from +x)
   const QARS_PHASE    =  40 * Math.PI / 180;
   const TIAMAT_PHASE  = 160 * Math.PI / 180;
