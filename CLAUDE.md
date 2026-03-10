@@ -139,7 +139,7 @@ update the corresponding entry in `analysis/moon_stats.mjs` and `analysis/tide_s
   this). The dragons are gone now, which is why Sextus is slowly destabilizing. Quintus (the
   "fifth moon") is actually a trojan at the Sun-Qaia L4 point — it counts in the naming sequence
   so that Septimus is legitimately the seventh moon, as referenced in in-world lore.
-- Quintus is a trace particle (1 kg) at the Sun-Qaia L4 point; librates ~45–80° over ~2000 yr.
+- Quintus is a trace particle (1 kg) at the Sun-Qaia L5 point (60° behind Qaia); librates ~45–80° over ~2000 yr.
 - Tertius at 0.55 LD hits a 5:2 mean-motion resonance with Quartus → catastrophic instability.
   Keep Tertius at 0.45 LD.
 - V8 (Chrome/Node) and SpiderMonkey (Firefox) produce divergent trajectories in chaotic

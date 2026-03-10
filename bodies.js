@@ -86,6 +86,12 @@ export function createInitialBodies() {
   const v_gan     = Math.sqrt(mu_J / A_GANYMEDE);
   const PI23      = 2 * Math.PI / 3;
 
+  // Starting phase angles for the outer planets (radians, CCW from +x)
+  const QARS_PHASE    =  40 * Math.PI / 180;
+  const TIAMAT_PHASE  = 160 * Math.PI / 180;
+  const BAHAMUT_PHASE = 240 * Math.PI / 180;
+  const cosT = Math.cos(TIAMAT_PHASE), sinT = Math.sin(TIAMAT_PHASE);
+
   // Index MOON_PARAMS by name for convenient lookup
   const mp = Object.fromEntries(MOON_PARAMS.map(m => [m.name, m]));
 
@@ -176,32 +182,37 @@ export function createInitialBodies() {
       color: mp.Septimus.color, trailColor: mp.Septimus.color, trailMaxLen: mp.Septimus.trailMaxLen,
       parentName: 'Qaia',
     }),
-    // Quintus: trace particle at Sun-Qaia L4 (60° ahead of Qaia)
+    // Quintus: trace particle at Sun-Qaia L5 (60° behind Qaia)
     new Body({
       name: 'Quintus', mass: M_QUINTUS,
-      x: AU * Math.cos(Math.PI / 3), y: AU * Math.sin(Math.PI / 3),
-      vx: -v_earth * Math.sin(Math.PI / 3), vy: v_earth * Math.cos(Math.PI / 3),
+      x:  AU * Math.cos(Math.PI / 3), y: -AU * Math.sin(Math.PI / 3),
+      vx: v_earth * Math.sin(Math.PI / 3), vy:  v_earth * Math.cos(Math.PI / 3),
       physicalRadius: R_QUINTUS, minDisplayPx: 4,
       color: '#FFDD55', trailColor: '#FFDD55', trailMaxLen: 2500,
     }),
     // Qaturn (9): hot Saturn at 0.1 AU (~11-day orbit)
     new Body({
       name: 'Bahamut', mass: M_SATURN,
-      x: QATURN_A, y: 0, vx: 0, vy: Math.sqrt(G * M_SUN / QATURN_A),
+      x: QATURN_A * Math.cos(BAHAMUT_PHASE), y: QATURN_A * Math.sin(BAHAMUT_PHASE),
+      vx: -Math.sqrt(G * M_SUN / QATURN_A) * Math.sin(BAHAMUT_PHASE),
+      vy:  Math.sqrt(G * M_SUN / QATURN_A) * Math.cos(BAHAMUT_PHASE),
       physicalRadius: R_SATURN, minDisplayPx: 8,
       color: '#E8D080', trailColor: '#E8D080', trailMaxLen: 800,
     }),
     // Qars (10): super-Earth at 1.52 AU (Mars position)
     new Body({
       name: 'Qars', mass: 3 * M_EARTH,
-      x: 1.52 * AU, y: 0, vx: 0, vy: Math.sqrt(G * M_SUN / (1.52 * AU)),
+      x: 1.52 * AU * Math.cos(QARS_PHASE), y: 1.52 * AU * Math.sin(QARS_PHASE),
+      vx: -Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.sin(QARS_PHASE),
+      vy:  Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.cos(QARS_PHASE),
       physicalRadius: R_EARTH * Math.pow(3, 1 / 3), minDisplayPx: 5,
       color: '#C1440E', trailColor: '#C1440E', trailMaxLen: 2000,
     }),
     // Tiamat (11): Jupiter-mass planet at 5.46 AU
     new Body({
       name: 'Tiamat', mass: M_JUPITER,
-      x: QUPITER_A, y: 0, vx: 0, vy: v_qupiter,
+      x: QUPITER_A * cosT, y: QUPITER_A * sinT,
+      vx: -v_qupiter * sinT, vy: v_qupiter * cosT,
       physicalRadius: R_JUPITER, minDisplayPx: 10,
       color: '#C88B3A', trailColor: '#C88B3A', trailMaxLen: 3000,
     }),
@@ -209,36 +220,36 @@ export function createInitialBodies() {
     // White (15): outside the resonance. Black is missing.
     new Body({
       name: 'Red', mass: M_IO,
-      x: QUPITER_A + A_IO, y: 0,
-      vx: 0, vy: v_qupiter + v_io,
+      x: QUPITER_A * cosT + A_IO, y: QUPITER_A * sinT,
+      vx: -v_qupiter * sinT, vy: v_qupiter * cosT + v_io,
       physicalRadius: R_IO, minDisplayPx: 3,
       color: '#CC3322', trailColor: '#CC3322', trailMaxLen: 400,
       parentName: 'Tiamat',
     }),
     new Body({
       name: 'Blue', mass: M_EUROPA,
-      x: QUPITER_A + A_EUROPA * Math.cos(PI23),
-      y:              A_EUROPA * Math.sin(PI23),
-      vx: -v_eur * Math.sin(PI23),
-      vy:  v_qupiter + v_eur * Math.cos(PI23),
+      x: QUPITER_A * cosT + A_EUROPA * Math.cos(PI23),
+      y: QUPITER_A * sinT + A_EUROPA * Math.sin(PI23),
+      vx: -v_qupiter * sinT - v_eur * Math.sin(PI23),
+      vy:  v_qupiter * cosT + v_eur * Math.cos(PI23),
       physicalRadius: R_EUROPA, minDisplayPx: 3,
       color: '#4488CC', trailColor: '#4488CC', trailMaxLen: 500,
       parentName: 'Tiamat',
     }),
     new Body({
       name: 'Green', mass: M_GANYMEDE,
-      x: QUPITER_A + A_GANYMEDE * Math.cos(2 * PI23),
-      y:              A_GANYMEDE * Math.sin(2 * PI23),
-      vx: -v_gan * Math.sin(2 * PI23),
-      vy:  v_qupiter + v_gan * Math.cos(2 * PI23),
+      x: QUPITER_A * cosT + A_GANYMEDE * Math.cos(2 * PI23),
+      y: QUPITER_A * sinT + A_GANYMEDE * Math.sin(2 * PI23),
+      vx: -v_qupiter * sinT - v_gan * Math.sin(2 * PI23),
+      vy:  v_qupiter * cosT + v_gan * Math.cos(2 * PI23),
       physicalRadius: R_GANYMEDE, minDisplayPx: 3,
       color: '#448833', trailColor: '#448833', trailMaxLen: 600,
       parentName: 'Tiamat',
     }),
     new Body({
       name: 'White', mass: M_CALLISTO,
-      x: QUPITER_A - A_CALLISTO, y: 0,
-      vx: 0, vy: v_qupiter - Math.sqrt(mu_J / A_CALLISTO),
+      x: QUPITER_A * cosT - A_CALLISTO, y: QUPITER_A * sinT,
+      vx: -v_qupiter * sinT, vy: v_qupiter * cosT - Math.sqrt(mu_J / A_CALLISTO),
       physicalRadius: R_CALLISTO, minDisplayPx: 3,
       color: '#DDDDEE', trailColor: '#DDDDEE', trailMaxLen: 700,
       parentName: 'Tiamat',
