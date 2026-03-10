@@ -10,9 +10,11 @@ There are a lot of blank spaces on the map that need to be filled. You can help 
 
 It’s possible that this will be useful to you if you zoom in and squint. No promises though.
 
-![](https://paper-attachments.dropboxusercontent.com/s_7E691FA74E610AEB4D62836E1E8A38FF8B68D10E7944E666BF6B41DFB154B9C3_1570645588477_20191009_112105.jpg)
+![](map-sketch.jpeg)
 
-![](https://paper-attachments.dropboxusercontent.com/s_43CA46CA1ABF67260099B7926B444B0BCA293A4F768ED3001838E3B1FB278076_1764800480420_file.jpeg)
+A nicer version:
+
+![](map-nice.jpeg)
 
 
 
@@ -130,10 +132,10 @@ Other notables:
 
 The most politically and economically dominant nation in Qamis, Edrad is ruled by a half-elven nobility from the coastal capital city of Jia. The Keyberos dynasty has reigned over Edrad for two centuries, gradually expanding royal control.
 
-The capital city, Jia, sits on a peninsula jutting out into the Central Sea. 
+The capital city, Jia, sits on a peninsula jutting out into the Central Sea.
 It is by far the most culturally influential city in Qamis.
 
-Edran nobility is half-elven and must be between one quarter and three quarters elf. 
+Edran nobility is half-elven and must be between one quarter and three quarters elf.
 
 
 
@@ -187,7 +189,6 @@ There are religious differences, with them mostly not being Bahumet worshipers.
 
 ## The big island to the south
 
-There is a big, mostly unexplored island to the south. A city of exiles and pirates, Freeport, sits at the shore, and the residents try to not look too hard at the jungle pressing up against the city. 
+There is a big, mostly unexplored island to the south. A city of exiles and pirates, Freeport, sits at the shore, and the residents try to not look too hard at the jungle pressing up against the city.
 
 Some say this is where the dragons went.
-
