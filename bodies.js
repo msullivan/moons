@@ -81,11 +81,16 @@ export function createInitialBodies() {
   const v_earth   = Math.sqrt(G * M_SUN / AU);
   const v_qupiter = Math.sqrt(G * M_SUN / QUPITER_A);
   const mu_J      = G * M_JUPITER;
-  const v_io      = Math.sqrt(mu_J / A_IO);
-  const v_eur     = Math.sqrt(mu_J / A_EUROPA);
-  const v_gan     = Math.sqrt(mu_J / A_GANYMEDE);
-  const PI23      = 2 * Math.PI / 3;  // 120° — Laplace resonance spacing
-
+  // Real Galilean eccentricities (forced by the Laplace resonance)
+  const E_IO       = 0.0041;
+  const E_EUROPA   = 0.0094;
+  const E_GANYMEDE = 0.0013;
+  const E_CALLISTO = 0.0074;
+  // Periapsis speeds: v_peri = sqrt(mu * (1+e) / (a*(1-e)))
+  const v_io  = Math.sqrt(mu_J * (1 + E_IO)       / (A_IO       * (1 - E_IO)));
+  const v_eur = Math.sqrt(mu_J * (1 + E_EUROPA)   / (A_EUROPA   * (1 - E_EUROPA)));
+  const v_gan = Math.sqrt(mu_J * (1 + E_GANYMEDE) / (A_GANYMEDE * (1 - E_GANYMEDE)));
+  const v_cal = Math.sqrt(mu_J * (1 + E_CALLISTO) / (A_CALLISTO * (1 - E_CALLISTO)));
   // Starting phase angles for the outer planets (radians, CCW from +x)
   const QARS_PHASE    =  40 * Math.PI / 180;
   const TIAMAT_PHASE  = 160 * Math.PI / 180;
@@ -220,7 +225,7 @@ export function createInitialBodies() {
     // White (15): outside the resonance. Black is missing.
     new Body({
       name: 'Red', mass: M_IO,
-      x: QUPITER_A * cosT + A_IO, y: QUPITER_A * sinT,
+      x: QUPITER_A * cosT + A_IO * (1 - E_IO), y: QUPITER_A * sinT,
       vx: -v_qupiter * sinT, vy: v_qupiter * cosT + v_io,
       physicalRadius: R_IO, minDisplayPx: 3,
       color: '#CC3322', trailColor: '#CC3322', trailMaxLen: 400,
@@ -228,28 +233,24 @@ export function createInitialBodies() {
     }),
     new Body({
       name: 'Blue', mass: M_EUROPA,
-      x: QUPITER_A * cosT + A_EUROPA * Math.cos(PI23),
-      y: QUPITER_A * sinT + A_EUROPA * Math.sin(PI23),
-      vx: -v_qupiter * sinT - v_eur * Math.sin(PI23),
-      vy:  v_qupiter * cosT + v_eur * Math.cos(PI23),
+      x: QUPITER_A * cosT + A_EUROPA * (1 - E_EUROPA), y: QUPITER_A * sinT,
+      vx: -v_qupiter * sinT, vy: v_qupiter * cosT + v_eur,
       physicalRadius: R_EUROPA, minDisplayPx: 3,
       color: '#4488CC', trailColor: '#4488CC', trailMaxLen: 500,
       parentName: 'Tiamat',
     }),
     new Body({
       name: 'Green', mass: M_GANYMEDE,
-      x: QUPITER_A * cosT + A_GANYMEDE * Math.cos(2 * PI23),
-      y: QUPITER_A * sinT + A_GANYMEDE * Math.sin(2 * PI23),
-      vx: -v_qupiter * sinT - v_gan * Math.sin(2 * PI23),
-      vy:  v_qupiter * cosT + v_gan * Math.cos(2 * PI23),
+      x: QUPITER_A * cosT, y: QUPITER_A * sinT + A_GANYMEDE * (1 - E_GANYMEDE),
+      vx: -v_qupiter * sinT - v_gan, vy: v_qupiter * cosT,
       physicalRadius: R_GANYMEDE, minDisplayPx: 3,
       color: '#448833', trailColor: '#448833', trailMaxLen: 600,
       parentName: 'Tiamat',
     }),
     new Body({
       name: 'White', mass: M_CALLISTO,
-      x: QUPITER_A * cosT - A_CALLISTO, y: QUPITER_A * sinT,
-      vx: -v_qupiter * sinT, vy: v_qupiter * cosT - Math.sqrt(mu_J / A_CALLISTO),
+      x: QUPITER_A * cosT - A_CALLISTO * (1 - E_CALLISTO), y: QUPITER_A * sinT,
+      vx: -v_qupiter * sinT, vy: v_qupiter * cosT - v_cal,
       physicalRadius: R_CALLISTO, minDisplayPx: 3,
       color: '#DDDDEE', trailColor: '#DDDDEE', trailMaxLen: 700,
       parentName: 'Tiamat',
