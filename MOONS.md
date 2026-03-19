@@ -188,7 +188,7 @@ Physically identical to Sextus but farther out — slightly smaller and dimmer i
 
 **Tidal locking**: The three freely-orbiting inner moons are almost certainly synchronously rotating — tidal locking timescale scales as a⁶.
 
-**Triple-moon alignment eras**: all three inner moons (Secundus, Tertius, Quartus) are simultaneously within 5% of full or new roughly every three months, and within 1% about once per year. Which type dominates alternates in multi-year eras: a full-moon era (all-full alignments frequent, all-new absent) followed by a new-moon era (the reverse), with a period of ~13 years driven by the beat between Quartus's synodic period and the Qaia year. The best alignments within an era are essentially exact — all three moons within 0.1% of syzygy simultaneously.
+**Triple-moon alignment eras**: all three inner moons (Secundus, Tertius, Quartus) are simultaneously within 5% of full or new about five times per year, and within 1% about once per year. Which type dominates alternates in multi-year eras: a full-moon era (all-full alignments frequent, all-new absent) followed by a new-moon era (the reverse), with a full cycle of ~12 years. The best alignments within an era are essentially exact — all three moons within 0.1% of syzygy simultaneously.
 
 ### Triple-moon alignment calendar, 2253–2263
 
