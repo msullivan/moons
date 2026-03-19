@@ -22,5 +22,8 @@ jobs:
           echo "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
           mkdir dist
           cp *.js *.css *.html *.json dist/
+          cp MOONS.md TIDES.md NAVIGATION.md dist/
+          mkdir -p dist/analysis
+          cp analysis/tide_plot.png analysis/primsine.png dist/analysis/
           sudo apt-get install -y rclone
           rclone sync dist/ ":sftp,host=moroso.emarhavil.com,user=upload-sully,key_file=$HOME/.ssh/deploy_key:$DEPLOY_TARGET"
