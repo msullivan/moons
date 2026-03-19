@@ -130,7 +130,7 @@ update the corresponding entry in `analysis/moon_stats.mjs` and `analysis/tide_s
 - Outer prograde moons (outside Quartus at 1 LD) are very hard to keep stable. Quartus
   perturbs them via resonances and they escape within years even if initially bound.
 - Inner moons (inside Quartus's orbit, a ≤ 0.45 LD) are individually stable.
-- Current naming by distance from Qaia: Primus 0.11 LD, Secundus 0.30 LD, Tertius 0.45 LD,
+- Current naming by distance from Qaia: Primus 0.11 LD, Secundus 0.30 LD, Tertius 0.44 LD,
   Quartus 1.00 LD, Sextus 1.65 LD, Septimus 2.10 LD.
 - **Sextus is actually unstable** — it escapes at ~yr 520 in the canonical dt=360s run. This is
   intentional worldbuilding (kept out of MOONS.md so players discover it themselves). Secundus,
@@ -162,5 +162,5 @@ This is non-conservative (no reaction force on Qaia) but energy drift is negligi
 
 - Primus is geosynchronous → raises a static ~20 cm tidal bulge, not an oscillating tide.
   It is excluded from `tide_sim.mjs`.
-- Oscillating drivers: Secundus 9.82 h ±40 cm, Tertius 13.65 h ±73 cm, Quartus 12.45 h ±27 cm.
-- Maximum aligned equilibrium range: ±152 cm.
+- Oscillating drivers: Secundus 9.85 h ±39 cm, Tertius 13.69 h ±55 cm, Quartus 12.43 h ±25 cm.
+- Maximum aligned equilibrium range: ±131 cm.

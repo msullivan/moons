@@ -63,7 +63,7 @@ const _mu = G * M_EARTH;
 export const MOON_PARAMS = [
   { name: 'Primus',   mass_frac: 0.0001, density_ratio: 2, a_LD: PRIMUS_A / LUNAR_DIST, e: 0,    prograde: true,  isAnchor: true,  inc_deg: 23.5, albedo: 0.06, color: '#4466CC', trailMaxLen:  300 },
   { name: 'Secundus', mass_frac: 0.04,   density_ratio: 2, a_LD: 0.30,                  e: 0.10, prograde: false, isAnchor: false, inc_deg:  8.0, albedo: 0.06, color: '#88CCAA', trailMaxLen:  500 },
-  { name: 'Tertius',  mass_frac: 0.25,   density_ratio: 1, a_LD: 0.45,                  e: 0.10, prograde: true,  isAnchor: false, inc_deg:  3.0, albedo: 0.12, color: '#CC9966', trailMaxLen: 1400 },
+  { name: 'Tertius',  mass_frac: 0.18,   density_ratio: 1.6, a_LD: 0.44,                  e: 0.10, prograde: true,  isAnchor: false, inc_deg:  3.0, albedo: 0.09, color: '#CC9966', trailMaxLen: 1400 },
   { name: 'Quartus',  mass_frac: 1.00,   density_ratio: 1, a_LD: 1.00,                  e: 0.10, prograde: true,  isAnchor: false, inc_deg:  5.14,albedo: 0.12, color: '#CCCCCC', trailMaxLen: 1400 },
   { name: 'Sextus',   mass_frac: 0.01,   density_ratio: 1, a_LD: 1.60,                  e: 0.10, prograde: false, isAnchor: false, inc_deg: 18.0, albedo: 0.09, color: '#AA88FF', trailMaxLen: 1800 },
   { name: 'Septimus', mass_frac: 0.01,   density_ratio: 1, a_LD: 2.10,                  e: 0.10, prograde: false, isAnchor: false, inc_deg: 22.0, albedo: 0.09, color: '#FF88AA', trailMaxLen: 2200 },
