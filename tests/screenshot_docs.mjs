@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { createReadStream, statSync } from 'fs';
 import { extname, join } from 'path';
 
-const MIME = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css', '.md':'text/plain' };
+const MIME = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css', '.md':'text/plain', '.png':'image/png' };
 const ROOT = new URL('..', import.meta.url).pathname;
 const server = createServer((req, res) => {
   const pathname = new URL(req.url, 'http://localhost').pathname;
@@ -18,23 +18,20 @@ const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.setViewportSize({ width: 1280, height: 900 });
 
-// Capture console messages
-page.on('console', msg => console.log(`[${msg.type()}] ${msg.text()}`));
-page.on('pageerror', err => console.log(`[pageerror] ${err.message}`));
+const target = process.argv[2] || 'MOONS.md';
+await page.goto(`http://localhost:${port}/docs.html?file=${target}`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(2000);
+await page.screenshot({ path: '/tmp/docs_top.png' });
 
-// Screenshot the docs page
-await page.goto(`http://localhost:${port}/docs.html?file=MOONS.md`, { waitUntil: 'networkidle' });
-await page.waitForTimeout(3000);
-
-const html = await page.evaluate(() => document.getElementById('content').innerHTML);
-console.log('content innerHTML length:', html.length);
-
-await page.screenshot({ path: '/tmp/docs_moons.png' });
-
-// Scroll down to see a table
-await page.evaluate(() => window.scrollBy(0, 600));
-await page.waitForTimeout(300);
-await page.screenshot({ path: '/tmp/docs_moons_table.png' });
+// Scroll to find the image if TIDES
+if (target === 'TIDES.md') {
+  await page.evaluate(() => {
+    const img = document.querySelector('#content img');
+    if (img) img.scrollIntoView({ block: 'center' });
+  });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: '/tmp/docs_chart.png' });
+}
 
 await browser.close();
 server.close();
