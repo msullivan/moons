@@ -40,14 +40,18 @@ const moons = MOON_PARAMS.map(m => {
 
 // Ref-relative properties (tidal, brightness)
 const ref = moons.find(m => m.name === 'Quartus');
+// Quartus full-moon apparent magnitude, calibrated to match Earth's Moon (−12.74).
+const QUARTUS_MAG = -12.74;
 for (const m of moons) {
   m.tidal_ratio  = (m.M / ref.M) * (ref.a / m.a)**3;
-  // TODO: bright_ratio uses ref.a from the snapshot, but -12.74 is calibrated for
+  // TODO: bright_ratio uses ref.a from the snapshot, but QUARTUS_MAG is calibrated for
   // Quartus at exactly 1.00 LD. Should use mp.Quartus.a (nominal) here instead so
   // magnitudes don't shift spuriously when Quartus drifts.
   m.bright_ratio = (m.albedo / ref.albedo) * (m.R * ref.a)**2 / (ref.R * m.a)**2;
+  // Pogson's law: Δm = −2.5 log₁₀(F₁/F₂). A factor of 100 in flux = 5 magnitudes,
+  // so each magnitude step is 100^(1/5) = 10^0.4, giving the −2.5 coefficient.
   m.delta_mag    = -2.5 * Math.log10(m.bright_ratio);
-  m.app_mag      = -12.74 + m.delta_mag;
+  m.app_mag      = QUARTUS_MAG + m.delta_mag;
   m.roche_margin = m.a / m.roche_rigid;
 }
 
@@ -61,7 +65,7 @@ for (const m of moons) {
   console.log(`  Semi-major:    ${m.a_LD.toFixed(3)} LD  /  period ${m.T_d.toFixed(2)} days  /  incl ${m.inc_deg.toFixed(2)}°`);
   console.log(`  Angular diam:  ${m.ang_mean.toFixed(1)}′ mean  (${m.ang_peri.toFixed(1)}′ peri – ${m.ang_apo.toFixed(1)}′ apo)`);
   console.log(`  vs Quartus:    ×${(m.ang_mean / ref.ang_mean).toFixed(3)} angular size`);
-  console.log(`  Full-moon mag: ${m.app_mag.toFixed(2)}  (${m.delta_mag >= 0 ? '+' : ''}${m.delta_mag.toFixed(2)} vs Quartus = −12.74)  illum ×${m.bright_ratio.toFixed(3)} Quartus`);
+  console.log(`  Full-moon mag: ${m.app_mag.toFixed(2)}  (${m.delta_mag >= 0 ? '+' : ''}${m.delta_mag.toFixed(2)} vs Quartus = ${QUARTUS_MAG})  illum ×${m.bright_ratio.toFixed(3)} Quartus`);
   console.log(`  Surface grav:  ${m.g_surf.toFixed(3)} m/s²  (×${(m.g_surf/ref.g_surf).toFixed(3)} Quartus)`);
   console.log(`  Surface area:  ${m.SA_Mkm2.toFixed(2)} M km²  (${(m.SA_Mkm2 / ref.SA_Mkm2 * 100).toFixed(1)}% of Quartus)`);
   console.log(`  Escape vel:    ${m.v_esc.toFixed(0)} m/s`);
