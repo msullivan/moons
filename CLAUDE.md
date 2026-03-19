@@ -112,18 +112,13 @@ After editing any moon parameters in `bodies.js` (mass, radius/density, semi-maj
 eccentricity), regenerate the reference docs:
 
 ```bash
-node analysis/moon_stats.mjs   # recompute physical/observational stats
-node analysis/tide_sim.mjs     # recompute tidal periods and simulation
+node analysis/moon_stats.mjs        # recompute physical/observational stats
+node analysis/tide_sim.mjs           # recompute tidal periods and simulation
+node tests/triple_alignment.mjs      # recompute triple-moon alignment calendar
 ```
 
-Then update `MOONS.md` and `TIDES.md` with the new output. The scripts read directly from
-`bodies.js` exports, so the numbers stay in sync as long as the exported constants
-(`M_MOON`, `R_MOON`, `LUNAR_DIST`, `M_EARTH`, `R_EARTH`, `M_SUN`, `AU`) are kept current.
-
-The moon definitions inside each analysis script (mass fraction, density ratio, semi-major
-axis) are **duplicated** from `bodies.js` and must be kept in sync by hand — they are not
-automatically read from `createInitialBodies()`. If you change a moon's mass or density,
-update the corresponding entry in `analysis/moon_stats.mjs` and `analysis/tide_sim.mjs`.
+Then update `MOONS.md` and `TIDES.md` with the new output. All three scripts import
+`MOON_PARAMS` directly from `bodies.js`, so the numbers stay in sync automatically.
 
 ### What we learned about stability
 
