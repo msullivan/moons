@@ -108,8 +108,12 @@ For running the simulation headlessly (no browser), use `tests/save_state_node.m
 
 ## Updating MOONS.md and TIDES.md after parameter changes
 
-After editing any moon parameters in `bodies.js` (mass, radius/density, semi-major axis,
-eccentricity), regenerate the reference docs:
+**Before changing any moon parameters in `bodies.js`**, confirm with the user — parameter
+changes trigger a cascade of regeneration (stats, tides, alignments, stability, MOONS.md,
+TIDES.md, state snapshot). Ask "Are you sure?" before editing `bodies.js`.
+
+After editing moon parameters (mass, radius/density, semi-major axis, eccentricity),
+regenerate the reference docs:
 
 ```bash
 node analysis/moon_stats.mjs        # recompute physical/observational stats
