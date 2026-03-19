@@ -3,7 +3,7 @@
 Generated from `bodies.js` parameters and the 200-year N-body snapshot (`state_200yr.json`). Re-run `node analysis/moon_stats.mjs` after any changes.
 
 Qaia's Hill sphere: **3.89 LD**. Brightness uses per-moon geometric albedo: iron-rich moons (Primus, Secundus) 0.06; outer moons (Sextus, Septimus) and Tertius 0.09; Quartus 0.12.
-Quartus (1.00 LD, 1 M_moon) is used as the reference body throughout.
+Luna (Earth's Moon: 1.00 LD, 1 M_moon, albedo 0.12) is the reference for all ratios.
 
 ---
 
@@ -19,18 +19,18 @@ Quartus (1.00 LD, 1 M_moon) is used as the reference body throughout.
 | Period | 1.00 days (= Qaia sidereal day) |
 | Inclination | 23.5° to ecliptic (= equatorial orbit; matches Qaia's axial tilt) |
 | Eccentricity | 0 (circular by construction) |
-| Angular diameter | **10.4′** — **0.33× Quartus** |
-| Full-moon brightness | **−9.68** (3.06 mag dimmer than Quartus) |
-| Full-moon illumination | **×0.060 Quartus** (~1/17 of Earth's full moon) |
-| Surface gravity | 0.120 m/s² (0.074× Quartus) |
-| Surface area | 0.05 M km² (0.1% of Quartus) |
+| Angular diameter | **10.4′** — **0.34× Luna** |
+| Full-moon brightness | **−9.62** (3.12 mag dimmer than Luna) |
+| Full-moon illumination | **×0.056 Luna** (~1/18 of Earth's full moon) |
+| Surface gravity | 0.120 m/s² (0.074× lunar) |
+| Surface area | 0.05 M km² (0.1% of Luna) |
 | Escape velocity | 124 m/s |
 | Static tidal bulge | **~2 cm** permanent ocean offset (not an oscillating tide) |
-| Tidal force (gradient) | ×0.083 vs Quartus |
+| Tidal force (gradient) | ×0.076 vs Luna |
 | Hill sphere fraction | 2.8% |
 | Roche margin | ×5.6 (rigid body) |
 
-Primus is fixed over a single point on Qaia's surface — it neither rises nor sets for the hemisphere beneath it, and is never visible from the opposite hemisphere. Despite being close (0.11 LD), its tiny mass (0.0001 M_moon) and dark iron surface (albedo 0.06) make it a minor object in the sky: **10.4′ apparent diameter** (one-third of Quartus) and magnitude −9.68 — dimmer than Quartus by 3.1 magnitudes. At 6,690 kg/m³ it is nearly iron-density, likely a fragment of a differentiated parent body. Its 23.5° orbital inclination (to the ecliptic) exactly matches Qaia's axial tilt — the two cancel, placing Primus's orbit in Qaia's equatorial plane. It is therefore truly **geostationary**: a motionless fixed point in the sky of the near hemisphere, never rising, never setting, never drifting.
+Primus is fixed over a single point on Qaia's surface — it neither rises nor sets for the hemisphere beneath it, and is never visible from the opposite hemisphere. Despite being close (0.11 LD), its tiny mass (0.0001 M_moon) and dark iron surface (albedo 0.06) make it a minor object in the sky: **10.4′ apparent diameter** (one-third of Luna) and magnitude −9.62 — dimmer than Luna by 3.1 magnitudes. At 6,690 kg/m³ it is nearly iron-density, likely a fragment of a differentiated parent body. Its 23.5° orbital inclination (to the ecliptic) exactly matches Qaia's axial tilt — the two cancel, placing Primus's orbit in Qaia's equatorial plane. It is therefore truly **geostationary**: a motionless fixed point in the sky of the near hemisphere, never rising, never setting, never drifting.
 
 **Navigation**: Primus is a revolutionary longitude reference. Because it is fixed in the sky at a known point above the equator, measuring its elevation from any location (with known latitude) immediately yields longitude — no chronometer required. Latitude is easily found by the usual methods (pole star, noon sun); elevation to Primus then places the observer on a circle of known angular radius around the sub-Primus point, and the intersection of that circle with the latitude line gives a longitude fix. This is structurally similar to finding latitude from the pole star, but with the "pole" on the equator instead of at the celestial pole — the difference being that Primus is close enough (0.11 LD) that its parallax is significant and position-dependent, so the geometry requires tables or calculation rather than a direct angle readout. Qaian navigators would have solved the longitude problem far earlier than Earth's — the main limitation is that Primus is visible only from one hemisphere.
 
@@ -50,17 +50,17 @@ Primus is fixed over a single point on Qaia's surface — it neither rises nor s
 | Period | 4.57 days |
 | Inclination | 5.72° |
 | Eccentricity | 0.10 |
-| Angular diameter | 27.9′ mean (23.7′–33.9′) — 0.92× Quartus |
-| Full-moon brightness | **−11.81** (0.93 mag dimmer than Quartus) |
-| Full-moon illumination | **×0.426 Quartus** (~2/5 of Earth's full moon) |
-| Surface gravity | 0.882 m/s² (0.54× Quartus) |
-| Surface area | 2.79 M km² (7.4% of Quartus) |
+| Angular diameter | 27.9′ mean (23.7′–33.9′) — 0.90× Luna |
+| Full-moon brightness | **−11.75** (0.99 mag dimmer than Luna) |
+| Full-moon illumination | **×0.402 Luna** (~2/5 of Earth's full moon) |
+| Surface gravity | 0.882 m/s² (0.54× lunar) |
+| Surface area | 2.79 M km² (7.4% of Luna) |
 | Escape velocity | 912 m/s |
-| Tidal force on Qaia | 1.57× Quartus |
+| Tidal force on Qaia | 1.44× Luna |
 | Hill sphere fraction | 7.8% |
 | Roche margin | ×15.5 |
 
-Slightly smaller than Quartus in the sky at mean distance; near periapsis it approaches Quartus's size. Retrograde — same 2× lunar density and dark albedo (0.06) as Primus, suggesting shared origin or composition (both iron-rich fragments of the same progenitor). Despite being nearly as large in the sky as Quartus, its dark surface makes it ~1 magnitude dimmer.
+Slightly smaller than Luna in the sky at mean distance; near periapsis it approaches Luna's size. Retrograde — same 2× lunar density and dark albedo (0.06) as Primus, suggesting shared origin or composition (both iron-rich fragments of the same progenitor). Despite being nearly as large in the sky as Luna, its dark surface makes it ~1 magnitude dimmer.
 
 ---
 
@@ -76,21 +76,21 @@ Slightly smaller than Quartus in the sky at mean distance; near periapsis it app
 | Period | 8.12 days (~8-day week) |
 | Inclination | 10.88° |
 | Eccentricity | 0.10 |
-| Angular diameter | 33.8′ mean (30.0′–38.7′) — 1.12× Quartus |
-| Full-moon brightness | **−12.67** (0.07 mag dimmer than Quartus) |
-| Full-moon illumination | **×0.940 Quartus** (~Earth's full moon) |
-| Surface gravity | 1.254 m/s² (0.77× Quartus) |
-| Surface area | 8.84 M km² (23.3% of Quartus) |
+| Angular diameter | 33.8′ mean (30.0′–38.7′) — 1.09× Luna |
+| Full-moon brightness | **−12.61** (0.13 mag dimmer than Luna) |
+| Full-moon illumination | **×0.887 Luna** (~9/10 of Earth's full moon) |
+| Surface gravity | 1.254 m/s² (0.77× lunar) |
+| Surface area | 8.84 M km² (23.3% of Luna) |
 | Escape velocity | 1,450 m/s |
-| Tidal force on Qaia | 2.25× Quartus |
+| Tidal force on Qaia | 2.06× Luna |
 | Hill sphere fraction | 11.4% |
 | Roche margin | ×21.0 |
 
-Slightly larger than Quartus in the sky but nearly identical in brightness — its darker surface (albedo 0.09 vs 0.12) compensates for its closer orbit. A dense, iron-enriched rocky world with surface area comparable to Brazil. Prograde, ~8-day period — the basis for Qaia's week. Tidal contribution 2.2× Quartus.
+Slightly larger than Luna in the sky but nearly identical in brightness — its darker surface (albedo 0.09 vs 0.12) compensates for its closer orbit. A dense, iron-enriched rocky world with surface area comparable to Brazil. Prograde, ~8-day period — the basis for Qaia's week. Tidal contribution 2.1× Luna.
 
 ---
 
-## Quartus — prograde *(reference)*
+## Quartus — prograde
 
 | Property | Value |
 |---|---|
@@ -102,13 +102,13 @@ Slightly larger than Quartus in the sky but nearly identical in brightness — i
 | Period | 28.67 days |
 | Inclination | 3.55° |
 | Eccentricity | ~0.04 at t=200 yr |
-| Angular diameter | 30.2′ mean (29.0′–31.4′) |
-| Full-moon brightness | **−12.74** |
-| Full-moon illumination | **×1.000 Quartus** (~Earth's full moon, ~0.1–0.3 lux) |
+| Angular diameter | 30.2′ mean (29.0′–31.4′) — 0.97× Luna |
+| Full-moon brightness | **−12.68** (0.06 mag dimmer than Luna) |
+| Full-moon illumination | **×0.944 Luna** (~Earth's full moon, ~0.1–0.3 lux) |
 | Surface gravity | 1.624 m/s² |
 | Surface area | 37.91 M km² |
 | Escape velocity | 2,375 m/s |
-| Tidal force on Qaia | 1.00× (reference) |
+| Tidal force on Qaia | 0.92× Luna |
 | Hill sphere fraction | 26.4% |
 | Roche margin | ×41.7 |
 
@@ -128,13 +128,13 @@ A clone of Earth's Moon at roughly the same distance and mass. The natural calen
 | Period | 60.12 days |
 | Inclination | 25.78° |
 | Eccentricity | 0.10 |
-| Angular diameter | 4.0′ mean (3.1′–5.6′) — 0.13× Quartus |
-| Full-moon brightness | **−8.02** (4.72 mag dimmer than Quartus) |
-| Full-moon illumination | **×0.013 Quartus** (~1/80 of Earth's full moon) |
-| Surface gravity | 0.350 m/s² (0.215× Quartus) |
-| Surface area | 1.76 M km² (4.6% of Quartus) |
+| Angular diameter | 4.0′ mean (3.1′–5.6′) — 0.13× Luna |
+| Full-moon brightness | **−7.96** (4.78 mag dimmer than Luna) |
+| Full-moon illumination | **×0.012 Luna** (~1/83 of Earth's full moon) |
+| Surface gravity | 0.350 m/s² (0.215× lunar) |
+| Surface area | 1.76 M km² (4.6% of Luna) |
 | Escape velocity | 512 m/s |
-| Tidal force on Qaia | ~0.002× Quartus |
+| Tidal force on Qaia | ×0.002 Luna |
 | Hill sphere fraction | 43.3% |
 | Roche margin | ×68.4 |
 
@@ -154,13 +154,13 @@ Visible as a small disc (~5× the apparent diameter of Jupiter from Earth). At �
 | Period | 89.89 days |
 | Inclination | 18.80° |
 | Eccentricity | 0.10 |
-| Angular diameter | 3.0′ mean (2.6′–3.6′) — 0.10× Quartus |
-| Full-moon brightness | **−7.44** (5.30 mag dimmer than Quartus) |
-| Full-moon illumination | **×0.008 Quartus** (~1/125 of Earth's full moon) |
-| Surface gravity | 0.350 m/s² (0.215× Quartus) |
-| Surface area | 1.76 M km² (4.6% of Quartus) |
+| Angular diameter | 3.0′ mean (2.6′–3.6′) — 0.10× Luna |
+| Full-moon brightness | **−7.38** (5.36 mag dimmer than Luna) |
+| Full-moon illumination | **×0.007 Luna** (~1/143 of Earth's full moon) |
+| Surface gravity | 0.350 m/s² (0.215× lunar) |
+| Surface area | 1.76 M km² (4.6% of Luna) |
 | Escape velocity | 512 m/s |
-| Tidal force on Qaia | ~0.001× Quartus |
+| Tidal force on Qaia | ×0.001 Luna |
 | Hill sphere fraction | 56.6% |
 | Roche margin | ×89.4 |
 
@@ -170,9 +170,9 @@ Physically identical to Sextus but farther out — slightly smaller and dimmer i
 
 ## System Notes
 
-**Sky appearance by size** (largest→smallest): Tertius 33.8′ > Quartus 30.2′ > Secundus 27.9′ > Primus 10.4′ (stationary). Tertius and Quartus are nearly the same apparent size but Tertius is slightly dimmer (albedo 0.09 vs 0.12). Primus is small and faint — roughly one-third the angular size of Quartus and 3.1 magnitudes dimmer. Secundus, though nearly Quartus's angular size, is ~1 mag dimmer due to its dark iron surface.
+**Sky appearance by size** (largest→smallest): Tertius 33.8′ > Quartus 30.2′ > Secundus 27.9′ > Primus 10.4′ (stationary). Tertius and Quartus are nearly the same apparent size but Tertius is slightly dimmer (albedo 0.09 vs 0.12). Primus is small and faint — roughly one-third the angular size of Luna and 3.1 magnitudes dimmer. Secundus, though nearly Luna's angular size, is ~1 mag dimmer due to its dark iron surface.
 
-**Oscillating tidal load**: Secundus (×1.57) + Tertius (×2.25) + Quartus (×1.0) ≈ **4.8× our Moon's total tidal force**. Primus contributes a separate static ~2 cm bulge but no daily tidal cycle. Total tidal complexity comes from three incommensurate oscillating drivers (9.85h, 13.69h, 12.43h) plus the solar tide (12.03h).
+**Oscillating tidal load**: Secundus (×1.44) + Tertius (×2.06) + Quartus (×0.92) ≈ **4.4× Luna's tidal force**. Primus contributes a separate static ~2 cm bulge but no daily tidal cycle. Total tidal complexity comes from three incommensurate oscillating drivers (9.85h, 13.69h, 12.43h) plus the solar tide (12.03h).
 
 **Primus visibility**: fixed over one hemisphere. Observers on the sublunar face see a 10.4′ moon that never moves. Observers on the far side never see it. A minor but permanent fixture — dimmer than Quartus and about the size of a large asteroid seen up close.
 
@@ -184,7 +184,7 @@ Physically identical to Sextus but farther out — slightly smaller and dimmer i
 
 **Tidal migration**: Primus is magically anchored — no tidal torque, no migration. Secundus (retrograde) slowly spirals inward over geological time. Roche margin is comfortable for all moons.
 
-**Long-term stability**: 10,000-year simulation shows Tertius, Quartus, and Septimus are stable; Sextus escapes ~yr 1210 and Secundus ~yr 1860 via chaotic ejection (no gradual drift — stable for centuries then suddenly unbound). The system is not naturally stable on civilizational timescales.
+**Long-term stability**: 2,000-year simulation shows all five freely-orbiting moons (Secundus, Tertius, Quartus, Sextus, Septimus) are stable. Longer runs may reveal late escapes — the system's long-term fate without dragon magic is an open question.
 
 **Tidal locking**: The three freely-orbiting inner moons are almost certainly synchronously rotating — tidal locking timescale scales as a⁶.
 

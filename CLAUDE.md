@@ -132,16 +132,17 @@ update the corresponding entry in `analysis/moon_stats.mjs` and `analysis/tide_s
 - Inner moons (inside Quartus's orbit, a ≤ 0.45 LD) are individually stable.
 - Current naming by distance from Qaia: Primus 0.11 LD, Secundus 0.30 LD, Tertius 0.44 LD,
   Quartus 1.00 LD, Sextus 1.65 LD, Septimus 2.10 LD.
-- **Sextus is actually unstable** — it escapes at ~yr 520 in the canonical dt=360s run. This is
-  intentional worldbuilding (kept out of MOONS.md so players discover it themselves). Secundus,
-  Tertius, Quartus, and Septimus are all stable past 10,000 simulated years.
+- **Sextus** was unstable (escaped ~yr 520) with the old Tertius params (0.25 mass, 0.45 LD).
+  After shrinking Tertius (0.18 mass, 0.44 LD), Sextus is stable past 2000 yr. This may change
+  again with future parameter tweaks — retest with `node analysis/stability.mjs 2000` after edits.
+  All six moons (Secundus, Tertius, Quartus, Sextus, Septimus) are currently stable past 2000 yr.
 - **Lore**: Dragons used to magically maintain the moon orbits (Primus's anchor is a remnant of
   this). The dragons are gone now, which is why Sextus is slowly destabilizing. Quintus (the
   "fifth moon") is actually a trojan at the Sun-Qaia L4 point — it counts in the naming sequence
   so that Septimus is legitimately the seventh moon, as referenced in in-world lore.
 - Quintus is a trace particle (1 kg) at the Sun-Qaia L5 point (60° behind Qaia); librates ~45–80° over ~2000 yr.
 - Tertius at 0.55 LD hits a 5:2 mean-motion resonance with Quartus → catastrophic instability.
-  Keep Tertius at 0.45 LD.
+  Keep Tertius at ≤0.45 LD (currently 0.44 LD).
 - V8 (Chrome/Node) and SpiderMonkey (Firefox) produce divergent trajectories in chaotic
   near-unstable configurations — this is expected, not a bug. Only robustly stable configs
   (wide margins from resonances) give consistent results across engines.
@@ -164,3 +165,5 @@ This is non-conservative (no reaction force on Qaia) but energy drift is negligi
   It is excluded from `tide_sim.mjs`.
 - Oscillating drivers: Secundus 9.85 h ±39 cm, Tertius 13.69 h ±55 cm, Quartus 12.43 h ±25 cm.
 - Maximum aligned equilibrium range: ±131 cm.
+- Tidal/brightness ratios in MOONS.md are Luna-relative (nominal 1 M_moon at 1.00 LD, albedo 0.12),
+  not Quartus-relative, so they don't shift when Quartus's osculating orbit drifts between snapshots.
