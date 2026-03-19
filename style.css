@@ -269,6 +269,27 @@ button.ctrl-btn.active {
   margin-top: 2px;
 }
 
+/* ── Doc links (styled as buttons) ──────────────────────────── */
+
+#doc-links a.ctrl-btn {
+  text-decoration: none;
+  display: inline-block;
+  font-family: inherit;
+  font-size: 12px;
+  background: rgba(20, 45, 100, 0.75);
+  border: 1px solid rgba(80, 130, 220, 0.3);
+  color: rgba(180, 215, 255, 0.88);
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+#doc-links a.ctrl-btn:hover {
+  background: rgba(40, 80, 160, 0.85);
+  border-color: rgba(120, 180, 255, 0.5);
+}
+
 /* ── Keyboard hint ───────────────────────────────────────────── */
 
 #key-hint {

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qaia — Docs</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: #06060f;
+      font-family: 'Courier New', Courier, monospace;
+      color: rgba(190, 220, 255, 0.9);
+      line-height: 1.7;
+    }
+
+    body { padding: 32px 24px 64px; max-width: 860px; margin: 0 auto; }
+
+    /* ── Nav bar ──────────────────────────────────────────────── */
+
+    nav {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 28px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(80, 130, 255, 0.18);
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: rgba(140, 190, 255, 0.85);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 4px 10px;
+      border: 1px solid rgba(80, 130, 220, 0.3);
+      border-radius: 4px;
+      background: rgba(20, 45, 100, 0.45);
+      transition: background 0.12s, border-color 0.12s;
+    }
+
+    nav a:hover, nav a.active {
+      background: rgba(50, 110, 200, 0.7);
+      border-color: rgba(140, 200, 255, 0.6);
+      color: #fff;
+    }
+
+    /* ── Markdown content ─────────────────────────────────────── */
+
+    #content { font-size: 13px; }
+
+    #content h1 {
+      font-size: 20px;
+      color: rgba(200, 230, 255, 0.95);
+      text-shadow: 0 0 12px rgba(80, 160, 255, 0.4);
+      margin-bottom: 16px;
+    }
+
+    #content h2 {
+      font-size: 16px;
+      color: rgba(180, 220, 255, 0.92);
+      margin-top: 28px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(80, 130, 255, 0.15);
+      padding-bottom: 4px;
+    }
+
+    #content h3 {
+      font-size: 14px;
+      color: rgba(160, 210, 255, 0.88);
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+
+    #content p { margin-bottom: 10px; }
+
+    #content strong { color: rgba(220, 240, 255, 0.95); }
+
+    #content hr {
+      border: none;
+      border-top: 1px solid rgba(80, 130, 255, 0.18);
+      margin: 24px 0;
+    }
+
+    /* ── Tables ───────────────────────────────────────────────── */
+
+    #content table {
+      border-collapse: collapse;
+      margin: 12px 0 16px;
+      font-size: 12px;
+      width: 100%;
+    }
+
+    #content th, #content td {
+      padding: 4px 10px;
+      text-align: left;
+      border: 1px solid rgba(80, 130, 255, 0.15);
+    }
+
+    #content th {
+      background: rgba(20, 45, 100, 0.5);
+      color: rgba(160, 210, 255, 0.9);
+      font-weight: normal;
+    }
+
+    #content td {
+      color: rgba(170, 210, 240, 0.85);
+    }
+
+    #content tr:hover td {
+      background: rgba(30, 60, 130, 0.25);
+    }
+
+    /* ── Code ─────────────────────────────────────────────────── */
+
+    #content code {
+      background: rgba(20, 45, 100, 0.45);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    #content pre {
+      background: rgba(10, 25, 60, 0.6);
+      border: 1px solid rgba(80, 130, 255, 0.12);
+      border-radius: 4px;
+      padding: 10px 14px;
+      overflow-x: auto;
+      margin: 10px 0 14px;
+    }
+
+    #content pre code {
+      background: none;
+      padding: 0;
+    }
+
+    /* ── Lists ────────────────────────────────────────────────── */
+
+    #content ul, #content ol {
+      padding-left: 24px;
+      margin-bottom: 10px;
+    }
+
+    #content li { margin-bottom: 3px; }
+
+    /* ── Links ────────────────────────────────────────────────── */
+
+    #content a {
+      color: rgba(140, 190, 255, 0.9);
+      text-decoration: underline;
+      text-decoration-color: rgba(140, 190, 255, 0.3);
+    }
+
+    #content a:hover {
+      color: #fff;
+      text-decoration-color: rgba(200, 220, 255, 0.6);
+    }
+
+    /* ── Loading / error ──────────────────────────────────────── */
+
+    .loading {
+      color: rgba(120, 170, 220, 0.5);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html">Simulation</a>
+    <a href="docs.html?file=MOONS.md">Moons</a>
+    <a href="docs.html?file=TIDES.md">Tides</a>
+    <a href="docs.html?file=NAVIGATION.md">Navigation</a>
+  </nav>
+
+  <div id="content"><p class="loading">Loading…</p></div>
+
+  <script type="module">
+    import { marked } from 'https://esm.sh/marked@15';
+
+    const ALLOWED = ['MOONS.md', 'TIDES.md', 'NAVIGATION.md'];
+    const params = new URLSearchParams(location.search);
+    const file = params.get('file');
+
+    // Highlight active nav link
+    for (const a of document.querySelectorAll('nav a')) {
+      if (a.href === location.href) a.classList.add('active');
+    }
+
+    const content = document.getElementById('content');
+
+    if (!file || !ALLOWED.includes(file)) {
+      content.innerHTML = '<p>Select a document from the nav bar above.</p>';
+    } else {
+      try {
+        const res = await fetch(file);
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const md = await res.text();
+        content.innerHTML = marked.parse(md);
+        document.title = `Qaia — ${file.replace('.md', '')}`;
+      } catch (err) {
+        content.innerHTML = `<p>Failed to load <code>${file}</code>: ${err.message}</p>`;
+      }
+    }
+  </script>
+
+</body>
+</html>

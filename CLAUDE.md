@@ -20,10 +20,11 @@ import { createServer } from 'http';
 import { createReadStream, statSync } from 'fs';
 import { extname, join } from 'path';
 
-const MIME = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css' };
+const MIME = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css', '.md':'text/plain' };
 const ROOT = new URL('..', import.meta.url).pathname;
 const server = createServer((req, res) => {
-  const file = join(ROOT, req.url === '/' ? 'index.html' : req.url);
+  const pathname = new URL(req.url, 'http://localhost').pathname;
+  const file = join(ROOT, pathname === '/' ? 'index.html' : pathname);
   try { statSync(file); } catch { res.writeHead(404); res.end(); return; }
   res.writeHead(200, { 'Content-Type': MIME[extname(file)] ?? 'text/plain' });
   createReadStream(file).pipe(res);

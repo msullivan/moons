@@ -1,7 +1,5 @@
 # Qaia Moon Reference
 
-Generated from `bodies.js` parameters and the 200-year N-body snapshot (`state_200yr.json`). Re-run `node analysis/moon_stats.mjs` after any changes.
-
 Qaia's Hill sphere: **3.89 LD**. Brightness uses per-moon geometric albedo: iron-rich moons (Primus, Secundus) 0.06; outer moons (Sextus, Septimus) and Tertius 0.09; Quartus 0.12.
 Luna (Earth's Moon: 1.00 LD, 1 M_moon, albedo 0.12) is the reference for all ratios.
 
