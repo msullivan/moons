@@ -176,7 +176,7 @@ division. Since `sin x = cos(90° − x)`, a single cosine table covers all step
 | 3 | divide primsine(e) / cos φ → cos λ | one division |
 | 4 | reverse-lookup cos λ → λ | cosine table read backwards |
 
-A 1°-resolution primsine column covers every useful elevation in under 200 entries.
+A 1°-resolution primsine column covers the full hemisphere in under 200 entries — enough for rough positioning (~100 km), trading accuracy for compactness. A 3′-resolution table (0.05°, matching careful sextant use) is ~20× larger but still only ~3,600 entries — entirely practical for a printed reference and necessary to exploit the instrument's full precision.
 For navigators who want to skip even the division, a two-variable `(e, φ) → λ` table
 fits the full near-side hemisphere in roughly 30,000 entries — standard nautical almanac
 size.
@@ -230,6 +230,4 @@ analogous to Earth's pre-chronometer longitude difficulty.
 | 2 | Primus elevation above horizon | primsine(e) → longitude magnitude |
 | 3 | Primus azimuth (east or west of due south) | Longitude sign (E or W) |
 
-Two angle measurements, no clock, no reference port, no lunar tables. Qaian navigators
-solved the longitude problem not by building better chronometers, but by being born on
-the right hemisphere of a world with a geostationary moon.
+When in sight of Qaia, longitude can be calculated without needing to know the time.
