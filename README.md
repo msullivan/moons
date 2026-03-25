@@ -41,7 +41,7 @@ See [MOONS.md](MOONS.md) for full physical stats and [TIDES.md](TIDES.md) for ti
   over 1000 simulated years.
 - Real SI units throughout. Initial conditions in the centre-of-mass frame.
 - Primus anchor: position and velocity overridden each step to enforce circular
-  geosynchronous orbit; non-conservative but negligible drift at 0.001 lunar masses.
+  geosynchronous orbit; momentum-compensated (equal-and-opposite kick to Qaia).
 - Energy error displayed live as a sanity check.
 
 ## Controls

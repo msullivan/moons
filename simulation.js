@@ -134,21 +134,31 @@ export class Simulation {
     const PI2 = 2 * Math.PI;
     const bx = this._bx, by = this._by, bz = this._bz;
     const bvx = this._bvx, bvy = this._bvy, bvz = this._bvz;
+    const mass = this._mass;
     for (const { idx, refIdx, cfg } of this._anchors) {
-      // Wrap angle to [0, 2π] to keep trig args small (avoids costly range reduction).
       const θ    = (cfg.phase + cfg.omega * this.time) % PI2;
       const cosθ = Math.cos(θ), sinθ = Math.sin(θ);
-      // Apply orbital inclination (rotation around y-axis so that the ascending node
-      // is on the ±y axis; at t=0 Qaia is on the x-axis → winter solstice).
-      // North-pole direction = (+sinI, 0, cosI).
       const cosI = cfg.inclination ? Math.cos(cfg.inclination) : 1;
       const sinI = cfg.inclination ? Math.sin(cfg.inclination) : 0;
+
+      const ox = bx[idx], oy = by[idx], oz = bz[idx];
+      const ovx = bvx[idx], ovy = bvy[idx], ovz = bvz[idx];
+
       bx[idx]  = bx[refIdx]  + cfg.radius * cosθ * cosI;
       by[idx]  = by[refIdx]  + cfg.radius * sinθ;
       bz[idx]  = bz[refIdx]  - cfg.radius * cosθ * sinI;
       bvx[idx] = bvx[refIdx] - cfg.radius * cfg.omega * sinθ * cosI;
       bvy[idx] = bvy[refIdx] + cfg.radius * cfg.omega * cosθ;
       bvz[idx] = bvz[refIdx] + cfg.radius * cfg.omega * sinθ * sinI;
+
+      // Conserve momentum: apply equal-and-opposite correction to reference body.
+      const mr = mass[idx] / mass[refIdx];
+      bx[refIdx]  -= mr * (bx[idx]  - ox);
+      by[refIdx]  -= mr * (by[idx]  - oy);
+      bz[refIdx]  -= mr * (bz[idx]  - oz);
+      bvx[refIdx] -= mr * (bvx[idx] - ovx);
+      bvy[refIdx] -= mr * (bvy[idx] - ovy);
+      bvz[refIdx] -= mr * (bvz[idx] - ovz);
     }
   }
 

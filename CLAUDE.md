@@ -156,8 +156,8 @@ Primus is enforced to a circular geosynchronous orbit after each integrator step
 ```javascript
 anchor: { toIndex: 1, radius: PRIMUS_A, omega: PRIMUS_OMEGA, phase: PRIMUS_PHASE }
 ```
-This is non-conservative (no reaction force on Qaia) but energy drift is negligible at
-0.001 M_moon. The anchor is called in the Simulation constructor and at the end of `_step()`.
+The anchor applies an equal-and-opposite momentum correction to Qaia each step.
+Called in the Simulation constructor and at the end of `_step()`.
 
 ### Tidal notes
 
