@@ -1,7 +1,7 @@
 import { G, Body } from './simulation.js';
 
 // Physical constants used in initial condition setup
-export const AU          = 1.496e11;   // meters (1 astronomical unit)
+export const AU          = 1.49606e11; // meters — tuned so Kepler period matches Gregorian year
 export const LUNAR_DIST  = 3.844e8;   // meters (Earth-Moon mean distance)
 
 export const M_SUN   = 1.989e30;  // kg
