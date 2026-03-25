@@ -374,11 +374,26 @@ export class SkyView {
           }
         }
       } else {
-        // Glow halo (Sun gets a larger, brighter one)
+        // Glow halo — for moons, scale by illuminated fraction so new
+        // moons don't glow as brightly as full moons.
+        let glowScale = 1;
+        if (o.idx !== 0 && sunAA) {
+          const qaia = this.sim.bodies[1];
+          const sun  = this.sim.bodies[0];
+          const body = o.body;
+          const dsx = sun.x - qaia.x, dsy = sun.y - qaia.y;
+          const dmx = body.x - qaia.x, dmy = body.y - qaia.y, dmz = body.z - qaia.z;
+          const md = Math.hypot(dmx, dmy, dmz);
+          const sd = Math.hypot(dsx, dsy);
+          if (md > 0 && sd > 0) {
+            const cosE = clamp((dmx * dsx + dmy * dsy) / (md * sd), -1, 1);
+            glowScale = (1 - cosE) / 2;  // 0 at new, 1 at full
+          }
+        }
         const glowR = o.idx === 0 ? o.discR * 5 : o.discR * 3;
         const glow = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, glowR);
-        glow.addColorStop(0, hexAlpha(o.body.color, o.idx === 0 ? 0.5 : 0.3));
-        glow.addColorStop(0.5, hexAlpha(o.body.color, o.idx === 0 ? 0.15 : 0.08));
+        glow.addColorStop(0, hexAlpha(o.body.color, (o.idx === 0 ? 0.5 : 0.3) * glowScale));
+        glow.addColorStop(0.5, hexAlpha(o.body.color, (o.idx === 0 ? 0.15 : 0.08) * glowScale));
         glow.addColorStop(1, hexAlpha(o.body.color, 0));
         ctx.fillStyle = glow;
         ctx.beginPath(); ctx.arc(o.x, o.y, glowR, 0, TAU); ctx.fill();
@@ -523,7 +538,19 @@ export class SkyView {
     // Terminator ellipse x semi-axis: R at full, 0 at quarter, R at new
     const tx = R * Math.abs(Math.cos(alpha));
 
-    const rotation = sunObj ? this._greatCircleScreenAngle(moon, sunObj) : 0;
+    // Great-circle tangent gives the projection-correct direction, but
+    // reverses near opposition (>90° separation) because the shortest
+    // great circle goes "over the pole."  Detect this by comparing with
+    // the naïve screen direction and flip if they disagree by >90°.
+    let rotation = 0;
+    if (sunObj) {
+      rotation = this._greatCircleScreenAngle(moon, sunObj);
+      const naive = Math.atan2(sunObj.y - moon.y, sunObj.x - moon.x);
+      // Signed angular difference
+      let diff = rotation - naive;
+      diff = ((diff + 3 * PI) % TAU) - PI;  // normalize to [-π, π]
+      if (Math.abs(diff) > PI / 2) rotation += PI;
+    }
 
     ctx.save();
     ctx.translate(moon.x, moon.y);
