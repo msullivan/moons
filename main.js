@@ -225,8 +225,10 @@ function buildPhasePanel() {
 
     const canvas = document.createElement('canvas');
     canvas.id = `phase-canvas-${bi}`;
-    canvas.width  = 124;
-    canvas.height = 96;
+    const w = window.innerWidth, h = window.innerHeight;
+    const compact = w <= 600 || h <= 500;
+    canvas.width  = compact ? 64 : w <= 900 ? 90 : 124;
+    canvas.height = compact ? 50 : w <= 900 ? 70 : 96;
     canvas.className = 'phase-canvas';
 
     const name = document.createElement('span');
