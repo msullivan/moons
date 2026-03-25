@@ -78,7 +78,12 @@ export const MOON_PARAMS = [
 }));
 
 export function createInitialBodies() {
-  const v_earth   = Math.sqrt(G * M_SUN / AU);
+  // Bahamut (Saturn-mass at 0.1 AU) yanks the Sun around in an 11-day
+  // wobble.  The indirect tidal effect reduces the effective central
+  // gravity felt by Qaia, requiring ~8 m/s less orbital velocity to
+  // stay on a Keplerian year.  Without this correction the calendar
+  // drifts ~55° over 200 years.
+  const v_earth   = Math.sqrt(G * M_SUN / AU) - 8.0;
   const v_qupiter = Math.sqrt(G * M_SUN / QUPITER_A);
   const mu_J      = G * M_JUPITER;
   // Real Galilean eccentricities (forced by the Laplace resonance)
@@ -258,7 +263,8 @@ export function createInitialBodies() {
   ];
 
   // Apply Newton's 3rd-law recoil to each parent body so that the
-  // parent+children subsystem COM moves at the parent's initial velocity.
+  // parent+children subsystem COM is at the parent's initial position
+  // and moves at the parent's initial velocity.
   const bodyByName = Object.fromEntries(bodies.map(b => [b.name, b]));
   const childrenOf = {};
   for (const b of bodies) {
@@ -267,8 +273,12 @@ export function createInitialBodies() {
   for (const [parentName, children] of Object.entries(childrenOf)) {
     const parent = bodyByName[parentName];
     if (!parent) continue;
+    const x0 = parent.x, y0 = parent.y, z0 = parent.z;
     const v0x = parent.vx, v0y = parent.vy, v0z = parent.vz;
     for (const child of children) {
+      parent.x  -= (child.mass / parent.mass) * (child.x  - x0);
+      parent.y  -= (child.mass / parent.mass) * (child.y  - y0);
+      parent.z  -= (child.mass / parent.mass) * (child.z  - z0);
       parent.vx -= (child.mass / parent.mass) * (child.vx - v0x);
       parent.vy -= (child.mass / parent.mass) * (child.vy - v0y);
       parent.vz -= (child.mass / parent.mass) * (child.vz - v0z);
