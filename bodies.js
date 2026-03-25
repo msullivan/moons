@@ -18,6 +18,11 @@ export const R_SATURN  = 5.823e7;   // m
 
 const QATURN_A = 0.10 * AU;         // hot Saturn — ~11-day orbit
 
+// Fafnir: Venus-like planet at 0.723 AU (~225-day orbit)
+const FAFNIR_A = 0.723 * AU;
+export const M_VENUS = 4.867e24;   // kg
+export const R_VENUS = 6.052e6;    // m
+
 // Tiamat: Jupiter-mass planet 5% beyond Jupiter's 5.2 AU
 const QUPITER_A = 5.46 * AU;
 
@@ -97,9 +102,11 @@ export function createInitialBodies() {
   const v_gan = Math.sqrt(mu_J * (1 + E_GANYMEDE) / (A_GANYMEDE * (1 - E_GANYMEDE)));
   const v_cal = Math.sqrt(mu_J * (1 + E_CALLISTO) / (A_CALLISTO * (1 - E_CALLISTO)));
   // Starting phase angles for the outer planets (radians, CCW from +x)
+  const FAFNIR_PHASE  = 300 * Math.PI / 180;
   const QARS_PHASE    =  40 * Math.PI / 180;
   const TIAMAT_PHASE  = 160 * Math.PI / 180;
   const BAHAMUT_PHASE = 240 * Math.PI / 180;
+  const cosF = Math.cos(FAFNIR_PHASE), sinF = Math.sin(FAFNIR_PHASE);
   const cosT = Math.cos(TIAMAT_PHASE), sinT = Math.sin(TIAMAT_PHASE);
 
   // Index MOON_PARAMS by name for convenient lookup
@@ -218,7 +225,16 @@ export function createInitialBodies() {
       physicalRadius: R_EARTH * Math.pow(3, 1 / 3), minDisplayPx: 5,
       color: '#C1440E', trailColor: '#C1440E', trailMaxLen: 2000,
     }),
-    // Tiamat (11): Jupiter-mass planet at 5.46 AU
+    // Fafnir (11): Venus-like planet at 0.723 AU (~225-day orbit)
+    new Body({
+      name: 'Fafnir', mass: M_VENUS,
+      x: FAFNIR_A * cosF, y: FAFNIR_A * sinF,
+      vx: -Math.sqrt(G * M_SUN / FAFNIR_A) * sinF,
+      vy:  Math.sqrt(G * M_SUN / FAFNIR_A) * cosF,
+      physicalRadius: R_VENUS, minDisplayPx: 5,
+      color: '#E8C87A', trailColor: '#E8C87A', trailMaxLen: 2000,
+    }),
+    // Tiamat (12): Jupiter-mass planet at 5.46 AU
     new Body({
       name: 'Tiamat', mass: M_JUPITER,
       x: QUPITER_A * cosT, y: QUPITER_A * sinT,
