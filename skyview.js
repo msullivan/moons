@@ -105,7 +105,10 @@ export class SkyView {
     const alt = Math.asin(clamp(b1 / dist, -1, 1));
     const az  = Math.atan2(b2, b3);   // 0 = north, π/2 = east
 
-    return { alt, az, dist };
+    // Body-fixed unit vector (used for great-circle phase orientation)
+    const ux = b1 / dist, uy = b2 / dist, uz = b3 / dist;
+
+    return { alt, az, dist, ux, uy, uz };
   }
 
   // ── azimuthal equidistant projection ──────────────────────────────────
@@ -132,6 +135,62 @@ export class SkyView {
       x: cx + r * Math.sin(az),
       y: cy - r * Math.cos(az),
     };
+  }
+
+  // ── great-circle screen angle ─────────────────────────────────────────
+  //
+  // Returns the screen-space direction from `from` toward `to` along
+  // the great circle on the celestial sphere.  Used to orient the lit
+  // side of moon phase discs toward the Sun.
+  //
+  // A naïve atan2(toScreen − fromScreen) fails because the azimuthal
+  // equidistant projection is nonlinear — the straight screen line
+  // doesn't follow the great circle.
+  //
+  // Instead we use finite differencing: nudge `from` a tiny amount
+  // along the great circle toward `to`, project both through _project(),
+  // and measure the screen angle between them.  This is projection-
+  // agnostic — works for any sky-to-screen mapping.
+
+  _greatCircleScreenAngle(from, to) {
+    if (from.ux === undefined || to.ux === undefined) return 0;
+
+    const mx = from.ux, my = from.uy, mz = from.uz;
+    const sx = to.ux,   sy = to.uy,   sz = to.uz;
+
+    // Great-circle tangent at `from` toward `to`.
+    // Decompose ŝ (to) into components parallel and perpendicular to m̂ (from):
+    //   parallel:      dot * m̂       where dot = ŝ · m̂  (dot product, a scalar)
+    //   perpendicular: ŝ − dot * m̂   ← this is the tangent
+    // The perpendicular part lies in the tangent plane of the sphere at
+    // m̂ and points toward ŝ — the great-circle direction.
+    const dot = sx * mx + sy * my + sz * mz;
+    let tx = sx - dot * mx;
+    let ty = sy - dot * my;
+    let tz = sz - dot * mz;
+    const tlen = Math.sqrt(tx * tx + ty * ty + tz * tz);
+    if (tlen < 1e-12) return 0;  // degenerate (coincident or antipodal)
+    tx /= tlen; ty /= tlen; tz /= tlen;
+
+    // Nudge `from` along the tangent (small ε keeps the projection linear)
+    const eps = 0.002;
+    let nx = mx + eps * tx;
+    let ny = my + eps * ty;
+    let nz = mz + eps * tz;
+    const nlen = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    nx /= nlen; ny /= nlen; nz /= nlen;
+
+    // Convert nudged point back to alt/az and project both
+    const nalt = Math.asin(clamp(nx, -1, 1));
+    const naz  = Math.atan2(ny, nz);
+
+    const W = this.canvas.width, H = this.canvas.height;
+    const R = Math.min(W, H) / 2 - 40;
+    const cx = W / 2, cy = H / 2;
+    const pFrom  = this._project(from.alt, from.az, cx, cy, R);
+    const pNudge = this._project(nalt, naz, cx, cy, R);
+
+    return Math.atan2(pNudge.y - pFrom.y, pNudge.x - pFrom.x);
   }
 
   // ── main render ───────────────────────────────────────────────────────
@@ -264,13 +323,13 @@ export class SkyView {
     for (const idx of SKY_BODIES) {
       const aa = this.altAz(idx);
       if (!aa) continue;
-      if (aa.alt * RAD < -10) continue;   // skip objects far below horizon
+      if (aa.alt * RAD < -10 && idx !== 0) continue;  // skip far-below-horizon objects (but keep Sun for phase rendering)
       const body = this.sim.bodies[idx];
       // Apparent angular radius → disc size in pixels (exaggerated)
       const angR = body.physicalRadius / aa.dist;
       const discR = clamp(angR * ANGULAR_SCALE, MIN_DISC_R, MAX_DISC_R);
       const pos = this._project(aa.alt, aa.az, cx, cy, R);
-      objs.push({ body, idx, alt: aa.alt, az: aa.az, dist: aa.dist, discR, ...pos });
+      objs.push({ body, idx, alt: aa.alt, az: aa.az, dist: aa.dist, ux: aa.ux, uy: aa.uy, uz: aa.uz, discR, ...pos });
     }
 
     // Draw order: below-horizon objects first (behind), then far → near.
@@ -340,15 +399,10 @@ export class SkyView {
   // extends past the midline; for crescents (α > π/2), the dark ellipse
   // cuts into the lit semicircle.
   //
-  // Waxing vs waning is determined by the 2D cross product of the
-  // Sun and Moon direction vectors (as seen from Qaia):
-  //
-  //   cross = dsx·dmy − dsy·dmx
-  //   cross > 0 → moon is CCW from Sun → waxing (lit fraction growing)
-  //   cross < 0 → moon is CW from Sun  → waning (lit fraction shrinking)
-  //
-  // Waning is handled by mirroring the disc (scale y by −1) so the
-  // terminator sweeps in the correct direction.
+  // Waxing vs waning doesn't require special handling: the rotation
+  // (computed via great-circle finite difference) already points the lit
+  // semicircle toward the Sun, so the terminator is on the correct side
+  // in both cases.
 
   _drawMoonDisc(ctx, moon, sunObj) {
     const qaia = this.sim.bodies[1];
@@ -364,29 +418,31 @@ export class SkyView {
 
     // Elongation: cos of the Sun-Qaia-Moon angle
     const cosElong = clamp((dmx * dsx + dmy * dsy) / (moonDist * sunDist), -1, 1);
-    // Cross product sign: positive = waxing, negative = waning
-    const waning = (dsx * dmy - dsy * dmx) < 0;
-
     // Phase angle α: 0 = full (opposite Sun), π = new (same as Sun)
     const alpha = Math.acos(-cosElong);
     const R = moon.discR;
     // Terminator ellipse x semi-axis: R at full, 0 at quarter, R at new
     const tx = R * Math.abs(Math.cos(alpha));
 
-    // Rotate the disc so the lit side faces the Sun on screen.
-    // atan2 gives the angle from this moon to the Sun in screen coords.
-    let rotation = 0;
-    if (sunObj) {
-      rotation = Math.atan2(sunObj.y - moon.y, sunObj.x - moon.x);
-    }
+    const rotation = sunObj ? this._greatCircleScreenAngle(moon, sunObj) : 0;
 
     ctx.save();
     ctx.translate(moon.x, moon.y);
     ctx.rotate(rotation);           // align lit side → Sun direction
-    if (waning) ctx.scale(1, -1);   // mirror for waning phases
 
     // Clip to disc boundary
     ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.clip();
+
+    // Near full moon (α < 9°): disc is entirely lit.  The terminator
+    // is sub-pixel at this phase, and the great-circle tangent toward the
+    // Sun is ill-defined near opposition (ŝ ≈ −m̂), so we skip the
+    // rotation-dependent rendering entirely.
+    if (alpha < 0.16) {   // ~9° — at this phase the terminator is sub-pixel, and the
+      ctx.fillStyle = body.color;
+      ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill();
+      ctx.restore();
+      return;
+    }
 
     // Dark base (night side)
     ctx.fillStyle = '#0e0e1e';

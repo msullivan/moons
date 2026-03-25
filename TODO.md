@@ -4,8 +4,6 @@
 
 ## Sky view
 
-- **Moon phase orientation** — the lit/dark terminator direction is wrong; the phase disc
-  needs to be oriented correctly relative to the Sun's position in the projected sky view.
 - **Include planets** — show Bahamut, Qars, Tiamat (and possibly their moons) in the sky
   view as additional objects. Bahamut in particular would be a bright evening/morning star
   (max elongation ~6° from the Sun).
