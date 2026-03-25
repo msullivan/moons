@@ -415,6 +415,7 @@ function buildUI(canvas) {
   labelBtn.classList.toggle('active', renderer.showLabels);
   labelBtn.addEventListener('click', () => {
     renderer.showLabels = !renderer.showLabels;
+    skyView.showLabels = renderer.showLabels;
     labelBtn.classList.toggle('active', renderer.showLabels);
   });
 
@@ -571,6 +572,7 @@ function handleKey(e) {
       break;
     case 'l': case 'L':
       renderer.showLabels = !renderer.showLabels;
+      skyView.showLabels = renderer.showLabels;
       document.getElementById('btn-labels').classList.toggle('active', renderer.showLabels);
       break;
     case 's': case 'S':

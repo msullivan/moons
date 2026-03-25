@@ -29,6 +29,7 @@ export class SkyView {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.sim = sim;
+    this.showLabels = true;
 
     // Precompute trig for the 23.5° axial tilt (ecliptic → equatorial rotation).
     this.cosI = Math.cos(PRIMUS_INCLINATION);
@@ -364,11 +365,13 @@ export class SkyView {
       }
 
       // Label
-      ctx.fillStyle = above ? 'rgba(210, 230, 255, 0.85)' : 'rgba(210, 230, 255, 0.4)';
-      ctx.font = '11px monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(o.body.name, o.x, o.y - o.discR - 4);
+      if (this.showLabels) {
+        ctx.fillStyle = above ? 'rgba(210, 230, 255, 0.85)' : 'rgba(210, 230, 255, 0.4)';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(o.body.name, o.x, o.y - o.discR - 4);
+      }
 
       ctx.globalAlpha = 1;
     }
