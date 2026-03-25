@@ -37,6 +37,11 @@
     <!-- populated by buildPhasePanel() -->
   </div>
 
+  <!-- Sky view panel -->
+  <div id="sky-panel">
+    <canvas id="sky-canvas"></canvas>
+  </div>
+
   <!-- Control panel -->
   <div id="controls">
 
@@ -73,13 +78,14 @@
     <div class="ctrl-group">
       <button id="btn-trails" class="ctrl-btn active" title="Toggle trails (T)">Trails</button>
       <button id="btn-labels" class="ctrl-btn active" title="Toggle labels (L)">Labels</button>
+      <button id="btn-sky" class="ctrl-btn" title="Toggle sky view (V)">Sky</button>
     </div>
 
     <div class="ctrl-group" id="doc-links">
       <a href="docs.html?file=MOONS.md" target="_blank" class="ctrl-btn">Docs</a>
     </div>
 
-    <span id="key-hint">Space: pause &nbsp;|&nbsp; S: system view &nbsp;|&nbsp; Scroll: zoom &nbsp;|&nbsp; Drag: pan</span>
+    <span id="key-hint">Space: pause &nbsp;|&nbsp; V: sky view &nbsp;|&nbsp; S: system view &nbsp;|&nbsp; Scroll: zoom</span>
 
   </div>
 

@@ -1,6 +1,7 @@
 import { G, Simulation } from './simulation.js';
 import { createInitialBodies, applySnapshot, AU, LUNAR_DIST, R_MOON } from './bodies.js';
 import { Renderer } from './renderer.js';
+import { SkyView } from './skyview.js';
 
 // ─── globals ────────────────────────────────────────────────────────────────
 
@@ -9,7 +10,7 @@ const PHASE_BODIES = [2, 3, 4, 5, 6, 7]; // Primus, Secundus, Tertius, Quartus, 
 
 const PHASE_R_BASE = 24;
 
-let sim, renderer;
+let sim, renderer, skyView;
 let snapshot       = null;  // loaded from state_200yr.json, or null
 let running        = false;
 let orbitBodyIndex = 5;  // default: Quartus (1.00 LD)
@@ -48,6 +49,8 @@ async function init() {
   sim      = new Simulation(makeBodies());
   if (snapshot) sim.time = snapshot.time;
   renderer = new Renderer(canvas, sim);
+  skyView  = new SkyView(document.getElementById('sky-canvas'), sim);
+  skyView.resize(window.innerWidth);
   window.sim = sim; window.renderer = renderer; // expose for Playwright tests
 
   buildUI(canvas);
@@ -66,6 +69,7 @@ function makeBodies() {
 function resizeCanvas(canvas) {
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
+  if (skyView) skyView.resize(window.innerWidth);
 }
 
 // ─── animation loop ──────────────────────────────────────────────────────────
@@ -101,6 +105,9 @@ function tick(ts) {
 
   renderer.render();
   updateHUD();
+  if (document.getElementById('sky-panel').classList.contains('open')) {
+    skyView.render();
+  }
   requestAnimationFrame(tick);
 }
 
@@ -409,6 +416,14 @@ function buildUI(canvas) {
     labelBtn.classList.toggle('active', renderer.showLabels);
   });
 
+  // Sky view toggle
+  const skyBtn = document.getElementById('btn-sky');
+  const skyPanel = document.getElementById('sky-panel');
+  skyBtn.addEventListener('click', () => {
+    skyPanel.classList.toggle('open');
+    skyBtn.classList.toggle('active', skyPanel.classList.contains('open'));
+  });
+
   // Zoom buttons
   document.getElementById('btn-zoom-in').addEventListener('click',
     () => renderer.zoomAt(1 / 2, renderer.W / 2, renderer.H / 2));
@@ -564,6 +579,12 @@ function handleKey(e) {
     case 's': case 'S':
       systemView();
       break;
+    case 'v': case 'V': {
+      const sp = document.getElementById('sky-panel');
+      sp.classList.toggle('open');
+      document.getElementById('btn-sky').classList.toggle('active', sp.classList.contains('open'));
+      break;
+    }
   }
 }
 
