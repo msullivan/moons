@@ -1,0 +1,91 @@
+name: Deploy PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  deploy:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy PR preview
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_TARGET: ${{ vars.DEPLOY_TARGET }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+        run: |
+          if [ -z "$DEPLOY_TARGET" ]; then echo "DEPLOY_TARGET not set" >&2; exit 1; fi
+          if [ -z "$DEPLOY_HOST" ]; then echo "DEPLOY_HOST not set" >&2; exit 1; fi
+          if [ -z "$DEPLOY_USER" ]; then echo "DEPLOY_USER not set" >&2; exit 1; fi
+          mkdir -p ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy_key
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          echo "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
+          mkdir dist
+          cp *.js *.css *.html *.json dist/
+          cp MOONS.md TIDES.md NAVIGATION.md dist/
+          mkdir -p dist/analysis
+          cp analysis/tide_plot.png analysis/primsine.png dist/analysis/
+          sudo apt-get install -y rclone
+          rclone sync dist/ ":sftp,host=$DEPLOY_HOST,user=$DEPLOY_USER,key_file=$HOME/.ssh/deploy_key:$DEPLOY_TARGET/prs/${{ github.event.pull_request.number }}"
+
+      - name: Comment preview link
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const previewUrl = `${{ vars.SITE_URL }}/prs/${prNumber}/`;
+            const marker = '<!-- pr-preview -->';
+            const body = `${marker}\nPreview deployed to ${previewUrl}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body,
+              });
+            }
+
+  cleanup:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove PR preview
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_TARGET: ${{ vars.DEPLOY_TARGET }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+        run: |
+          if [ -z "$DEPLOY_TARGET" ]; then echo "DEPLOY_TARGET not set" >&2; exit 1; fi
+          if [ -z "$DEPLOY_HOST" ]; then echo "DEPLOY_HOST not set" >&2; exit 1; fi
+          if [ -z "$DEPLOY_USER" ]; then echo "DEPLOY_USER not set" >&2; exit 1; fi
+          mkdir -p ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy_key
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          echo "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts "$DEPLOY_USER@$DEPLOY_HOST" "rm -rf '$DEPLOY_TARGET/prs/${{ github.event.pull_request.number }}'"

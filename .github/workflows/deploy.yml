@@ -15,7 +15,12 @@ jobs:
           SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           DEPLOY_TARGET: ${{ vars.DEPLOY_TARGET }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
         run: |
+          if [ -z "$DEPLOY_TARGET" ]; then echo "DEPLOY_TARGET not set" >&2; exit 1; fi
+          if [ -z "$DEPLOY_HOST" ]; then echo "DEPLOY_HOST not set" >&2; exit 1; fi
+          if [ -z "$DEPLOY_USER" ]; then echo "DEPLOY_USER not set" >&2; exit 1; fi
           mkdir -p ~/.ssh
           install -m 600 /dev/null ~/.ssh/deploy_key
           echo "$SSH_KEY" > ~/.ssh/deploy_key
@@ -26,4 +31,4 @@ jobs:
           mkdir -p dist/analysis
           cp analysis/tide_plot.png analysis/primsine.png dist/analysis/
           sudo apt-get install -y rclone
-          rclone sync dist/ ":sftp,host=moroso.emarhavil.com,user=upload-sully,key_file=$HOME/.ssh/deploy_key:$DEPLOY_TARGET"
+          rclone sync dist/ ":sftp,host=$DEPLOY_HOST,user=$DEPLOY_USER,key_file=$HOME/.ssh/deploy_key:$DEPLOY_TARGET"
