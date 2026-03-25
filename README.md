@@ -44,6 +44,24 @@ See [MOONS.md](MOONS.md) for full physical stats and [TIDES.md](TIDES.md) for ti
   geosynchronous orbit; momentum-compensated (equal-and-opposite kick to Qaia).
 - Energy error displayed live as a sanity check.
 
+### Seasonal drift and Bahamut's tidal effect
+
+The calendar (Gregorian rules, Jan 1 = southern solstice) needs the orbital period to
+match the calendar year. Three corrections keep the drift under 1 day per 200 years:
+
+1. **Velocity recoil** — Quartus starts at +x from Qaia with tangential velocity, which
+   inflates the Qaia+moon barycenter's heliocentric speed by ~13 m/s. The recoil loop in
+   `createInitialBodies()` subtracts each moon's momentum from Qaia so the barycenter
+   orbits at the correct circular velocity.
+
+2. **Bahamut velocity correction** — Bahamut (Saturn-mass at 0.1 AU) yanks the Sun in an
+   11-day, 4300 km wobble. The indirect tidal effect reduces the effective central gravity
+   at Qaia's distance. Empirically this requires subtracting ~8 m/s from v_earth to
+   compensate. Without this the calendar drifts ~55° over 200 years.
+
+3. **AU tuning** — AU is set to 1.49606×10¹¹ m (vs the real 1.496×10¹¹) so the Kepler
+   period lands on 365.2425 days, matching the Gregorian calendar average exactly.
+
 ## Controls
 
 | Input | Action |

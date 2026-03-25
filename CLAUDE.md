@@ -148,6 +148,11 @@ Then update `MOONS.md` and `TIDES.md` with the new output. All three scripts imp
   (wide margins from resonances) give consistent results across engines.
 - Binding energy checks must include the z-component (Quartus has 5.14° inclination).
 - Exclude Quintus from stability tests — it's a trace particle and costs ~22% runtime.
+- **Bahamut causes seasonal drift** — the hot Saturn at 0.1 AU wobbles the Sun, reducing
+  effective central gravity at Qaia. This requires a −8 m/s correction to v_earth in
+  `createInitialBodies()`. If Bahamut's mass or orbit changes, re-tune this empirically
+  (run a 200yr sim and check Qaia's orbital angle). AU is also tuned (1.49606e11) to
+  match the Gregorian calendar year.
 
 ### Primus anchor mechanism
 
