@@ -10,8 +10,6 @@
 - **Proper star field** — assign stars fixed ecliptic/solar-relative spherical coordinates
   at infinity and rotate them with Qaia's sidereal rotation, so the star field moves
   realistically rather than being a static random backdrop.
-- **Terminator seam** — fix the visible line down the middle of moon discs where the lit
-  semicircle and the terminator ellipse meet.
 - **Smooth slow playback** — at 10m/s and 1h/s the sky jumps between integrator steps
   (dt = 6 min). Lerp body positions between the last two sim states to produce smooth
   apparent motion without changing the integrator or making it speed-dependent.

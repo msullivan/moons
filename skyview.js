@@ -453,33 +453,23 @@ export class SkyView {
 
     // Near new moon (α ≥ 95% of π): disc stays fully dark
     if (alpha < PI * 0.95) {
-      // Lit right semicircle (the half facing the Sun before rotation)
+      // Draw the entire lit region as a single path to avoid an
+      // anti-aliasing seam where the semicircle meets the terminator.
       ctx.fillStyle = body.color;
       ctx.beginPath();
+      // Right semicircle arc (top → bottom, clockwise)
       ctx.arc(0, 0, R, -PI / 2, PI / 2, false);
+      if (alpha < PI / 2) {
+        // Gibbous: continue along the LEFT side of the terminator
+        // ellipse back to the top (counterclockwise through -tx).
+        ctx.ellipse(0, 0, tx, R, 0, PI / 2, -PI / 2, true);
+      } else {
+        // Crescent: return along the RIGHT side of the terminator
+        // ellipse back to the top (clockwise through +tx).
+        ctx.ellipse(0, 0, tx, R, 0, PI / 2, -PI / 2, false);
+      }
       ctx.closePath();
       ctx.fill();
-
-      // Terminator ellipse adjusts how much of the disc is lit:
-      if (alpha < PI / 2) {
-        // Gibbous: fill the left side of the terminator ellipse with
-        // the moon color, extending the lit area past the midline.
-        ctx.fillStyle = body.color;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, tx, R, 0, PI / 2, -PI / 2, false);
-        ctx.closePath();
-        ctx.fill();
-      } else if (alpha > PI / 2) {
-        // Crescent: fill the right side of the terminator ellipse dark,
-        // cutting into the lit semicircle.
-        ctx.fillStyle = '#0e0e1e';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, tx, R, 0, -PI / 2, PI / 2, false);
-        ctx.closePath();
-        ctx.fill();
-      }
-      // At exactly α = π/2 (quarter): the terminator is a straight line
-      // through the center, and the semicircle alone gives the right shape.
     }
 
     ctx.restore();
