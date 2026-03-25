@@ -25,6 +25,8 @@ let seekTarget = null; // sim-seconds to fast-forward to, or null
 const MAX_STEPS_PER_FRAME = 80000;
 
 const SPEED_PRESETS = [
+  { label: '10m/s',     value: 600 },
+  { label: '1h/s',      value: 3600 },
   { label: '6h/s',      value: 3600 * 6 },
   { label: '1 day/s',   value: 86400 },
   { label: '1 wk/s',    value: 86400 * 7 },
@@ -50,7 +52,7 @@ async function init() {
   if (snapshot) sim.time = snapshot.time;
   renderer = new Renderer(canvas, sim);
   skyView  = new SkyView(document.getElementById('sky-canvas'), sim);
-  skyView.resize(window.innerWidth);
+  skyView.resize(window.innerWidth, window.innerHeight - 70);
   window.sim = sim; window.renderer = renderer; // expose for Playwright tests
 
   buildUI(canvas);
@@ -69,7 +71,7 @@ function makeBodies() {
 function resizeCanvas(canvas) {
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
-  if (skyView) skyView.resize(window.innerWidth);
+  if (skyView) skyView.resize(window.innerWidth, window.innerHeight - 70);
 }
 
 // ─── animation loop ──────────────────────────────────────────────────────────
@@ -417,12 +419,7 @@ function buildUI(canvas) {
   });
 
   // Sky view toggle
-  const skyBtn = document.getElementById('btn-sky');
-  const skyPanel = document.getElementById('sky-panel');
-  skyBtn.addEventListener('click', () => {
-    skyPanel.classList.toggle('open');
-    skyBtn.classList.toggle('active', skyPanel.classList.contains('open'));
-  });
+  document.getElementById('btn-sky').addEventListener('click', toggleSkyView);
 
   // Zoom buttons
   document.getElementById('btn-zoom-in').addEventListener('click',
@@ -579,12 +576,9 @@ function handleKey(e) {
     case 's': case 'S':
       systemView();
       break;
-    case 'v': case 'V': {
-      const sp = document.getElementById('sky-panel');
-      sp.classList.toggle('open');
-      document.getElementById('btn-sky').classList.toggle('active', sp.classList.contains('open'));
+    case 'v': case 'V':
+      toggleSkyView();
       break;
-    }
   }
 }
 
@@ -595,6 +589,14 @@ function systemView() {
   renderer.scale = 2e9;     // ~5.5 AU fits on screen
   sim.clearTrails();
   updateFollowSelect();
+}
+
+function toggleSkyView() {
+  const panel = document.getElementById('sky-panel');
+  const open  = panel.classList.toggle('open');
+  document.getElementById('btn-sky').classList.toggle('active', open);
+  document.getElementById('orbit-panel').style.display = open ? 'none' : '';
+  document.getElementById('phase-panel').style.display = open ? 'none' : '';
 }
 
 function togglePause() {

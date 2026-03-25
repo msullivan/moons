@@ -21,16 +21,20 @@ await page.goto(`http://localhost:${port}/`);
 await page.waitForFunction(() => typeof sim !== 'undefined');
 await page.waitForTimeout(1500);
 
-// Open the sky panel
+// Open sky view
 await page.click('#btn-sky');
 await page.waitForTimeout(500);
+await page.screenshot({ path: '/tmp/sky_full.png' });
 
-await page.screenshot({ path: '/tmp/sky_view.png' });
-
-// Also take one after advancing time a bit (to see motion)
-await page.evaluate(() => { sim.advance(400, 10, renderer.followIndex); });
+// Advance ~6 hours to see different sky
+await page.evaluate(() => { sim.advance(60, 10, renderer.followIndex); });
 await page.waitForTimeout(300);
-await page.screenshot({ path: '/tmp/sky_view_later.png' });
+await page.screenshot({ path: '/tmp/sky_6h.png' });
+
+// Advance to nighttime (~12h total)
+await page.evaluate(() => { sim.advance(60, 10, renderer.followIndex); });
+await page.waitForTimeout(300);
+await page.screenshot({ path: '/tmp/sky_12h.png' });
 
 await browser.close();
 server.close();
