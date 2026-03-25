@@ -12,8 +12,9 @@
 import { PRIMUS_INCLINATION, QAIA_SIDEREAL_DAY } from './bodies.js';
 
 // Body indices to display
-const SKY_BODIES = [0, 2, 3, 4, 5, 6, 7];
-// Sun, Primus, Secundus, Tertius, Quartus, Sextus, Septimus
+const SKY_BODIES = [0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12];
+// Sun, moons (Primus–Septimus), planets (Bahamut, Qars, Fafnir, Tiamat)
+const SKY_PLANETS = new Set([9, 10, 11, 12]);
 
 // Disc sizes are exaggerated — real angular diameters are sub-pixel.
 // Tertius (largest apparent moon) ≈ 0.005 rad → 16px at this scale.
@@ -326,11 +327,19 @@ export class SkyView {
       if (!aa) continue;
       if (aa.alt * RAD < -10 && idx !== 0) continue;  // skip far-below-horizon objects (but keep Sun for phase rendering)
       const body = this.sim.bodies[idx];
-      // Apparent angular radius → disc size in pixels (exaggerated)
-      const angR = body.physicalRadius / aa.dist;
-      const discR = clamp(angR * ANGULAR_SCALE, MIN_DISC_R, MAX_DISC_R);
-      const pos = this._project(aa.alt, aa.az, cx, cy, R);
-      objs.push({ body, idx, alt: aa.alt, az: aa.az, dist: aa.dist, ux: aa.ux, uy: aa.uy, uz: aa.uz, discR, ...pos });
+      const isPlanet = SKY_PLANETS.has(idx);
+      if (isPlanet) {
+        // Planets render as star-like points with brightness from physics
+        const brightness = this._planetBrightness(body, aa.dist);
+        const pos = this._project(aa.alt, aa.az, cx, cy, R);
+        objs.push({ body, idx, alt: aa.alt, az: aa.az, dist: aa.dist, ux: aa.ux, uy: aa.uy, uz: aa.uz, isPlanet: true, brightness, ...pos });
+      } else {
+        // Apparent angular radius → disc size in pixels (exaggerated)
+        const angR = body.physicalRadius / aa.dist;
+        const discR = clamp(angR * ANGULAR_SCALE, MIN_DISC_R, MAX_DISC_R);
+        const pos = this._project(aa.alt, aa.az, cx, cy, R);
+        objs.push({ body, idx, alt: aa.alt, az: aa.az, dist: aa.dist, ux: aa.ux, uy: aa.uy, uz: aa.uz, discR, ...pos });
+      }
     }
 
     // Draw order: below-horizon objects first (behind), then far → near.
@@ -347,34 +356,121 @@ export class SkyView {
       const above = o.alt >= 0;
       ctx.globalAlpha = above ? 1 : 0.2;
 
-      // Glow halo (Sun gets a larger, brighter one)
-      const glowR = o.idx === 0 ? o.discR * 5 : o.discR * 3;
-      const glow = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, glowR);
-      glow.addColorStop(0, hexAlpha(o.body.color, o.idx === 0 ? 0.5 : 0.3));
-      glow.addColorStop(0.5, hexAlpha(o.body.color, o.idx === 0 ? 0.15 : 0.08));
-      glow.addColorStop(1, hexAlpha(o.body.color, 0));
-      ctx.fillStyle = glow;
-      ctx.beginPath(); ctx.arc(o.x, o.y, glowR, 0, TAU); ctx.fill();
-
-      // Body disc — Sun is solid yellow, moons get phase shading
-      if (o.idx === 0) {
-        ctx.fillStyle = o.body.color;
-        ctx.beginPath(); ctx.arc(o.x, o.y, o.discR, 0, TAU); ctx.fill();
+      if (o.isPlanet) {
+        // Fade planets in daylight, similar to stars.  Brighter planets
+        // (like Fafnir/Venus) linger a few degrees longer.
+        const dayFade = sunAltDeg > 0
+          ? clamp(1 - sunAltDeg / (15 + o.brightness * 10), 0, 1)
+          : 1;
+        if (dayFade > 0.01) {
+          ctx.globalAlpha *= dayFade;
+          this._drawPlanet(ctx, o);
+          if (this.showLabels) {
+            ctx.fillStyle = above ? 'rgba(210, 230, 255, 0.85)' : 'rgba(210, 230, 255, 0.4)';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(o.body.name, o.x, o.y - 3 - 4);
+          }
+        }
       } else {
-        this._drawMoonDisc(ctx, o, sunObj);
-      }
+        // Glow halo (Sun gets a larger, brighter one)
+        const glowR = o.idx === 0 ? o.discR * 5 : o.discR * 3;
+        const glow = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, glowR);
+        glow.addColorStop(0, hexAlpha(o.body.color, o.idx === 0 ? 0.5 : 0.3));
+        glow.addColorStop(0.5, hexAlpha(o.body.color, o.idx === 0 ? 0.15 : 0.08));
+        glow.addColorStop(1, hexAlpha(o.body.color, 0));
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(o.x, o.y, glowR, 0, TAU); ctx.fill();
 
-      // Label
-      if (this.showLabels) {
-        ctx.fillStyle = above ? 'rgba(210, 230, 255, 0.85)' : 'rgba(210, 230, 255, 0.4)';
-        ctx.font = '11px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(o.body.name, o.x, o.y - o.discR - 4);
+        // Body disc — Sun is solid yellow, moons get phase shading
+        if (o.idx === 0) {
+          ctx.fillStyle = o.body.color;
+          ctx.beginPath(); ctx.arc(o.x, o.y, o.discR, 0, TAU); ctx.fill();
+        } else {
+          this._drawMoonDisc(ctx, o, sunObj);
+        }
+
+        // Label
+        if (this.showLabels) {
+          ctx.fillStyle = above ? 'rgba(210, 230, 255, 0.85)' : 'rgba(210, 230, 255, 0.4)';
+          ctx.font = '11px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(o.body.name, o.x, o.y - o.discR - 4);
+        }
       }
 
       ctx.globalAlpha = 1;
     }
+  }
+
+  // ── planet brightness and rendering ─────────────────────────────────
+  //
+  // Planets appear as point-like colored stars.  Apparent brightness is
+  // proportional to:
+  //
+  //   B ∝ albedo × R² / (r_sun² × r_qaia²) × Φ(α)
+  //
+  // where r_sun = Sun–planet distance, r_qaia = Qaia–planet distance,
+  // R = physical radius, and Φ(α) is the Lambertian diffuse sphere phase
+  // function:
+  //
+  //   Φ(α) = [ sin(α) + (π − α) cos(α) ] / π
+  //
+  // The result is normalized so that Venus at opposition (α=0, r=0.28 AU)
+  // maps to brightness ≈ 1.0.
+
+  _planetBrightness(body, distFromQaia) {
+    const qaia = this.sim.bodies[1];
+    const sun  = this.sim.bodies[0];
+
+    // Sun–planet distance
+    const dsx = body.x - sun.x, dsy = body.y - sun.y, dsz = (body.z || 0) - (sun.z || 0);
+    const rSun = Math.sqrt(dsx * dsx + dsy * dsy + dsz * dsz);
+    if (rSun === 0 || distFromQaia === 0) return 0;
+
+    // Phase angle: Sun-planet-Qaia angle
+    // Vector from planet to Sun and planet to Qaia
+    const toSunX = sun.x - body.x, toSunY = sun.y - body.y;
+    const toQaiaX = qaia.x - body.x, toQaiaY = qaia.y - body.y;
+    const dot = toSunX * toQaiaX + toSunY * toQaiaY;
+    const magS = Math.sqrt(toSunX * toSunX + toSunY * toSunY);
+    const magQ = Math.sqrt(toQaiaX * toQaiaX + toQaiaY * toQaiaY);
+    const cosAlpha = clamp(dot / (magS * magQ), -1, 1);
+    const alpha = Math.acos(cosAlpha);
+
+    // Lambertian phase function
+    const phi = (Math.sin(alpha) + (PI - alpha) * Math.cos(alpha)) / PI;
+
+    const albedo = body.albedo || 0.3;
+    const R = body.physicalRadius;
+
+    // Raw flux (arbitrary units)
+    const flux = albedo * R * R * phi / (rSun * rSun * distFromQaia * distFromQaia);
+
+    // Normalize: Venus-like planet at opposition at closest approach (~0.28 AU)
+    // gives flux_ref = 0.76 * R_venus² * 1 / ((0.723*AU)² * (0.277*AU)²)
+    const AU = 1.49606e11;
+    const R_V = 6.052e6;
+    const fluxRef = 0.76 * R_V * R_V / ((0.723 * AU) ** 2 * (0.277 * AU) ** 2);
+
+    return clamp(flux / fluxRef, 0, 1);
+  }
+
+  _drawPlanet(ctx, o) {
+    const b = o.brightness;
+    if (b < 0.001) return;
+
+    // Map brightness to display size on a log scale for the huge dynamic
+    // range between Tiamat and Fafnir.
+    const logB = Math.log10(Math.max(b, 1e-4));  // -4 to 0
+    const t = clamp((logB + 4) / 4, 0, 1);       // 0 to 1
+    const dotR = 0.7 + t * 1.0;
+    const alpha = 0.5 + t * 0.5;
+
+    ctx.fillStyle = hexAlpha(o.body.color, alpha);
+    ctx.beginPath(); ctx.arc(o.x, o.y, dotR, 0, TAU); ctx.fill();
   }
 
   // ── phase-shaded moon disc ──────────────────────────────────────────

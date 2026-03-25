@@ -144,7 +144,7 @@ export function createInitialBodies() {
       vy: v_earth   + PRIMUS_A * PRIMUS_OMEGA * Math.cos(PRIMUS_PHASE),
       vz:             PRIMUS_A * PRIMUS_OMEGA * Math.sin(PRIMUS_PHASE) * Math.sin(PRIMUS_INCLINATION),
       physicalRadius: mp.Primus.R, minDisplayPx: 3,
-      color: mp.Primus.color, trailColor: mp.Primus.color, trailMaxLen: mp.Primus.trailMaxLen,
+      color: mp.Primus.color, trailColor: mp.Primus.color, trailMaxLen: mp.Primus.trailMaxLen, albedo: mp.Primus.albedo,
       anchor: { toIndex: 1, radius: PRIMUS_A, omega: PRIMUS_OMEGA, phase: PRIMUS_PHASE, inclination: PRIMUS_INCLINATION },
       parentName: 'Qaia',
     }),
@@ -155,7 +155,7 @@ export function createInitialBodies() {
       vx: -vp(mp.Secundus) * Math.cos(mp.Secundus.inc_deg * Math.PI / 180), vy: v_earth,
       vz: vp(mp.Secundus) * Math.sin(mp.Secundus.inc_deg * Math.PI / 180),
       physicalRadius: mp.Secundus.R, minDisplayPx: 3,
-      color: mp.Secundus.color, trailColor: mp.Secundus.color, trailMaxLen: mp.Secundus.trailMaxLen,
+      color: mp.Secundus.color, trailColor: mp.Secundus.color, trailMaxLen: mp.Secundus.trailMaxLen, albedo: mp.Secundus.albedo,
       parentName: 'Qaia',
     }),
     // Tertius: prograde, periapsis at +y from Qaia
@@ -165,7 +165,7 @@ export function createInitialBodies() {
       vx: -vp(mp.Tertius) * Math.cos(mp.Tertius.inc_deg * Math.PI / 180), vy: v_earth,
       vz: vp(mp.Tertius) * Math.sin(mp.Tertius.inc_deg * Math.PI / 180),
       physicalRadius: mp.Tertius.R, minDisplayPx: 3,
-      color: mp.Tertius.color, trailColor: mp.Tertius.color, trailMaxLen: mp.Tertius.trailMaxLen,
+      color: mp.Tertius.color, trailColor: mp.Tertius.color, trailMaxLen: mp.Tertius.trailMaxLen, albedo: mp.Tertius.albedo,
       parentName: 'Qaia',
     }),
     // Quartus: prograde with inclination, starts at mean distance along +x from Qaia
@@ -176,7 +176,7 @@ export function createInitialBodies() {
       vy: v_earth + Math.sqrt(_mu / mp.Quartus.a) * Math.cos(QUARTUS_INCLINATION),
       vz:             Math.sqrt(_mu / mp.Quartus.a) * Math.sin(QUARTUS_INCLINATION),
       physicalRadius: mp.Quartus.R, minDisplayPx: 3,
-      color: mp.Quartus.color, trailColor: mp.Quartus.color, trailMaxLen: mp.Quartus.trailMaxLen,
+      color: mp.Quartus.color, trailColor: mp.Quartus.color, trailMaxLen: mp.Quartus.trailMaxLen, albedo: mp.Quartus.albedo,
       parentName: 'Qaia',
     }),
     // Sextus: retrograde, periapsis at +y from Qaia
@@ -186,7 +186,7 @@ export function createInitialBodies() {
       vx: vp(mp.Sextus) * Math.cos(mp.Sextus.inc_deg * Math.PI / 180), vy: v_earth,
       vz: vp(mp.Sextus) * Math.sin(mp.Sextus.inc_deg * Math.PI / 180),
       physicalRadius: mp.Sextus.R, minDisplayPx: 3,
-      color: mp.Sextus.color, trailColor: mp.Sextus.color, trailMaxLen: mp.Sextus.trailMaxLen,
+      color: mp.Sextus.color, trailColor: mp.Sextus.color, trailMaxLen: mp.Sextus.trailMaxLen, albedo: mp.Sextus.albedo,
       parentName: 'Qaia',
     }),
     // Septimus: retrograde, periapsis at −y from Qaia
@@ -196,7 +196,7 @@ export function createInitialBodies() {
       vx: -vp(mp.Septimus) * Math.cos(mp.Septimus.inc_deg * Math.PI / 180), vy: v_earth,
       vz: vp(mp.Septimus) * Math.sin(mp.Septimus.inc_deg * Math.PI / 180),
       physicalRadius: mp.Septimus.R, minDisplayPx: 3,
-      color: mp.Septimus.color, trailColor: mp.Septimus.color, trailMaxLen: mp.Septimus.trailMaxLen,
+      color: mp.Septimus.color, trailColor: mp.Septimus.color, trailMaxLen: mp.Septimus.trailMaxLen, albedo: mp.Septimus.albedo,
       parentName: 'Qaia',
     }),
     // Quintus: trace particle at Sun-Qaia L5 (60° behind Qaia)
@@ -214,7 +214,7 @@ export function createInitialBodies() {
       vx: -Math.sqrt(G * M_SUN / QATURN_A) * Math.sin(BAHAMUT_PHASE),
       vy:  Math.sqrt(G * M_SUN / QATURN_A) * Math.cos(BAHAMUT_PHASE),
       physicalRadius: R_SATURN, minDisplayPx: 8,
-      color: '#E8D080', trailColor: '#E8D080', trailMaxLen: 800,
+      color: '#E8D080', trailColor: '#E8D080', trailMaxLen: 800, albedo: 0.47,
     }),
     // Qars (10): super-Earth at 1.52 AU (Mars position)
     new Body({
@@ -223,7 +223,7 @@ export function createInitialBodies() {
       vx: -Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.sin(QARS_PHASE),
       vy:  Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.cos(QARS_PHASE),
       physicalRadius: R_EARTH * Math.pow(3, 1 / 3), minDisplayPx: 5,
-      color: '#C1440E', trailColor: '#C1440E', trailMaxLen: 2000,
+      color: '#C1440E', trailColor: '#C1440E', trailMaxLen: 2000, albedo: 0.25,
     }),
     // Fafnir (11): Venus-like planet at 0.723 AU (~225-day orbit)
     new Body({
@@ -232,7 +232,7 @@ export function createInitialBodies() {
       vx: -Math.sqrt(G * M_SUN / FAFNIR_A) * sinF,
       vy:  Math.sqrt(G * M_SUN / FAFNIR_A) * cosF,
       physicalRadius: R_VENUS, minDisplayPx: 5,
-      color: '#E8C87A', trailColor: '#E8C87A', trailMaxLen: 2000,
+      color: '#E8C87A', trailColor: '#E8C87A', trailMaxLen: 2000, albedo: 0.76,
     }),
     // Tiamat (12): Jupiter-mass planet at 5.46 AU
     new Body({
@@ -240,7 +240,7 @@ export function createInitialBodies() {
       x: QUPITER_A * cosT, y: QUPITER_A * sinT,
       vx: -v_qupiter * sinT, vy: v_qupiter * cosT,
       physicalRadius: R_JUPITER, minDisplayPx: 10,
-      color: '#C88B3A', trailColor: '#C88B3A', trailMaxLen: 3000,
+      color: '#C88B3A', trailColor: '#C88B3A', trailMaxLen: 3000, albedo: 0.52,
     }),
     // Red (12), Blue (13), Green (14): in 1:2:4 Laplace resonance, 120° apart
     // White (15): outside the resonance. Black is missing.
