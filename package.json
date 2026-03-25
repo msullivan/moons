@@ -19,6 +19,6 @@
   },
   "homepage": "https://github.com/msullivan/moons#readme",
   "devDependencies": {
-    "playwright": "^1.58.2"
+    "playwright": "^1.56.1"
   }
 }
