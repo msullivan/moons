@@ -269,9 +269,10 @@ function updateMoonPhases() {
     const waning = (dsx * dmy - dsy * dmx) < 0;
 
     // Disc radius scaled by apparent angular size (physicalRadius / distance).
-    const R = Math.min(42, PHASE_R_BASE * body.physicalRadius * LUNAR_DIST / (moonDist * R_MOON));
+    const rScale = canvas.height / 96;
+    const R = Math.min(42 * rScale, PHASE_R_BASE * rScale * body.physicalRadius * LUNAR_DIST / (moonDist * R_MOON));
 
-    drawPhaseDisc(ctx, 62, 48, R, cosElong, body.color, waning);
+    drawPhaseDisc(ctx, canvas.width / 2, canvas.height / 2, R, cosElong, body.color, waning);
   });
 }
 
