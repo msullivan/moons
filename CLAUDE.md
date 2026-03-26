@@ -173,6 +173,10 @@ then use `getImageData()` to pixel-count the result. This catches issues like in
 flags that are invisible at small disc sizes but obvious when you measure lit-pixel fractions
 across a sweep of parameters.
 
+For visual inspection, temporarily increase `MIN_DISC_R` or `ANGULAR_SCALE` in `skyview.js`
+to make tiny elements large enough to see, or use a narrow viewport (e.g., 412×915 mobile)
+where the sky circle is smaller relative to the disc sizes.
+
 Example: the sky view moon phase discs had their `ctx.ellipse()` anticlockwise flags swapped
 for months — gibbous drew as crescent and vice versa. The near-full/near-new threshold
 shortcuts masked the extremes, making it look intermittent. A standalone pixel-counting test
