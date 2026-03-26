@@ -164,6 +164,20 @@ anchor: { toIndex: 1, radius: PRIMUS_A, omega: PRIMUS_OMEGA, phase: PRIMUS_PHASE
 The anchor applies an equal-and-opposite momentum correction to Qaia each step.
 Called in the Simulation constructor and at the end of `_step()`.
 
+### Debugging Canvas 2D rendering
+
+When investigating visual rendering bugs (wrong phase, wrong color, wrong shape), **do not**
+try to diagnose from screenshots of tiny on-screen elements. Instead, write a standalone
+Playwright test that renders the drawing code in isolation on a fresh canvas at a known size,
+then use `getImageData()` to pixel-count the result. This catches issues like inverted winding
+flags that are invisible at small disc sizes but obvious when you measure lit-pixel fractions
+across a sweep of parameters.
+
+Example: the sky view moon phase discs had their `ctx.ellipse()` anticlockwise flags swapped
+for months — gibbous drew as crescent and vice versa. The near-full/near-new threshold
+shortcuts masked the extremes, making it look intermittent. A standalone pixel-counting test
+across α = 5°–175° at multiple radii revealed complete phase inversion in seconds.
+
 ### Tidal notes
 
 - Primus is geosynchronous → raises a static ~20 cm tidal bulge, not an oscillating tide.
