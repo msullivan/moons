@@ -547,17 +547,6 @@ export class SkyView {
     // Clip to disc boundary
     ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.clip();
 
-    // Near full moon (α < 9°): disc is entirely lit.  The terminator
-    // is sub-pixel at this phase, and the great-circle tangent toward the
-    // Sun is ill-defined near opposition (ŝ ≈ −m̂), so we skip the
-    // rotation-dependent rendering entirely.
-    if (alpha < 0.16) {   // ~9° — at this phase the terminator is sub-pixel, and the
-      ctx.fillStyle = body.color;
-      ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill();
-      ctx.restore();
-      return;
-    }
-
     // Dark base (night side)
     ctx.fillStyle = '#0e0e1e';
     ctx.fillRect(-R - 1, -R - 1, 2 * R + 2, 2 * R + 2);
