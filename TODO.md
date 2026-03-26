@@ -4,9 +4,6 @@
 
 ## Sky view
 
-- **Include planets** — show Bahamut, Qars, Tiamat (and possibly their moons) in the sky
-  view as additional objects. Bahamut in particular would be a bright evening/morning star
-  (max elongation ~6° from the Sun).
 - **Proper star field** — assign stars fixed ecliptic/solar-relative spherical coordinates
   at infinity and rotate them with Qaia's sidereal rotation, so the star field moves
   realistically rather than being a static random backdrop.
@@ -14,6 +11,7 @@
   (dt = 6 min). Lerp body positions between the last two sim states to produce smooth
   apparent motion without changing the integrator or making it speed-dependent.
 - Support different locations on the planet
+- Fix positioning / calandar priority
 
 ## World-building / RPG utility
 
