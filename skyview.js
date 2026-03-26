@@ -277,18 +277,29 @@ export class SkyView {
     }
 
     // ── stars ─────────────────────────────────────────────────────────
-    // Fixed star field rendered inside the horizon circle.  Opacity fades
-    // with sun altitude: full brightness at night, nearly invisible in
-    // daytime (above +15° solar altitude).
+    // Stars have fixed ecliptic coordinates and rotate with Qaia's
+    // sidereal rotation — they rise and set like real stars.
+    // Opacity fades with sun altitude: full at night, invisible in daytime.
     const starAlpha = sunAltDeg > 0 ? clamp(1 - sunAltDeg / 15, 0, 0.15) : 0.8;
     if (starAlpha > 0.01) {
+      const M = this._starMatrix();
       ctx.save();
       ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip();
-      for (const [fx, fy, r, a] of this.stars) {
-        const sx = cx + (fx * 2 - 1) * R;
-        const sy = cy + (fy * 2 - 1) * R;
-        const dx = sx - cx, dy = sy - cy;
-        if (dx * dx + dy * dy > R * R) continue;
+      for (const [ex, ey, ez, r, a] of this.stars) {
+        // Rotate ecliptic unit vector into observer's local frame
+        const zen  = M[0] * ex + M[1] * ey + M[2] * ez;
+        if (zen < -0.17) continue;  // skip stars well below horizon (> ~10°)
+        const east = M[3] * ex + M[4] * ey + M[5] * ez;
+        const nor  = M[6] * ex + M[7] * ey + M[8] * ez;
+        // Alt/az → screen projection
+        const alt = Math.asin(clamp(zen, -1, 1));
+        const az  = Math.atan2(east, nor);
+        const pr  = (PI / 2 - alt) / (PI / 2) * R;
+        const sx  = cx + pr * Math.sin(az);
+        const sy  = cy - pr * Math.cos(az);
+        // Cull outside horizon circle
+        const ddx = sx - cx, ddy = sy - cy;
+        if (ddx * ddx + ddy * ddy > R * R) continue;
         ctx.fillStyle = `rgba(255,255,255,${(a * starAlpha).toFixed(3)})`;
         ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
       }
@@ -517,8 +528,16 @@ export class SkyView {
     // range between Tiamat and Fafnir.
     const logB = Math.log10(Math.max(b, 1e-4));  // -4 to 0
     const t = clamp((logB + 4) / 4, 0, 1);       // 0 to 1
-    const dotR = 0.7 + t * 1.0;
-    const alpha = 0.5 + t * 0.5;
+    const dotR = 1.2 + t * 1.3;
+    const alpha = 0.7 + t * 0.3;
+
+    // Soft glow so planets are clearly brighter than any star
+    const glowR = dotR * 4;
+    const glow = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, glowR);
+    glow.addColorStop(0, hexAlpha(o.body.color, 0.25 * t));
+    glow.addColorStop(1, hexAlpha(o.body.color, 0));
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(o.x, o.y, glowR, 0, TAU); ctx.fill();
 
     ctx.fillStyle = hexAlpha(o.body.color, alpha);
     ctx.beginPath(); ctx.arc(o.x, o.y, dotR, 0, TAU); ctx.fill();
@@ -611,7 +630,46 @@ export class SkyView {
     ctx.restore();
   }
 
-  // ── stars ───────────────────────────────────────────────────────────
+  // ── star rotation matrix ───────────────────────────────────────────
+  //
+  // Computes the 3×3 rotation matrix from ecliptic unit vectors to
+  // the observer's local (zenith, east, north) frame.  This composes
+  // the axial tilt, sidereal rotation, and observer lat/lon into one
+  // matrix so we can transform all 500 stars with 9 multiplies each.
+  //
+  // Returns a flat array [m00,m01,m02, m10,m11,m12, m20,m21,m22]
+  // where row 0 = zenith, row 1 = east, row 2 = north.
+
+  _starMatrix() {
+    const cI = this.cosI, sI = this.sinI;
+    const theta = this.omega * this.sim.time;
+    const c = Math.cos(theta), s = Math.sin(theta);
+    const cP = this._cosPhi, sP = this._sinPhi;
+    const cL = this._cosLam, sL = this._sinLam;
+
+    // Step 1+2: ecliptic (x,y,z) → body-fixed (b1,b2,b3)
+    // b1 = c·cI·x + s·y - c·sI·z
+    // b2 = -s·cI·x + c·y + s·sI·z
+    // b3 = sI·x + cI·z
+    const a00 = c * cI,  a01 = s,  a02 = -c * sI;
+    const a10 = -s * cI, a11 = c,  a12 = s * sI;
+    const a20 = sI,      a21 = 0,  a22 = cI;
+
+    // Step 3: body-fixed (b1,b2,b3) → observer (zen,east,nor)
+    // zen  = cP·cL·b1 + cP·sL·b2 + sP·b3
+    // east = -sL·b1 + cL·b2
+    // nor  = -sP·cL·b1 - sP·sL·b2 + cP·b3
+    const o00 = cP * cL, o01 = cP * sL, o02 = sP;
+    const o10 = -sL,     o11 = cL,      o12 = 0;
+    const o20 = -sP * cL, o21 = -sP * sL, o22 = cP;
+
+    // Compose: M = O × A
+    return [
+      o00*a00 + o01*a10 + o02*a20,  o00*a01 + o01*a11 + o02*a21,  o00*a02 + o01*a12 + o02*a22,
+      o10*a00 + o11*a10 + o12*a20,  o10*a01 + o11*a11 + o12*a21,  o10*a02 + o11*a12 + o12*a22,
+      o20*a00 + o21*a10 + o22*a20,  o20*a01 + o21*a11 + o22*a21,  o20*a02 + o21*a12 + o22*a22,
+    ];
+  }
 
 }
 
@@ -630,10 +688,19 @@ function buildStars(count, seed) {
   const rand = () => { s |= 0; s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const stars = [];
   for (let i = 0; i < count; i++) {
-    // [fx, fy] ∈ [0,1)² mapped to the bounding square of the sky circle;
-    // points outside the circle are culled at render time.
-    // r = display radius, a = base opacity.
-    stars.push([rand(), rand(), rand() < 0.85 ? 0.5 : rand() * 1.2 + 0.5, 0.25 + rand() * 0.6]);
+    // Fixed ecliptic coordinates — uniform on the celestial sphere.
+    // θ = ecliptic longitude [0, 2π), φ = ecliptic latitude via arcsin.
+    const theta = rand() * 2 * PI;
+    const phi   = Math.asin(2 * rand() - 1);
+    const cp = Math.cos(phi);
+    // Unit vector in the ecliptic (inertial) frame
+    const ex = cp * Math.cos(theta);
+    const ey = cp * Math.sin(theta);
+    const ez = Math.sin(phi);
+    // Display properties: r = radius, a = base opacity
+    const r = rand() < 0.85 ? 0.5 : rand() * 1.2 + 0.5;
+    const a = 0.25 + rand() * 0.6;
+    stars.push([ex, ey, ez, r, a]);
   }
   return stars;
 }

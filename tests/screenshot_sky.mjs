@@ -19,27 +19,27 @@ const page = await browser.newPage();
 await page.setViewportSize({ width: 1280, height: 900 });
 await page.goto(`http://localhost:${port}/`);
 await page.waitForFunction(() => typeof sim !== 'undefined');
-await page.waitForTimeout(1500);
+
+// Pause to prevent animation from moving things
+await page.keyboard.press('Space');
+await page.waitForTimeout(500);
 
 // Open sky view
 await page.click('#btn-sky');
 await page.waitForTimeout(500);
 
-// Screenshot default location (Sub-Primus)
-await page.screenshot({ path: '/tmp/sky_subprimus.png' });
-
-// Switch to Qarangil (45°N, 30°W)
-await page.selectOption('#sky-location-select', '1');
-await page.waitForTimeout(300);
+// Screenshot at current time (nighttime at Qarangil)
 await page.evaluate(() => skyView.render());
-await page.screenshot({ path: '/tmp/sky_qarangil.png' });
+await page.screenshot({ path: '/tmp/sky_stars_t0.png' });
 
-// Switch to Peχavn (25°S, 5°E)
-await page.selectOption('#sky-location-select', '4');
-await page.waitForTimeout(300);
-await page.evaluate(() => skyView.render());
-await page.screenshot({ path: '/tmp/sky_pexavn.png' });
+// Advance 6 hours — stars should visibly shift
+await page.evaluate(() => { sim.advance(100, 10, null); skyView.render(); });
+await page.screenshot({ path: '/tmp/sky_stars_6h.png' });
 
-console.log('Screenshots saved to /tmp/sky_*.png');
+// Advance another 6 hours
+await page.evaluate(() => { sim.advance(100, 10, null); skyView.render(); });
+await page.screenshot({ path: '/tmp/sky_stars_12h.png' });
+
+console.log('Screenshots saved to /tmp/sky_stars_*.png');
 await browser.close();
 server.close();
