@@ -535,15 +535,6 @@ export class SkyView {
     // Phase angle α: 0 = full (opposite Sun), π = new (same as Sun)
     const alpha = Math.acos(-cosElong);
     const R = moon.discR;
-
-    // DEBUG: show α on screen for each moon
-    ctx.save();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = 'yellow';
-    ctx.font = '10px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText((alpha * 180 / PI).toFixed(0) + '°', moon.x, moon.y + R + 14);
-    ctx.restore();
     // Terminator ellipse x semi-axis: R at full, 0 at quarter, R at new
     const tx = R * Math.abs(Math.cos(alpha));
 
@@ -572,7 +563,7 @@ export class SkyView {
     // is sub-pixel at this phase, and the great-circle tangent toward the
     // Sun is ill-defined near opposition (ŝ ≈ −m̂), so we skip the
     // rotation-dependent rendering entirely.
-    if (alpha < 0.16) {   // ~9° — at this phase the terminator is sub-pixel, and the
+    if (alpha < 0.35) {   // ~20° — at small disc sizes the arc+ellipse path
       ctx.fillStyle = body.color;
       ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill();
       ctx.restore();
