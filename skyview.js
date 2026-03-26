@@ -535,6 +535,15 @@ export class SkyView {
     // Phase angle α: 0 = full (opposite Sun), π = new (same as Sun)
     const alpha = Math.acos(-cosElong);
     const R = moon.discR;
+
+    // DEBUG: show α on screen for each moon
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'yellow';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText((alpha * 180 / PI).toFixed(0) + '°', moon.x, moon.y + R + 14);
+    ctx.restore();
     // Terminator ellipse x semi-axis: R at full, 0 at quarter, R at new
     const tx = R * Math.abs(Math.cos(alpha));
 
