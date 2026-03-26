@@ -422,6 +422,9 @@ function buildUI(canvas) {
     labelBtn.classList.toggle('active', renderer.showLabels);
   });
 
+  // Sky view location selector
+  buildLocationSelect();
+
   // Sky view toggle
   document.getElementById('btn-sky').addEventListener('click', toggleSkyView);
 
@@ -444,6 +447,28 @@ function buildUI(canvas) {
 
   // Keyboard shortcuts
   window.addEventListener('keydown', handleKey);
+}
+
+const SKY_LOCATIONS = [
+  { name: 'Qarangil (45\u00b0N, 30\u00b0E)',     lat:  45, lon:  30 },
+  { name: 'Potosia (33\u00b0N, 15\u00b0E)',      lat:  33, lon:  15 },
+  { name: 'Qama (40\u00b0N, 45\u00b0E)',         lat:  40, lon:  45 },
+  { name: 'Pe\u03c7avn (25\u00b0S, 5\u00b0W)',   lat: -25, lon:  -5 },
+  { name: 'Sub-Primus (0\u00b0N, 0\u00b0)',      lat:   0, lon:   0 },
+];
+
+function buildLocationSelect() {
+  const sel = document.getElementById('sky-location-select');
+  SKY_LOCATIONS.forEach((loc, i) => {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = loc.name;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => {
+    const loc = SKY_LOCATIONS[parseInt(sel.value)];
+    skyView.setLocation(loc.lat, loc.lon);
+  });
 }
 
 function buildFollowSelect() {

@@ -292,6 +292,33 @@ button.ctrl-btn.active {
   height: 100%;
 }
 
+#sky-location {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 9;
+}
+
+#sky-location-select {
+  background: rgba(20, 45, 100, 0.75);
+  border: 1px solid rgba(80, 130, 220, 0.3);
+  color: rgba(180, 215, 255, 0.88);
+  padding: 4px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  border-radius: 4px;
+  outline: none;
+}
+
+#sky-location-select:hover,
+#sky-location-select:focus {
+  border-color: rgba(120, 180, 255, 0.5);
+}
+
 /* ── Doc links (styled as buttons) ──────────────────────────── */
 
 #doc-links a.ctrl-btn {

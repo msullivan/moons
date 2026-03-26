@@ -24,17 +24,22 @@ await page.waitForTimeout(1500);
 // Open sky view
 await page.click('#btn-sky');
 await page.waitForTimeout(500);
-await page.screenshot({ path: '/tmp/sky_full.png' });
 
-// Advance ~6 hours to see different sky
-await page.evaluate(() => { sim.advance(60, 10, renderer.followIndex); });
+// Screenshot default location (Sub-Primus)
+await page.screenshot({ path: '/tmp/sky_subprimus.png' });
+
+// Switch to Qarangil (45°N, 30°W)
+await page.selectOption('#sky-location-select', '1');
 await page.waitForTimeout(300);
-await page.screenshot({ path: '/tmp/sky_6h.png' });
+await page.evaluate(() => skyView.render());
+await page.screenshot({ path: '/tmp/sky_qarangil.png' });
 
-// Advance to nighttime (~12h total)
-await page.evaluate(() => { sim.advance(60, 10, renderer.followIndex); });
+// Switch to Peχavn (25°S, 5°E)
+await page.selectOption('#sky-location-select', '4');
 await page.waitForTimeout(300);
-await page.screenshot({ path: '/tmp/sky_12h.png' });
+await page.evaluate(() => skyView.render());
+await page.screenshot({ path: '/tmp/sky_pexavn.png' });
 
+console.log('Screenshots saved to /tmp/sky_*.png');
 await browser.close();
 server.close();

@@ -1,13 +1,14 @@
 // Sky view — full-window azimuthal equidistant projection of the sky
-// as seen from Qaia's surface (equatorial observer at sub-Primus longitude).
+// as seen from Qaia's surface at a configurable (lat, lon) location.
 // Zenith at center, horizon at rim. North up, east right.
 //
 // Coordinate pipeline:
 //   1. Inertial ecliptic (x,y,z) — the simulation frame
 //   2. Equatorial basis (p1,p2,p3) — rotated 23.5° around y to align with Qaia's equator
 //   3. Body-fixed (b1,b2,b3) — spinning with Qaia's sidereal rotation
-//   4. Altitude / azimuth — observer's local horizon frame
-//   5. Screen (x,y) — azimuthal equidistant projection onto a circle
+//   4. Observer local frame (zen,east,nor) — rotated to observer's lat/lon
+//   5. Altitude / azimuth — from local frame components
+//   6. Screen (x,y) — azimuthal equidistant projection onto a circle
 
 import { PRIMUS_INCLINATION, QAIA_SIDEREAL_DAY } from './bodies.js';
 
@@ -38,8 +39,25 @@ export class SkyView {
     // Sidereal rotation rate (rad/s).  One full turn = one sidereal day.
     this.omega = TAU / QAIA_SIDEREAL_DAY;
 
+    // Observer location on Qaia's surface.  Default: Qarangil (45°N, 30°E).
+    // setLocation() precomputes trig for the observer frame.
+    this.setLocation(45, 30);
+
     // Seeded star field (same PRNG as renderer.js but different seed)
     this.stars = buildStars(500, 0xCAFEBABE);
+  }
+
+  // Set observer latitude and longitude (in degrees).
+  // Longitude is relative to the sub-Primus meridian; positive = east, negative = west.
+  setLocation(latDeg, lonDeg) {
+    this.latDeg = latDeg;
+    this.lonDeg = lonDeg;
+    const phi = latDeg * PI / 180;
+    const lam = lonDeg * PI / 180;
+    this._cosPhi = Math.cos(phi);
+    this._sinPhi = Math.sin(phi);
+    this._cosLam = Math.cos(lam);
+    this._sinLam = Math.sin(lam);
   }
 
   resize(w, h) {
@@ -50,7 +68,8 @@ export class SkyView {
   // ── coordinate transform ──────────────────────────────────────────────
   //
   // Converts a body's inertial position to altitude/azimuth as seen by an
-  // observer standing on Qaia's equator at the sub-Primus longitude.
+  // observer standing on Qaia's surface at (latitude φ, longitude λ)
+  // relative to the sub-Primus meridian.
   //
   // The transform has three stages:
   //
@@ -67,18 +86,27 @@ export class SkyView {
   //      vectors.  They are still inertial (non-rotating).
   //
   //  (b) Inertial equatorial → body-fixed: apply Qaia's sidereal rotation
-  //      as a 2D rotation of (p1, p2) by angle φ = ω·t.  The spin-axis
+  //      as a 2D rotation of (p1, p2) by angle θ = ω·t.  The spin-axis
   //      component p3 is unaffected (rotation around an axis doesn't change
   //      the component along that axis).
   //
   //      After rotation:
-  //        b1 = zenith direction for the sub-Primus observer
-  //        b2 = east
-  //        b3 = north  (= p3, unchanged)
+  //        b1 = direction toward sub-Primus equatorial point
+  //        b2 = east at that point
+  //        b3 = north pole  (= p3, unchanged)
   //
-  //  (c) Body-fixed → alt/az:
-  //        altitude = arcsin(b1 / distance)   — angle above the horizon
-  //        azimuth  = atan2(b2, b3)           — compass bearing, 0=N, π/2=E
+  //  (c) Body-fixed → observer's local frame at (φ, λ):
+  //
+  //      The observer's zenith direction in body-fixed coords is:
+  //        ẑ = (cosφ·cosλ,  cosφ·sinλ,  sinφ)
+  //
+  //      Local east and north directions:
+  //        ê = (−sinλ,  cosλ,  0)
+  //        n̂ = (−sinφ·cosλ,  −sinφ·sinλ,  cosφ)
+  //
+  //      Project the body direction onto these to get:
+  //        zenith_component → altitude = arcsin(zen / dist)
+  //        east_component, north_component → azimuth = atan2(east, north)
 
   altAz(bodyIndex) {
     const qaia = this.sim.bodies[1];
@@ -96,19 +124,27 @@ export class SkyView {
     const p2 = dy;                                  // equatorial east
     const p3 = dx * this.sinI + dz * this.cosI;   // spin axis (north)
 
-    // (b) Rotate into body-fixed frame by sidereal angle φ
-    const phi = this.omega * this.sim.time;
-    const c = Math.cos(phi), s = Math.sin(phi);
-    const b1 =  c * p1 + s * p2;   // zenith component
-    const b2 = -s * p1 + c * p2;   // east component
-    const b3 = p3;                   // north (unchanged by rotation)
+    // (b) Rotate into body-fixed frame by sidereal angle θ
+    const theta = this.omega * this.sim.time;
+    const c = Math.cos(theta), s = Math.sin(theta);
+    const b1 =  c * p1 + s * p2;   // toward sub-Primus equatorial point
+    const b2 = -s * p1 + c * p2;   // east at sub-Primus point
+    const b3 = p3;                   // north pole (unchanged by rotation)
 
-    // (c) Convert to altitude and azimuth
-    const alt = Math.asin(clamp(b1 / dist, -1, 1));
-    const az  = Math.atan2(b2, b3);   // 0 = north, π/2 = east
+    // (c) Project onto observer's local frame at (φ, λ)
+    const cP = this._cosPhi, sP = this._sinPhi;
+    const cL = this._cosLam, sL = this._sinLam;
 
-    // Body-fixed unit vector (used for great-circle phase orientation)
-    const ux = b1 / dist, uy = b2 / dist, uz = b3 / dist;
+    const zen  =  b1 * cP * cL + b2 * cP * sL + b3 * sP;   // zenith
+    const east = -b1 * sL       + b2 * cL;                   // east
+    const nor  = -b1 * sP * cL - b2 * sP * sL + b3 * cP;   // north
+
+    // Convert to altitude and azimuth
+    const alt = Math.asin(clamp(zen / dist, -1, 1));
+    const az  = Math.atan2(east, nor);   // 0 = north, π/2 = east
+
+    // Local-frame unit vector (used for great-circle phase orientation)
+    const ux = zen / dist, uy = east / dist, uz = nor / dist;
 
     return { alt, az, dist, ux, uy, uz };
   }
