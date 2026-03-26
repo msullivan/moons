@@ -538,19 +538,7 @@ export class SkyView {
     // Terminator ellipse x semi-axis: R at full, 0 at quarter, R at new
     const tx = R * Math.abs(Math.cos(alpha));
 
-    // Great-circle tangent gives the projection-correct direction, but
-    // reverses near opposition (>90° separation) because the shortest
-    // great circle goes "over the pole."  Detect this by comparing with
-    // the naïve screen direction and flip if they disagree by >90°.
-    let rotation = 0;
-    if (sunObj) {
-      rotation = this._greatCircleScreenAngle(moon, sunObj);
-      const naive = Math.atan2(sunObj.y - moon.y, sunObj.x - moon.x);
-      // Signed angular difference
-      let diff = rotation - naive;
-      diff = ((diff + 3 * PI) % TAU) - PI;  // normalize to [-π, π]
-      if (Math.abs(diff) > PI / 2) rotation += PI;
-    }
+    const rotation = sunObj ? this._greatCircleScreenAngle(moon, sunObj) : 0;
 
     ctx.save();
     ctx.translate(moon.x, moon.y);
