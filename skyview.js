@@ -551,7 +551,7 @@ export class SkyView {
     // is sub-pixel at this phase, and the great-circle tangent toward the
     // Sun is ill-defined near opposition (ŝ ≈ −m̂), so we skip the
     // rotation-dependent rendering entirely.
-    if (alpha < 0.35) {   // ~20° — at small disc sizes the arc+ellipse path
+    if (alpha < 0.35) {   // ~20° — the arc+ellipse path degenerates when tx ≈ R
       ctx.fillStyle = body.color;
       ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill();
       ctx.restore();
@@ -562,8 +562,10 @@ export class SkyView {
     ctx.fillStyle = '#0e0e1e';
     ctx.fillRect(-R - 1, -R - 1, 2 * R + 2, 2 * R + 2);
 
-    // Near new moon (α ≥ 95% of π): disc stays fully dark
-    if (alpha < PI * 0.95) {
+    // Near new moon: disc stays fully dark.  The threshold mirrors the
+    // near-full one (0.35 rad ≈ 20°) so tx stays well below R — the
+    // arc+ellipse path degenerates when tx ≈ R.
+    if (alpha < PI - 0.35) {
       // Draw the entire lit region as a single path to avoid an
       // anti-aliasing seam where the semicircle meets the terminator.
       ctx.fillStyle = body.color;
