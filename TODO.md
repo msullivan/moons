@@ -10,7 +10,6 @@
 - **Smooth slow playback** — at 10m/s and 1h/s the sky jumps between integrator steps
   (dt = 6 min). Lerp body positions between the last two sim states to produce smooth
   apparent motion without changing the integrator or making it speed-dependent.
-- Support different locations on the planet
 - Fix positioning / calandar priority
 
 ## World-building / RPG utility
