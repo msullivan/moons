@@ -166,12 +166,12 @@ Called in the Simulation constructor and at the end of `_step()`.
 
 ### Debugging Canvas 2D rendering
 
-When investigating visual rendering bugs (wrong phase, wrong color, wrong shape), **do not**
-try to diagnose from screenshots of tiny on-screen elements. Instead, write a standalone
-Playwright test that renders the drawing code in isolation on a fresh canvas at a known size,
-then use `getImageData()` to pixel-count the result. This catches issues like inverted winding
-flags that are invisible at small disc sizes but obvious when you measure lit-pixel fractions
-across a sweep of parameters.
+When investigating visual rendering bugs (wrong phase, wrong color, wrong shape), screenshots
+are useful for understanding the problem, but for pinpointing the root cause consider writing
+a standalone Playwright test that renders the drawing code in isolation on a fresh canvas at a
+known size, then uses `getImageData()` to pixel-count the result. This catches issues like
+inverted winding flags that are invisible at small disc sizes but obvious when you measure
+lit-pixel fractions across a sweep of parameters.
 
 For visual inspection, temporarily increase `MIN_DISC_R` or `ANGULAR_SCALE` in `skyview.js`
 to make tiny elements large enough to see, or use a narrow viewport (e.g., 412×915 mobile)
