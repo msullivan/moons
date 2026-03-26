@@ -53,7 +53,7 @@ async function init() {
   renderer = new Renderer(canvas, sim);
   skyView  = new SkyView(document.getElementById('sky-canvas'), sim);
   skyView.resize(window.innerWidth, window.innerHeight - 70);
-  window.sim = sim; window.renderer = renderer; // expose for Playwright tests
+  window.sim = sim; window.renderer = renderer; window.skyView = skyView; // expose for Playwright tests
 
   buildUI(canvas);
 
