@@ -329,6 +329,40 @@ export class SkyView {
     }
     ctx.setLineDash([]);
 
+    // ── ecliptic ─────────────────────────────────────────────────────
+    // The ecliptic is the z=0 plane in the inertial frame — sample unit
+    // vectors around it, transform through the star matrix, and draw.
+    {
+      const M = this._starMatrix();
+      const N_ECL = 120;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip();
+      ctx.strokeStyle = 'rgba(200, 160, 80, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      let drawing = false;
+      for (let i = 0; i <= N_ECL; i++) {
+        const ang = (i / N_ECL) * TAU;
+        const ex = Math.cos(ang), ey = Math.sin(ang);
+        // ez = 0 for ecliptic plane
+        const zen  = M[0] * ex + M[1] * ey;
+        const east = M[3] * ex + M[4] * ey;
+        const nor  = M[6] * ex + M[7] * ey;
+        const alt = Math.asin(clamp(zen, -1, 1));
+        if (alt < -0.02) { drawing = false; continue; }
+        const az = Math.atan2(east, nor);
+        const pr = (PI / 2 - alt) / (PI / 2) * R;
+        const sx = cx + pr * Math.sin(az);
+        const sy = cy - pr * Math.cos(az);
+        if (!drawing) { ctx.moveTo(sx, sy); drawing = true; }
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
     // Horizon circle — the boundary between visible sky and ground.
     ctx.strokeStyle = 'rgba(80, 130, 255, 0.30)';
     ctx.lineWidth = 1.5;
