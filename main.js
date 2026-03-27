@@ -57,6 +57,9 @@ async function init() {
 
   buildUI(canvas);
 
+  // Open sky view if ?sky is in the URL (so refreshing preserves it).
+  if (new URL(location.href).searchParams.has('sky')) toggleSkyView();
+
   running = true;
   updatePlayBtn();
   requestAnimationFrame(tick);
@@ -627,6 +630,11 @@ function toggleSkyView() {
   document.getElementById('btn-sky').classList.toggle('active', open);
   document.getElementById('orbit-panel').style.display = open ? 'none' : '';
   document.getElementById('phase-panel').style.display = open ? 'none' : '';
+  // Persist sky view state in URL so refreshing stays on it.
+  const url = new URL(location.href);
+  if (open) url.searchParams.set('sky', '');
+  else url.searchParams.delete('sky');
+  history.replaceState(null, '', url);
 }
 
 function togglePause() {
