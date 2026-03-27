@@ -702,5 +702,9 @@ function buildStars(count, seed) {
     const a = 0.25 + rand() * 0.6;
     stars.push([ex, ey, ez, r, a]);
   }
+  // Pole star — bright star on the spin axis (ecliptic coords of the north pole).
+  // I = 23.5° axial tilt → ecliptic unit vector = (sinI, 0, cosI).
+  const I = 23.5 * PI / 180;
+  stars.push([Math.sin(I), 0, Math.cos(I), 1.4, 0.9]);
   return stars;
 }
