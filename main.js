@@ -458,6 +458,8 @@ const SKY_LOCATIONS = [
   { name: 'Qama (40\u00b0N, 45\u00b0E)',         lat:  40, lon:  45 },
   { name: 'Pe\u03c7avn (25\u00b0S, 5\u00b0W)',   lat: -25, lon:  -5 },
   { name: 'Sub-Primus (0\u00b0N, 0\u00b0)',      lat:   0, lon:   0 },
+  { name: 'North Pole (90\u00b0N)',               lat:  90, lon:   0 },
+  { name: 'South Pole (90\u00b0S)',               lat: -90, lon:   0 },
 ];
 
 function buildLocationSelect() {
