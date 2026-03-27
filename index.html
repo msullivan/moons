@@ -49,7 +49,14 @@
         <label><input type="checkbox" id="sky-hide-moons"> Hide moons</label>
         <label><input type="checkbox" id="sky-hide-ecliptic"> Hide ecliptic</label>
         <label><input type="checkbox" id="sky-no-glare"> Disable sun glare</label>
-        <label><input type="checkbox" id="sky-day-synced"> Day synchronized</label>
+        <div id="sky-sync-row">
+          <span class="ctrl-label">Sync</span>
+          <select id="sky-sync-select">
+            <option value="">Off</option>
+            <option value="sidereal">Sidereal day</option>
+            <option value="solar">Solar day</option>
+          </select>
+        </div>
       </div>
     </div>
   </div>

@@ -345,6 +345,29 @@ button.ctrl-btn.active {
   cursor: pointer;
 }
 
+#sky-sync-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+#sky-sync-select {
+  background: rgba(20, 45, 100, 0.75);
+  border: 1px solid rgba(80, 130, 220, 0.3);
+  color: rgba(180, 215, 255, 0.88);
+  padding: 2px 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  border-radius: 4px;
+  outline: none;
+}
+
+#sky-sync-select:hover,
+#sky-sync-select:focus {
+  border-color: rgba(120, 180, 255, 0.5);
+}
+
 /* ── Doc links (styled as buttons) ──────────────────────────── */
 
 #doc-links a.ctrl-btn {
