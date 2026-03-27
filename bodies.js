@@ -18,6 +18,12 @@ export const R_SATURN  = 5.823e7;   // m
 
 const QATURN_A = 0.10 * AU;         // hot Saturn — ~11-day orbit
 
+// Orbital inclinations to ecliptic (degrees → radians)
+const BAHAMUT_INC = 45.0 * Math.PI / 180;  // heavily inclined hot Saturn
+const QARS_INC    = 1.85 * Math.PI / 180;  // Mars
+const FAFNIR_INC  = 3.40 * Math.PI / 180;  // Venus
+const TIAMAT_INC  = 1.30 * Math.PI / 180;  // Jupiter
+
 // Fafnir: Venus-like planet at 0.723 AU (~225-day orbit)
 const FAFNIR_A = 0.723 * AU;
 export const M_VENUS = 4.867e24;   // kg
@@ -88,7 +94,7 @@ export function createInitialBodies() {
   // gravity felt by Qaia, requiring ~8 m/s less orbital velocity to
   // stay on a Keplerian year.  Without this correction the calendar
   // drifts ~55° over 200 years.
-  const v_earth   = Math.sqrt(G * M_SUN / AU) - 8.0;
+  const v_earth   = Math.sqrt(G * M_SUN / AU) - 3.8;
   const v_qupiter = Math.sqrt(G * M_SUN / QUPITER_A);
   const mu_J      = G * M_JUPITER;
   // Real Galilean eccentricities (forced by the Laplace resonance)
@@ -207,38 +213,43 @@ export function createInitialBodies() {
       physicalRadius: R_QUINTUS, minDisplayPx: 4,
       color: '#FFDD55', trailColor: '#FFDD55', trailMaxLen: 2500,
     }),
-    // Qaturn (9): hot Saturn at 0.1 AU (~11-day orbit)
+    // Qaturn (9): hot Saturn at 0.1 AU (~11-day orbit), inclined 45°
     new Body({
       name: 'Bahamut', mass: M_SATURN,
       x: QATURN_A * Math.cos(BAHAMUT_PHASE), y: QATURN_A * Math.sin(BAHAMUT_PHASE),
-      vx: -Math.sqrt(G * M_SUN / QATURN_A) * Math.sin(BAHAMUT_PHASE),
-      vy:  Math.sqrt(G * M_SUN / QATURN_A) * Math.cos(BAHAMUT_PHASE),
+      vx: -Math.sqrt(G * M_SUN / QATURN_A) * Math.sin(BAHAMUT_PHASE) * Math.cos(BAHAMUT_INC),
+      vy:  Math.sqrt(G * M_SUN / QATURN_A) * Math.cos(BAHAMUT_PHASE) * Math.cos(BAHAMUT_INC),
+      vz:  Math.sqrt(G * M_SUN / QATURN_A) * Math.sin(BAHAMUT_INC),
       physicalRadius: R_SATURN, minDisplayPx: 8,
       color: '#E8D080', trailColor: '#E8D080', trailMaxLen: 800, albedo: 0.47,
     }),
-    // Qars (10): super-Earth at 1.52 AU (Mars position)
+    // Qars (10): super-Earth at 1.52 AU (Mars position), inclined 1.85°
     new Body({
       name: 'Qars', mass: 3 * M_EARTH,
       x: 1.52 * AU * Math.cos(QARS_PHASE), y: 1.52 * AU * Math.sin(QARS_PHASE),
-      vx: -Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.sin(QARS_PHASE),
-      vy:  Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.cos(QARS_PHASE),
+      vx: -Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.sin(QARS_PHASE) * Math.cos(QARS_INC),
+      vy:  Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.cos(QARS_PHASE) * Math.cos(QARS_INC),
+      vz:  Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.sin(QARS_INC),
       physicalRadius: R_EARTH * Math.pow(3, 1 / 3), minDisplayPx: 5,
       color: '#C1440E', trailColor: '#C1440E', trailMaxLen: 2000, albedo: 0.25,
     }),
-    // Fafnir (11): Venus-like planet at 0.723 AU (~225-day orbit)
+    // Fafnir (11): Venus-like planet at 0.723 AU (~225-day orbit), inclined 3.4°
     new Body({
       name: 'Fafnir', mass: M_VENUS,
       x: FAFNIR_A * cosF, y: FAFNIR_A * sinF,
-      vx: -Math.sqrt(G * M_SUN / FAFNIR_A) * sinF,
-      vy:  Math.sqrt(G * M_SUN / FAFNIR_A) * cosF,
+      vx: -Math.sqrt(G * M_SUN / FAFNIR_A) * sinF * Math.cos(FAFNIR_INC),
+      vy:  Math.sqrt(G * M_SUN / FAFNIR_A) * cosF * Math.cos(FAFNIR_INC),
+      vz:  Math.sqrt(G * M_SUN / FAFNIR_A) * Math.sin(FAFNIR_INC),
       physicalRadius: R_VENUS, minDisplayPx: 5,
       color: '#E8C87A', trailColor: '#E8C87A', trailMaxLen: 2000, albedo: 0.76,
     }),
-    // Tiamat (12): Jupiter-mass planet at 5.46 AU
+    // Tiamat (12): Jupiter-mass planet at 5.46 AU, inclined 1.3°
     new Body({
       name: 'Tiamat', mass: M_JUPITER,
       x: QUPITER_A * cosT, y: QUPITER_A * sinT,
-      vx: -v_qupiter * sinT, vy: v_qupiter * cosT,
+      vx: -v_qupiter * sinT * Math.cos(TIAMAT_INC),
+      vy:  v_qupiter * cosT * Math.cos(TIAMAT_INC),
+      vz:  v_qupiter * Math.sin(TIAMAT_INC),
       physicalRadius: R_JUPITER, minDisplayPx: 10,
       color: '#C88B3A', trailColor: '#C88B3A', trailMaxLen: 3000, albedo: 0.52,
     }),
