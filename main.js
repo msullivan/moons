@@ -485,6 +485,13 @@ function buildLocationSelect() {
   document.getElementById('sky-no-glare').addEventListener('change', (e) => {
     skyView.disableSunGlare = e.target.checked;
   });
+  document.getElementById('sky-day-synced').addEventListener('change', (e) => {
+    skyView.daySynced = e.target.checked;
+    if (e.target.checked) {
+      skyView._syncEpoch = sim.time;
+      skyView._lastSyncRender = -Infinity;  // force immediate first render
+    }
+  });
 }
 
 function buildFollowSelect() {

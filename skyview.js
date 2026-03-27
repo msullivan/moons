@@ -35,6 +35,9 @@ export class SkyView {
     this.hideMoons = false;
     this.hideEcliptic = false;
     this.disableSunGlare = false;
+    this.daySynced = false;
+    this._syncEpoch = 0;        // sim time when day-synced was enabled
+    this._lastSyncRender = -Infinity;  // sim time of last synced render
 
     // Precompute trig for the 23.5° axial tilt (ecliptic → equatorial rotation).
     this.cosI = Math.cos(PRIMUS_INCLINATION);
@@ -237,6 +240,15 @@ export class SkyView {
   // ── main render ───────────────────────────────────────────────────────
 
   render() {
+    // Day-synced mode: skip rendering until a full sidereal day has
+    // elapsed since the last render.  When it does render, it uses the
+    // real sim time so you see the sky at the same time-of-day each frame.
+    if (this.daySynced) {
+      const elapsed = this.sim.time - this._lastSyncRender;
+      if (elapsed >= 0 && elapsed < QAIA_SIDEREAL_DAY) return;
+      this._lastSyncRender = this.sim.time;
+    }
+
     const ctx = this.ctx;
     const W = this.canvas.width;
     const H = this.canvas.height;
