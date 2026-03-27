@@ -474,6 +474,17 @@ function buildLocationSelect() {
     const loc = SKY_LOCATIONS[parseInt(sel.value)];
     skyView.setLocation(loc.lat, loc.lon);
   });
+
+  // Sky view option checkboxes
+  document.getElementById('sky-hide-moons').addEventListener('change', (e) => {
+    skyView.hideMoons = e.target.checked;
+  });
+  document.getElementById('sky-hide-ecliptic').addEventListener('change', (e) => {
+    skyView.hideEcliptic = e.target.checked;
+  });
+  document.getElementById('sky-no-glare').addEventListener('change', (e) => {
+    skyView.disableSunGlare = e.target.checked;
+  });
 }
 
 function buildFollowSelect() {

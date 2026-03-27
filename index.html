@@ -40,9 +40,16 @@
   <!-- Sky view panel -->
   <div id="sky-panel">
     <canvas id="sky-canvas"></canvas>
-    <div id="sky-location">
-      <span class="ctrl-label">Location</span>
-      <select id="sky-location-select"></select>
+    <div id="sky-controls">
+      <div id="sky-location">
+        <span class="ctrl-label">Location</span>
+        <select id="sky-location-select"></select>
+      </div>
+      <div id="sky-options">
+        <label><input type="checkbox" id="sky-hide-moons"> Hide moons</label>
+        <label><input type="checkbox" id="sky-hide-ecliptic"> Hide ecliptic</label>
+        <label><input type="checkbox" id="sky-no-glare"> Disable sun glare</label>
+      </div>
     </div>
   </div>
 

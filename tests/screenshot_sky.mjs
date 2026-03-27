@@ -20,26 +20,29 @@ await page.setViewportSize({ width: 1280, height: 900 });
 await page.goto(`http://localhost:${port}/`);
 await page.waitForFunction(() => typeof sim !== 'undefined');
 
-// Pause to prevent animation from moving things
+// Pause and open sky view
 await page.keyboard.press('Space');
 await page.waitForTimeout(500);
-
-// Open sky view
 await page.click('#btn-sky');
 await page.waitForTimeout(500);
 
-// Screenshot at current time (nighttime at Qarangil)
+// Advance to nighttime to see moons and stars
+await page.evaluate(() => { sim.advance(100, 10, null); skyView.render(); });
+await page.screenshot({ path: '/tmp/sky_normal.png' });
+
+// Enable "Disable sun glare" — should show stars in daytime
+await page.evaluate(() => { sim.advance(-100, 10, null); }); // can't go back, just toggle glare
+await page.click('#sky-no-glare');
+await page.waitForTimeout(200);
 await page.evaluate(() => skyView.render());
-await page.screenshot({ path: '/tmp/sky_stars_t0.png' });
+await page.screenshot({ path: '/tmp/sky_noglare.png' });
 
-// Advance 6 hours — stars should visibly shift
-await page.evaluate(() => { sim.advance(100, 10, null); skyView.render(); });
-await page.screenshot({ path: '/tmp/sky_stars_6h.png' });
+// Enable "Hide moons"
+await page.click('#sky-hide-moons');
+await page.waitForTimeout(200);
+await page.evaluate(() => skyView.render());
+await page.screenshot({ path: '/tmp/sky_nomoons.png' });
 
-// Advance another 6 hours
-await page.evaluate(() => { sim.advance(100, 10, null); skyView.render(); });
-await page.screenshot({ path: '/tmp/sky_stars_12h.png' });
-
-console.log('Screenshots saved to /tmp/sky_stars_*.png');
+console.log('Screenshots saved');
 await browser.close();
 server.close();

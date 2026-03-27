@@ -32,6 +32,9 @@ export class SkyView {
     this.ctx = canvas.getContext('2d');
     this.sim = sim;
     this.showLabels = true;
+    this.hideMoons = false;
+    this.hideEcliptic = false;
+    this.disableSunGlare = false;
 
     // Precompute trig for the 23.5° axial tilt (ecliptic → equatorial rotation).
     this.cosI = Math.cos(PRIMUS_INCLINATION);
@@ -257,7 +260,7 @@ export class SkyView {
     // −18° is the astronomical twilight threshold; below that, the sky
     // is fully dark.  The intensity ramps linearly from 0 at −18° to
     // full at +12°.  Daytime gets blue, twilight gets warm orange.
-    if (sunAA && sunAltDeg > -18) {
+    if (!this.disableSunGlare && sunAA && sunAltDeg > -18) {
       const sp = this._project(sunAA.alt, sunAA.az, cx, cy, R);
       const t = clamp((sunAltDeg + 18) / 30, 0, 1);  // 0 at −18°, 1 at +12°
       const grad = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, R * 1.5);
@@ -280,7 +283,8 @@ export class SkyView {
     // Stars have fixed ecliptic coordinates and rotate with Qaia's
     // sidereal rotation — they rise and set like real stars.
     // Opacity fades with sun altitude: full at night, invisible in daytime.
-    const starAlpha = sunAltDeg > 0 ? clamp(1 - sunAltDeg / 15, 0, 0.15) : 0.8;
+    const starAlpha = this.disableSunGlare ? 0.8
+      : sunAltDeg > 0 ? clamp(1 - sunAltDeg / 15, 0, 0.15) : 0.8;
     if (starAlpha > 0.01) {
       const M = this._starMatrix();
       ctx.save();
@@ -332,7 +336,7 @@ export class SkyView {
     // ── ecliptic ─────────────────────────────────────────────────────
     // The ecliptic is the z=0 plane in the inertial frame — sample unit
     // vectors around it, transform through the star matrix, and draw.
-    {
+    if (!this.hideEcliptic) {
       const M = this._starMatrix();
       const N_ECL = 120;
       ctx.save();
@@ -409,6 +413,8 @@ export class SkyView {
       if (aa.alt * RAD < -10 && idx !== 0) continue;  // skip far-below-horizon objects (but keep Sun for phase rendering)
       const body = this.sim.bodies[idx];
       const isPlanet = SKY_PLANETS.has(idx);
+      // Skip moons (not Sun idx=0, not planets) when hidden
+      if (this.hideMoons && idx !== 0 && !isPlanet) continue;
       if (isPlanet) {
         // Planets render as star-like points with brightness from physics
         const brightness = this._planetBrightness(body, aa.dist);
@@ -440,8 +446,8 @@ export class SkyView {
       if (o.isPlanet) {
         // Fade planets in daylight, similar to stars.  Brighter planets
         // (like Fafnir/Venus) linger a few degrees longer.
-        const dayFade = sunAltDeg > 0
-          ? clamp(1 - sunAltDeg / (15 + o.brightness * 10), 0, 1)
+        const dayFade = this.disableSunGlare ? 1
+          : sunAltDeg > 0 ? clamp(1 - sunAltDeg / (15 + o.brightness * 10), 0, 1)
           : 1;
         if (dayFade > 0.01) {
           ctx.globalAlpha *= dayFade;
@@ -471,13 +477,17 @@ export class SkyView {
             glowScale = (1 - cosE) / 2;  // 0 at new, 1 at full
           }
         }
-        const glowR = o.idx === 0 ? o.discR * 5 : o.discR * 3;
-        const glow = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, glowR);
-        glow.addColorStop(0, hexAlpha(o.body.color, (o.idx === 0 ? 0.5 : 0.3) * glowScale));
-        glow.addColorStop(0.5, hexAlpha(o.body.color, (o.idx === 0 ? 0.15 : 0.08) * glowScale));
-        glow.addColorStop(1, hexAlpha(o.body.color, 0));
-        ctx.fillStyle = glow;
-        ctx.beginPath(); ctx.arc(o.x, o.y, glowR, 0, TAU); ctx.fill();
+        // Glow halo (skip Sun glow when sun glare is disabled)
+        const skipGlow = o.idx === 0 && this.disableSunGlare;
+        if (!skipGlow) {
+          const glowR = o.idx === 0 ? o.discR * 5 : o.discR * 3;
+          const glow = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, glowR);
+          glow.addColorStop(0, hexAlpha(o.body.color, (o.idx === 0 ? 0.5 : 0.3) * glowScale));
+          glow.addColorStop(0.5, hexAlpha(o.body.color, (o.idx === 0 ? 0.15 : 0.08) * glowScale));
+          glow.addColorStop(1, hexAlpha(o.body.color, 0));
+          ctx.fillStyle = glow;
+          ctx.beginPath(); ctx.arc(o.x, o.y, glowR, 0, TAU); ctx.fill();
+        }
 
         // Body disc — Sun is solid yellow, moons get phase shading
         if (o.idx === 0) {
