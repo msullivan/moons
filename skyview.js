@@ -37,6 +37,7 @@ export class SkyView {
     this.disableSunGlare = false;
     this.syncMode = null;  // null, 'sidereal', or 'solar'
     this._lastSyncRender = -Infinity;  // sim time of last synced render
+    this._syncPhase = 0;  // phase offset within the period (set when sync enabled)
 
     // Precompute trig for the 23.5° axial tilt (ecliptic → equatorial rotation).
     this.cosI = Math.cos(PRIMUS_INCLINATION);
@@ -253,15 +254,19 @@ export class SkyView {
     } else {
       const period = this.syncMode === 'sidereal' ? QAIA_SIDEREAL_DAY : 86400;
       if (this._lastSyncRender === -Infinity) {
-        // First render after enabling sync — snap to current time
-        this._lastSyncRender = Math.floor(this.sim.time / period) * period;
+        // First render after enabling sync — record current phase within
+        // the period so subsequent renders land at the same time of day.
+        this._syncPhase = ((this.sim.time % period) + period) % period;
+        this._lastSyncRender = this.sim.time;
+        this._syncTime = this.sim.time;
+      } else {
+        const elapsed = this.sim.time - this._lastSyncRender;
+        if (elapsed >= 0 && elapsed < period) return;
+        // Advance by exact multiples of the period
+        const n = Math.floor(elapsed / period);
+        this._lastSyncRender += n * period;
+        this._syncTime = this._lastSyncRender;
       }
-      const elapsed = this.sim.time - this._lastSyncRender;
-      if (elapsed >= 0 && elapsed < period) return;
-      // Advance by exact multiples of the period
-      const n = Math.floor(elapsed / period);
-      this._lastSyncRender += n * period;
-      this._syncTime = this._lastSyncRender;
     }
 
     const ctx = this.ctx;

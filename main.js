@@ -193,8 +193,13 @@ function updateHUD() {
   // Show the snapped render time when sync mode is active
   const syncEl = document.getElementById('hud-sync');
   if (skyView && skyView._syncTime != null) {
+    const t = skyView._syncTime;
     const label = skyView.syncMode === 'sidereal' ? 'Sidereal' : 'Solar';
-    syncEl.textContent = `${label} sync: ${simDate(skyView._syncTime)}`;
+    const period = skyView.syncMode === 'sidereal' ? SIDEREAL_DAY : 86400;
+    const frac = ((t % period) + period) % period / period;
+    const hh = Math.floor(frac * 24).toString().padStart(2, '0');
+    const mm = Math.floor((frac * 24 % 1) * 60).toString().padStart(2, '0');
+    syncEl.textContent = `${label} sync: ${simDate(t)}, ${hh}:${mm}`;
     syncEl.style.display = '';
   } else {
     syncEl.style.display = 'none';
