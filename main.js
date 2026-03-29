@@ -195,8 +195,9 @@ function updateHUD() {
   if (skyView && skyView._syncTime != null) {
     const t = skyView._syncTime;
     const label = skyView.syncMode === 'sidereal' ? 'Sidereal' : 'Solar';
-    const period = skyView.syncMode === 'sidereal' ? SIDEREAL_DAY : 86400;
-    const frac = ((t % period) + period) % period / period;
+    // Always display solar (clock) time — in sidereal mode this drifts
+    // ~4 min earlier each day, which is the whole point.
+    const frac = ((t % 86400) + 86400) % 86400 / 86400;
     const hh = Math.floor(frac * 24).toString().padStart(2, '0');
     const mm = Math.floor((frac * 24 % 1) * 60).toString().padStart(2, '0');
     syncEl.textContent = `${label} sync: ${simDate(t)}, ${hh}:${mm}`;
