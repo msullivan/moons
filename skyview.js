@@ -718,7 +718,8 @@ export class SkyView {
 
   _starMatrix() {
     const cI = this.cosI, sI = this.sinI;
-    const theta = this.omega * this.sim.time;
+    const t = this._syncTime ?? this.sim.time;
+    const theta = this.omega * t;
     const c = Math.cos(theta), s = Math.sin(theta);
     const cP = this._cosPhi, sP = this._sinPhi;
     const cL = this._cosLam, sL = this._sinLam;
