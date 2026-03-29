@@ -38,6 +38,7 @@ export class SkyView {
     this.syncMode = null;  // null, 'sidereal', or 'solar'
     this._lastSyncRender = -Infinity;  // sim time of last synced render
     this._syncPhase = 0;  // phase offset within the period (set when sync enabled)
+    this._syncTime = null; // snapped time used for rendering (null = use sim.time)
 
     // Precompute trig for the 23.5° axial tilt (ecliptic → equatorial rotation).
     this.cosI = Math.cos(PRIMUS_INCLINATION);
@@ -70,6 +71,11 @@ export class SkyView {
     this.canvas.width = w;
     this.canvas.height = h;
   }
+
+  // The time used for sidereal rotation in all rendering code.
+  // In sync mode this is the snapped time (so stars/sun stay fixed);
+  // otherwise it's the live sim time.
+  get renderTime() { return this._syncTime ?? this.sim.time; }
 
   // ── coordinate transform ──────────────────────────────────────────────
   //
@@ -131,10 +137,7 @@ export class SkyView {
     const p3 = dx * this.sinI + dz * this.cosI;   // spin axis (north)
 
     // (b) Rotate into body-fixed frame by sidereal angle θ
-    // In sync mode, use the snapped time so the rotation lands on exact
-    // multiples of the sync period (stars fixed / sun fixed).
-    const t = this._syncTime ?? this.sim.time;
-    const theta = this.omega * t;
+    const theta = this.omega * this.renderTime;
     const c = Math.cos(theta), s = Math.sin(theta);
     const b1 =  c * p1 + s * p2;   // toward sub-Primus equatorial point
     const b2 = -s * p1 + c * p2;   // east at sub-Primus point
@@ -718,8 +721,7 @@ export class SkyView {
 
   _starMatrix() {
     const cI = this.cosI, sI = this.sinI;
-    const t = this._syncTime ?? this.sim.time;
-    const theta = this.omega * t;
+    const theta = this.omega * this.renderTime;
     const c = Math.cos(theta), s = Math.sin(theta);
     const cP = this._cosPhi, sP = this._sinPhi;
     const cL = this._cosLam, sL = this._sinLam;
