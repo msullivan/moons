@@ -109,10 +109,10 @@ function tick(ts) {
   }
 
   renderer.render();
-  updateHUD();
   if (document.getElementById('sky-panel').classList.contains('open')) {
     skyView.render();
   }
+  updateHUD();
   requestAnimationFrame(tick);
 }
 
@@ -189,6 +189,16 @@ function updateHUD() {
   document.getElementById('hud-date').textContent   = simDate(sim.time);
   document.getElementById('hud-pmt').textContent    = primusMeanTime(sim.time);
   document.getElementById('hud-energy').textContent = `ΔE/E₀: ${sign}${err.toExponential(2)}`;
+
+  // Show the snapped render time when sync mode is active
+  const syncEl = document.getElementById('hud-sync');
+  if (skyView && skyView._syncTime != null) {
+    const label = skyView.syncMode === 'sidereal' ? 'Sidereal' : 'Solar';
+    syncEl.textContent = `${label} sync: ${simDate(skyView._syncTime)}`;
+    syncEl.style.display = '';
+  } else {
+    syncEl.style.display = 'none';
+  }
 
   updateMoonPhases();
 

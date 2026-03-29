@@ -130,7 +130,10 @@ export class SkyView {
     const p3 = dx * this.sinI + dz * this.cosI;   // spin axis (north)
 
     // (b) Rotate into body-fixed frame by sidereal angle θ
-    const theta = this.omega * this.sim.time;
+    // In sync mode, use the snapped time so the rotation lands on exact
+    // multiples of the sync period (stars fixed / sun fixed).
+    const t = this._syncTime ?? this.sim.time;
+    const theta = this.omega * t;
     const c = Math.cos(theta), s = Math.sin(theta);
     const b1 =  c * p1 + s * p2;   // toward sub-Primus equatorial point
     const b2 = -s * p1 + c * p2;   // east at sub-Primus point
@@ -242,11 +245,23 @@ export class SkyView {
     // Sync mode: skip rendering until a full day has elapsed since the
     // last render.  Sidereal syncs to the star rotation; solar syncs to
     // the Sun's position (24h solar day = 86400s).
-    if (this.syncMode) {
+    // Snap to exact period boundaries so the rotation angle lands on
+    // consistent values each frame (stars stay fixed in sidereal mode,
+    // sun stays fixed in solar mode).
+    if (!this.syncMode) {
+      this._syncTime = null;
+    } else {
       const period = this.syncMode === 'sidereal' ? QAIA_SIDEREAL_DAY : 86400;
+      if (this._lastSyncRender === -Infinity) {
+        // First render after enabling sync — snap to current time
+        this._lastSyncRender = Math.floor(this.sim.time / period) * period;
+      }
       const elapsed = this.sim.time - this._lastSyncRender;
       if (elapsed >= 0 && elapsed < period) return;
-      this._lastSyncRender = this.sim.time;
+      // Advance by exact multiples of the period
+      const n = Math.floor(elapsed / period);
+      this._lastSyncRender += n * period;
+      this._syncTime = this._lastSyncRender;
     }
 
     const ctx = this.ctx;
