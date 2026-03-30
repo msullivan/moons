@@ -511,6 +511,19 @@ function buildLocationSelect() {
       skyView.toggleTrace(Number(e.target.dataset.trace), e.target.checked);
     });
   }
+
+  // Apply browser-restored state (autofill doesn't fire change events)
+  skyView.hideMoons      = document.getElementById('sky-hide-moons').checked;
+  skyView.hideEcliptic   = document.getElementById('sky-hide-ecliptic').checked;
+  skyView.disableSunGlare = document.getElementById('sky-no-glare').checked;
+  const syncVal = document.getElementById('sky-sync-select').value;
+  if (syncVal) {
+    skyView.syncMode = syncVal;
+    skyView._lastSyncRender = -Infinity;
+  }
+  for (const cb of document.querySelectorAll('#sky-options input[data-trace]')) {
+    if (cb.checked) skyView.toggleTrace(Number(cb.dataset.trace), true);
+  }
 }
 
 function buildFollowSelect() {
