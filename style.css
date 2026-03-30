@@ -345,10 +345,17 @@ button.ctrl-btn.active {
   cursor: pointer;
 }
 
-#sky-sync-row, #sky-traces {
+#sky-sync-row {
   display: flex;
   align-items: center;
   gap: 5px;
+}
+
+#sky-traces {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
 }
 
 #sky-sync-select {
