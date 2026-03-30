@@ -180,6 +180,20 @@ export class SkyView {
     return { alt, az, dist, ux, uy, uz };
   }
 
+  // Convert body-fixed unit direction (b1, b2, b3) to (alt, az) using
+  // the current observer lat/lon.  Shared by altAz() and trace drawing.
+  _bodyFixedToAltAz(b1, b2, b3) {
+    const cP = this._cosPhi, sP = this._sinPhi;
+    const cL = this._cosLam, sL = this._sinLam;
+    const zen  =  b1 * cP * cL + b2 * cP * sL + b3 * sP;
+    const east = -b1 * sL       + b2 * cL;
+    const nor  = -b1 * sP * cL - b2 * sP * sL + b3 * cP;
+    return {
+      alt: Math.asin(clamp(zen, -1, 1)),
+      az:  Math.atan2(east, nor),
+    };
+  }
+
   // ── azimuthal equidistant projection ──────────────────────────────────
   //
   // Maps the sky hemisphere onto a flat circle.  The angular distance from
@@ -459,20 +473,32 @@ export class SkyView {
     ctx.stroke();
 
     // ── traces ────────────────────────────────────────────────────────
-    // Record current alt/az for traced bodies and draw their trails.
+    // Record body-fixed unit directions for traced bodies.  These are
+    // observer-independent, so changing location re-projects correctly.
     for (const idx of this.traces) {
-      const aa = this.altAz(idx);
-      if (!aa) continue;
+      const qaia = this.sim.bodies[1];
+      const body = this.sim.bodies[idx];
+      const dx = body.x - qaia.x, dy = body.y - qaia.y, dz = body.z - qaia.z;
+      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (dist === 0) continue;
+      const p1 = dx * this.cosI - dz * this.sinI;
+      const p2 = dy;
+      const p3 = dx * this.sinI + dz * this.cosI;
+      const theta = this.omega * this.renderTime;
+      const c = Math.cos(theta), s = Math.sin(theta);
+      const b1 = ( c * p1 + s * p2) / dist;
+      const b2 = (-s * p1 + c * p2) / dist;
+      const b3 = p3 / dist;
       let pts = this._tracePoints.get(idx);
       if (!pts) { pts = []; this._tracePoints.set(idx, pts); }
-      pts.push({ alt: aa.alt, az: aa.az });
-      if (pts.length > this._traceMaxLen) pts.shift();
+      pts.push(b1, b2, b3);  // flat array: every 3 elements = one point
+      if (pts.length > this._traceMaxLen * 3) pts.splice(0, 3);
     }
     if (this._tracePoints.size > 0) {
       ctx.save();
       ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip();
       for (const [idx, pts] of this._tracePoints) {
-        if (pts.length < 2) continue;
+        if (pts.length < 6) continue;
         const color = this.sim.bodies[idx].trailColor || this.sim.bodies[idx].color;
         ctx.strokeStyle = color;
         ctx.lineWidth = 1.5;
@@ -480,12 +506,12 @@ export class SkyView {
         ctx.beginPath();
         let drawing = false;
         let prevX, prevY;
-        for (const p of pts) {
-          const sp = this._project(p.alt, p.az, cx, cy, R);
-          // Break the line if it wraps around azimuth (large screen-space jump)
+        for (let i = 0; i < pts.length; i += 3) {
+          const aa = this._bodyFixedToAltAz(pts[i], pts[i+1], pts[i+2]);
+          const sp = this._project(aa.alt, aa.az, cx, cy, R);
           if (drawing) {
-            const dx = sp.x - prevX, dy = sp.y - prevY;
-            if (dx * dx + dy * dy > R * R * 0.25) {
+            const ddx = sp.x - prevX, ddy = sp.y - prevY;
+            if (ddx * ddx + ddy * ddy > R * R * 0.25) {
               ctx.stroke();
               ctx.beginPath();
               ctx.moveTo(sp.x, sp.y);
