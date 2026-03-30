@@ -504,6 +504,7 @@ function buildLocationSelect() {
   document.getElementById('sky-sync-select').addEventListener('change', (e) => {
     skyView.syncMode = e.target.value || null;
     skyView._lastSyncRender = -Infinity;  // force immediate first render
+    skyView.clearTraces();
   });
   for (const cb of document.querySelectorAll('#sky-traces input[data-trace]')) {
     cb.addEventListener('change', (e) => {
