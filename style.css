@@ -328,12 +328,12 @@ button.ctrl-btn.active {
 #sky-options {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
   gap: 3px;
 }
 
 #sky-options label {
   display: flex;
+  flex-direction: row-reverse;
   align-items: center;
   gap: 5px;
   font-size: 11px;
@@ -348,8 +348,13 @@ button.ctrl-btn.active {
 
 #sky-sync-row {
   display: flex;
+  flex-direction: row-reverse;
   align-items: center;
   gap: 5px;
+}
+
+#sky-options > .ctrl-label {
+  text-align: right;
 }
 
 #sky-sync-select {
