@@ -345,7 +345,7 @@ button.ctrl-btn.active {
   cursor: pointer;
 }
 
-#sky-sync-row {
+#sky-sync-row, #sky-traces {
   display: flex;
   align-items: center;
   gap: 5px;

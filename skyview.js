@@ -40,6 +40,12 @@ export class SkyView {
     this._syncPhase = 0;  // phase offset within the period (set when sync enabled)
     this._syncTime = null; // snapped time used for rendering (null = use sim.time)
 
+    // Sky traces: store projected (alt, az) trails per body index.
+    // Map from body index → array of {alt, az} points.
+    this.traces = new Set();  // body indices with tracing enabled
+    this._tracePoints = new Map();  // body index → [{alt, az}, ...]
+    this._traceMaxLen = 2000;
+
     // Precompute trig for the 23.5° axial tilt (ecliptic → equatorial rotation).
     this.cosI = Math.cos(PRIMUS_INCLINATION);
     this.sinI = Math.sin(PRIMUS_INCLINATION);
@@ -70,6 +76,19 @@ export class SkyView {
   resize(w, h) {
     this.canvas.width = w;
     this.canvas.height = h;
+  }
+
+  toggleTrace(bodyIndex, on) {
+    if (on) {
+      this.traces.add(bodyIndex);
+    } else {
+      this.traces.delete(bodyIndex);
+      this._tracePoints.delete(bodyIndex);
+    }
+  }
+
+  clearTraces() {
+    this._tracePoints.clear();
   }
 
   // The time used for sidereal rotation in all rendering code.
@@ -438,6 +457,52 @@ export class SkyView {
     ctx.moveTo(cx - 8, cy); ctx.lineTo(cx + 8, cy);
     ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy + 8);
     ctx.stroke();
+
+    // ── traces ────────────────────────────────────────────────────────
+    // Record current alt/az for traced bodies and draw their trails.
+    for (const idx of this.traces) {
+      const aa = this.altAz(idx);
+      if (!aa) continue;
+      let pts = this._tracePoints.get(idx);
+      if (!pts) { pts = []; this._tracePoints.set(idx, pts); }
+      pts.push({ alt: aa.alt, az: aa.az });
+      if (pts.length > this._traceMaxLen) pts.shift();
+    }
+    if (this._tracePoints.size > 0) {
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip();
+      for (const [idx, pts] of this._tracePoints) {
+        if (pts.length < 2) continue;
+        const color = this.sim.bodies[idx].trailColor || this.sim.bodies[idx].color;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        let drawing = false;
+        let prevX, prevY;
+        for (const p of pts) {
+          const sp = this._project(p.alt, p.az, cx, cy, R);
+          // Break the line if it wraps around azimuth (large screen-space jump)
+          if (drawing) {
+            const dx = sp.x - prevX, dy = sp.y - prevY;
+            if (dx * dx + dy * dy > R * R * 0.25) {
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(sp.x, sp.y);
+            } else {
+              ctx.lineTo(sp.x, sp.y);
+            }
+          } else {
+            ctx.moveTo(sp.x, sp.y);
+            drawing = true;
+          }
+          prevX = sp.x; prevY = sp.y;
+        }
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
 
     // ── celestial objects ─────────────────────────────────────────────
 

@@ -505,6 +505,11 @@ function buildLocationSelect() {
     skyView.syncMode = e.target.value || null;
     skyView._lastSyncRender = -Infinity;  // force immediate first render
   });
+  for (const cb of document.querySelectorAll('#sky-traces input[data-trace]')) {
+    cb.addEventListener('change', (e) => {
+      skyView.toggleTrace(Number(e.target.dataset.trace), e.target.checked);
+    });
+  }
 }
 
 function buildFollowSelect() {
