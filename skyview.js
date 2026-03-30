@@ -177,7 +177,10 @@ export class SkyView {
     // Local-frame unit vector (used for great-circle phase orientation)
     const ux = zen / dist, uy = east / dist, uz = nor / dist;
 
-    return { alt, az, dist, ux, uy, uz };
+    // Body-fixed unit direction (observer-independent, for traces)
+    const bf1 = b1 / dist, bf2 = b2 / dist, bf3 = b3 / dist;
+
+    return { alt, az, dist, ux, uy, uz, bf1, bf2, bf3 };
   }
 
   // Convert body-fixed unit direction (b1, b2, b3) to (alt, az) using
@@ -476,22 +479,11 @@ export class SkyView {
     // Record body-fixed unit directions for traced bodies.  These are
     // observer-independent, so changing location re-projects correctly.
     for (const idx of this.traces) {
-      const qaia = this.sim.bodies[1];
-      const body = this.sim.bodies[idx];
-      const dx = body.x - qaia.x, dy = body.y - qaia.y, dz = body.z - qaia.z;
-      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      if (dist === 0) continue;
-      const p1 = dx * this.cosI - dz * this.sinI;
-      const p2 = dy;
-      const p3 = dx * this.sinI + dz * this.cosI;
-      const theta = this.omega * this.renderTime;
-      const c = Math.cos(theta), s = Math.sin(theta);
-      const b1 = ( c * p1 + s * p2) / dist;
-      const b2 = (-s * p1 + c * p2) / dist;
-      const b3 = p3 / dist;
+      const aa = this.altAz(idx);
+      if (!aa) continue;
       let pts = this._tracePoints.get(idx);
       if (!pts) { pts = []; this._tracePoints.set(idx, pts); }
-      pts.push(b1, b2, b3);  // flat array: every 3 elements = one point
+      pts.push(aa.bf1, aa.bf2, aa.bf3);  // flat array: every 3 elements = one point
       if (pts.length > this._traceMaxLen * 3) pts.splice(0, 3);
     }
     if (this._tracePoints.size > 0) {
