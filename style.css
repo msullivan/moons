@@ -351,13 +351,6 @@ button.ctrl-btn.active {
   gap: 5px;
 }
 
-#sky-traces {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px 8px;
-}
-
 #sky-sync-select {
   background: rgba(20, 45, 100, 0.75);
   border: 1px solid rgba(80, 130, 220, 0.3);

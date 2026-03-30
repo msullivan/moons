@@ -506,7 +506,7 @@ function buildLocationSelect() {
     skyView._lastSyncRender = -Infinity;  // force immediate first render
     skyView.clearTraces();
   });
-  for (const cb of document.querySelectorAll('#sky-traces input[data-trace]')) {
+  for (const cb of document.querySelectorAll('#sky-options input[data-trace]')) {
     cb.addEventListener('change', (e) => {
       skyView.toggleTrace(Number(e.target.dataset.trace), e.target.checked);
     });
