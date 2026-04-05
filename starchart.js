@@ -1,5 +1,6 @@
 // Star chart — two azimuthal equidistant projections (north + south pole)
-// reusing the same deterministic star field as the sky view.
+// rendered as inline SVGs for crisp printing and vector editing.
+// Reuses the same deterministic star field as the sky view.
 
 import { buildStars } from './skyview.js';
 import { PRIMUS_INCLINATION } from './bodies.js';
@@ -12,16 +13,13 @@ const sinI = Math.sin(PRIMUS_INCLINATION);
 
 const stars = buildStars(500, 0xCAFEBABE);
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 // Compute the 3×3 matrix: ecliptic → observer (zen, east, north) frame.
-// Same math as SkyView._starMatrix() but with time=0 and explicit lat/lon.
+// Same math as SkyView._starMatrix() but with time=0 and lon=0.
 function starMatrix(latDeg) {
   const phi = latDeg * PI / 180;
   const cP = Math.cos(phi), sP = Math.sin(phi);
-  // lon=0 → cosLam=1, sinLam=0
-
-  // Ecliptic → body-fixed (θ=0) composed with body-fixed → observer (lon=0).
-  // With θ=0 and lon=0 many terms vanish; the result is a rotation by
-  // (lat + axial_tilt) around the y-axis.
   return [
     cP * cosI + sP * sinI,  0,  -cP * sinI + sP * cosI,
     0,                       1,  0,
@@ -29,159 +27,173 @@ function starMatrix(latDeg) {
   ];
 }
 
-// Convert equatorial unit vector (at Dec=0, RA=ra) to ecliptic coordinates.
-// RA=0 is anchored to the vernal equinox — the ecliptic direction (0,−1,0),
-// where the Sun crosses the equator going north.  In equatorial coords this
-// is also (0,−1,0), so we rotate the standard (cosRA, sinRA) basis by −90°:
-//   eq = (sin(RA), −cos(RA), 0)
-// Then equatorial→ecliptic rotates by −I around y.
+// Convert equatorial direction (Dec=0, RA=ra) to ecliptic coordinates.
+// RA=0 anchored at the vernal equinox: ecliptic direction (0, −1, 0).
 function raToEcliptic(ra) {
   const eqx = Math.sin(ra), eqy = -Math.cos(ra);
   return [cosI * eqx, eqy, -sinI * eqx];
 }
 
-function renderChart(canvas, latDeg) {
-  const dpr = window.devicePixelRatio || 1;
-  const size = Math.min(600, Math.min(window.innerWidth / 2 - 40, window.innerHeight - 120));
-  canvas.width = size * dpr;
-  canvas.height = size * dpr;
-  canvas.style.width = size + 'px';
-  canvas.style.height = size + 'px';
+// Project ecliptic direction through matrix M, return screen (x, y).
+// Convention: 0h at bottom, RA counterclockwise (north) / clockwise (south).
+function project(M, ex, ey, ez, R, cx, cy) {
+  const zen  = M[0] * ex + M[1] * ey + M[2] * ez;
+  const east = M[3] * ex + M[4] * ey + M[5] * ez;
+  const nor  = M[6] * ex + M[7] * ey + M[8] * ez;
+  const alt  = Math.asin(Math.max(-1, Math.min(1, zen)));
+  const az   = Math.atan2(east, nor);
+  const pr   = (PI / 2 - alt) / (PI / 2) * R;
+  return { x: cx - pr * Math.cos(az), y: cy - pr * Math.sin(az), pr };
+}
 
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
+function el(tag, attrs, ...children) {
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  for (const c of children) {
+    if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+    else e.appendChild(c);
+  }
+  return e;
+}
 
+function buildChart(latDeg) {
+  const size = 600;
   const margin = 32;
   const R  = size / 2 - margin;
   const cx = size / 2;
   const cy = size / 2;
   const isNorth = latDeg > 0;
-
-  // Include 10° overlap past the equator so equatorial patterns aren't cut off
   const clipR = R * 1.11;
-
-  ctx.fillStyle = '#04081a';
-  ctx.fillRect(0, 0, size, size);
-
   const M = starMatrix(latDeg);
 
-  // ── Declination circles ────────────────────────────────────────
-  ctx.strokeStyle = 'rgba(80, 130, 255, 0.30)';
-  ctx.lineWidth = 0.75;
-  ctx.setLineDash([3, 6]);
-  // 0° = equator (at distance R), ±30°, ±60°
+  const svg = el('svg', {
+    viewBox: `0 0 ${size} ${size}`,
+    xmlns: SVG_NS,
+  });
+
+  // Clip definition for the chart area
+  const defs = el('defs', {});
+  const clipPath = el('clipPath', { id: isNorth ? 'clip-n' : 'clip-s' });
+  clipPath.appendChild(el('circle', { cx, cy, r: clipR }));
+  defs.appendChild(clipPath);
+  svg.appendChild(defs);
+
+  // Background
+  svg.appendChild(el('rect', { width: size, height: size, fill: '#04081a' }));
+
+  const clipId = isNorth ? 'clip-n' : 'clip-s';
+
+  // ── Declination circles ──────────────────────────────────────
   for (const dec of [0, 30, 60]) {
     const r = (90 - dec) / 90 * R;
     if (r > clipR) continue;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, TAU);
-    ctx.stroke();
+    svg.appendChild(el('circle', {
+      cx, cy, r,
+      fill: 'none',
+      stroke: 'rgba(80,130,255,0.30)',
+      'stroke-width': 0.75,
+      'stroke-dasharray': '3 6',
+    }));
   }
-  ctx.setLineDash([]);
 
-  // ── RA hour lines (every 2h) ───────────────────────────────────
+  // ── RA hour lines ────────────────────────────────────────────
   for (let h = 0; h < 24; h += 2) {
     const ra = h * PI / 12;
     const [ex, ey, ez] = raToEcliptic(ra);
+    const p = project(M, ex, ey, ez, R, cx, cy);
 
+    // Spoke
+    svg.appendChild(el('line', {
+      x1: cx, y1: cy, x2: p.x, y2: p.y,
+      stroke: 'rgba(80,130,255,0.18)',
+      'stroke-width': 0.75,
+    }));
+
+    // Label
+    const lr = R + 16;
     const east = M[3] * ex + M[4] * ey + M[5] * ez;
     const nor  = M[6] * ex + M[7] * ey + M[8] * ez;
     const az   = Math.atan2(east, nor);
-
-    // Spoke from pole to equator
-    ctx.strokeStyle = 'rgba(80, 130, 255, 0.18)';
-    ctx.lineWidth = 0.75;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx - R * Math.cos(az), cy - R * Math.sin(az));
-    ctx.stroke();
-
-    // RA label just outside the equator circle
-    const lr = R + 16;
-    ctx.fillStyle = 'rgba(140, 185, 230, 0.80)';
-    ctx.font = '11px Courier New';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(h + 'h', cx - lr * Math.cos(az), cy - lr * Math.sin(az));
+    const lx = cx - lr * Math.cos(az);
+    const ly = cy - lr * Math.sin(az);
+    svg.appendChild(el('text', {
+      x: lx, y: ly,
+      fill: 'rgba(140,185,230,0.80)',
+      'font-family': 'Courier New, monospace',
+      'font-size': '11',
+      'text-anchor': 'middle',
+      'dominant-baseline': 'central',
+    }, h + 'h'));
   }
 
-  // ── Ecliptic ───────────────────────────────────────────────────
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, clipR, 0, TAU);
-  ctx.clip();
-  ctx.strokeStyle = 'rgba(200, 160, 80, 0.30)';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([6, 6]);
-  ctx.beginPath();
-  let drawing = false;
-  for (let i = 0; i <= 120; i++) {
-    const ang = (i / 120) * TAU;
+  // ── Ecliptic ─────────────────────────────────────────────────
+  const eclPts = [];
+  const N_ECL = 120;
+  let segment = [];
+  for (let i = 0; i <= N_ECL; i++) {
+    const ang = (i / N_ECL) * TAU;
     const ex = Math.cos(ang), ey = Math.sin(ang);
-    const zen  = M[0] * ex + M[1] * ey;
-    const east = M[3] * ex + M[4] * ey;
-    const nor  = M[6] * ex + M[7] * ey;
-    const alt = Math.asin(Math.max(-1, Math.min(1, zen)));
-    const az  = Math.atan2(east, nor);
-    const pr  = (PI / 2 - alt) / (PI / 2) * R;
-    if (pr > clipR) { drawing = false; continue; }
-    const sx = cx - pr * Math.cos(az);
-    const sy = cy - pr * Math.sin(az);
-    if (!drawing) { ctx.moveTo(sx, sy); drawing = true; }
-    else ctx.lineTo(sx, sy);
+    const p = project(M, ex, ey, 0, R, cx, cy);
+    if (p.pr > clipR) {
+      if (segment.length) { eclPts.push(segment); segment = []; }
+      continue;
+    }
+    segment.push(p);
   }
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
+  if (segment.length) eclPts.push(segment);
+  for (const seg of eclPts) {
+    const d = seg.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join('');
+    svg.appendChild(el('path', {
+      d,
+      fill: 'none',
+      stroke: 'rgba(200,160,80,0.30)',
+      'stroke-width': 1,
+      'stroke-dasharray': '6 6',
+      'clip-path': `url(#${clipId})`,
+    }));
+  }
 
-  // ── Stars ──────────────────────────────────────────────────────
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, clipR, 0, TAU);
-  ctx.clip();
+  // ── Stars ────────────────────────────────────────────────────
+  const starGroup = el('g', { 'clip-path': `url(#${clipId})` });
   for (const [ex, ey, ez, r, a] of stars) {
-    const zen  = M[0] * ex + M[1] * ey + M[2] * ez;
-    const east = M[3] * ex + M[4] * ey + M[5] * ez;
-    const nor  = M[6] * ex + M[7] * ey + M[8] * ez;
-    const alt = Math.asin(Math.max(-1, Math.min(1, zen)));
-    const az  = Math.atan2(east, nor);
-    const pr  = (PI / 2 - alt) / (PI / 2) * R;
-    if (pr > clipR) continue;
-    const sx = cx - pr * Math.cos(az);
-    const sy = cy - pr * Math.sin(az);
-    // Enlarge dots for chart readability; brighter stars get bigger
+    const p = project(M, ex, ey, ez, R, cx, cy);
+    if (p.pr > clipR) continue;
     const cr = r * 1.8;
     const opacity = Math.min(a * 1.3, 1);
-    ctx.fillStyle = `rgba(255,255,255,${opacity.toFixed(3)})`;
-    ctx.beginPath();
-    ctx.arc(sx, sy, cr, 0, TAU);
-    ctx.fill();
+    starGroup.appendChild(el('circle', {
+      cx: p.x.toFixed(2),
+      cy: p.y.toFixed(2),
+      r: cr.toFixed(2),
+      fill: `rgba(255,255,255,${opacity.toFixed(3)})`,
+    }));
   }
-  ctx.restore();
+  svg.appendChild(starGroup);
 
-  // ── Dec labels ─────────────────────────────────────────────────
-  ctx.fillStyle = 'rgba(120, 170, 220, 0.40)';
-  ctx.font = '9px Courier New';
-  ctx.textAlign = 'left';
+  // ── Dec labels ───────────────────────────────────────────────
   for (const dec of [0, 30, 60]) {
     const r = (90 - dec) / 90 * R;
     if (r > clipR) continue;
     const label = dec === 0 ? '0\u00B0'
       : isNorth ? `+${dec}\u00B0` : `\u2212${dec}\u00B0`;
-    ctx.fillText(label, cx + 4, cy - r - 3);
+    svg.appendChild(el('text', {
+      x: cx + 4, y: cy - r - 3,
+      fill: 'rgba(120,170,220,0.40)',
+      'font-family': 'Courier New, monospace',
+      'font-size': '9',
+    }, label));
   }
 
-  // Pole label at center
-  ctx.fillStyle = 'rgba(150, 210, 255, 0.5)';
-  ctx.font = '10px Courier New';
-  ctx.textAlign = 'center';
-  ctx.fillText(isNorth ? 'NCP' : 'SCP', cx + 12, cy - 4);
+  // Pole label
+  svg.appendChild(el('text', {
+    x: cx + 12, y: cy - 4,
+    fill: 'rgba(150,210,255,0.5)',
+    'font-family': 'Courier New, monospace',
+    'font-size': '10',
+    'text-anchor': 'middle',
+  }, isNorth ? 'NCP' : 'SCP'));
+
+  return svg;
 }
 
-renderChart(document.getElementById('north-canvas'), 90);
-renderChart(document.getElementById('south-canvas'), -90);
-
-window.addEventListener('resize', () => {
-  renderChart(document.getElementById('north-canvas'), 90);
-  renderChart(document.getElementById('south-canvas'), -90);
-});
+document.getElementById('north-chart').appendChild(buildChart(90));
+document.getElementById('south-chart').appendChild(buildChart(-90));

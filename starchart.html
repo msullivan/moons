@@ -16,7 +16,8 @@
     #chart-container {
       display: flex;
       justify-content: center;
-      align-items: flex-start;
+      align-items: center;
+      min-height: 100vh;
       flex-wrap: wrap;
       gap: 20px;
       padding: 20px;
@@ -26,16 +27,19 @@
       flex-direction: column;
       align-items: center;
       gap: 8px;
+      width: calc(50% - 20px);
+      max-width: 600px;
+      min-width: 280px;
+    }
+    .chart-wrap svg {
+      width: 100%;
+      height: auto;
     }
     .chart-wrap h2 {
       font-size: 14px;
       font-weight: normal;
       color: rgba(150, 210, 255, 0.88);
       letter-spacing: 0.06em;
-    }
-    canvas {
-      display: block;
-      background: #04081a;
     }
     #back-link {
       position: fixed;
@@ -54,11 +58,11 @@
   <div id="chart-container">
     <div class="chart-wrap">
       <h2>Northern Hemisphere</h2>
-      <canvas id="north-canvas"></canvas>
+      <div id="north-chart"></div>
     </div>
     <div class="chart-wrap">
       <h2>Southern Hemisphere</h2>
-      <canvas id="south-canvas"></canvas>
+      <div id="south-chart"></div>
     </div>
   </div>
   <script type="module" src="starchart.js"></script>
