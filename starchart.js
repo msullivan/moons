@@ -309,12 +309,10 @@ const glowCircles = [];  // reusable glow markers
 
 function highlightStar(idx) {
   if (idx === activeStarIdx) return;
-  // Remove old glows
   for (const g of glowCircles) g.remove();
   glowCircles.length = 0;
   activeStarIdx = idx;
   if (idx < 0) return;
-  // Add glow circles next to each instance of this star
   for (const c of starElements[idx]) {
     const glow = document.createElementNS(SVG_NS, 'circle');
     glow.setAttribute('cx', c.getAttribute('cx'));
@@ -329,13 +327,233 @@ function highlightStar(idx) {
   }
 }
 
-function handleStarEvent(e) {
+function handleHover(e) {
   const star = e.target.closest('[data-star]');
   if (star) {
     highlightStar(Number(star.dataset.star));
   } else if (e.type === 'mouseleave') {
     highlightStar(-1);
   }
+}
+
+// ── Constellation drawing ──────────────────────────────────────────
+
+let selectedStarIdx = -1;
+const selectionRings = [];
+const drawnLines = [];          // [{a, b, key}, ...] in draw order (for undo)
+const drawnLineSet = new Set(); // "min-max" strings for dedup
+const lineEls = [];             // SVG elements to clear/rebuild
+
+function lineKey(a, b) { return a < b ? `${a}-${b}` : `${b}-${a}`; }
+
+function selectStar(idx) {
+  for (const r of selectionRings) r.remove();
+  selectionRings.length = 0;
+  selectedStarIdx = idx;
+  if (idx < 0) return;
+  for (const c of starElements[idx]) {
+    const ring = document.createElementNS(SVG_NS, 'circle');
+    ring.setAttribute('cx', c.getAttribute('cx'));
+    ring.setAttribute('cy', c.getAttribute('cy'));
+    ring.setAttribute('r', '10');
+    ring.setAttribute('fill', 'none');
+    ring.setAttribute('stroke', '#fc4');
+    ring.setAttribute('stroke-width', '2');
+    ring.setAttribute('opacity', '0.9');
+    c.parentNode.appendChild(ring);
+    selectionRings.push(ring);
+  }
+}
+
+function addLine(a, b) {
+  const key = lineKey(a, b);
+  if (drawnLineSet.has(key) || a === b) return;
+  drawnLineSet.add(key);
+  drawnLines.push({ a, b, key });
+  renderLines();
+  syncToHash();
+}
+
+function removeLineByKey(key) {
+  if (!drawnLineSet.has(key)) return;
+  drawnLineSet.delete(key);
+  const i = drawnLines.findIndex(l => l.key === key);
+  if (i >= 0) drawnLines.splice(i, 1);
+  renderLines();
+  syncToHash();
+}
+
+function undoLine() {
+  if (!drawnLines.length) return;
+  const last = drawnLines.pop();
+  drawnLineSet.delete(last.key);
+  renderLines();
+  syncToHash();
+}
+
+// SVG groups for drawn lines — one per chart SVG, inserted before stars
+const lineGroups = new Map(); // svg element → <g>
+
+function ensureLineGroup(svg) {
+  if (lineGroups.has(svg)) return lineGroups.get(svg);
+  const g = document.createElementNS(SVG_NS, 'g');
+  g.classList.add('constellation-lines');
+  // Insert before the star clip group so lines render behind stars
+  const starG = svg.querySelector('g[clip-path]');
+  if (starG) svg.insertBefore(g, starG);
+  else svg.appendChild(g);
+  lineGroups.set(svg, g);
+  return g;
+}
+
+function renderLines() {
+  // Clear old line elements
+  for (const e of lineEls) e.remove();
+  lineEls.length = 0;
+
+  // Build lookup: starIdx → [{svg, cx, cy}, ...]
+  const posMap = {};
+  for (let i = 0; i < starElements.length; i++) {
+    for (const c of starElements[i]) {
+      if (!posMap[i]) posMap[i] = [];
+      posMap[i].push({
+        svg: c.closest('svg'),
+        cx: parseFloat(c.getAttribute('cx')),
+        cy: parseFloat(c.getAttribute('cy')),
+      });
+    }
+  }
+
+  for (const { a, b, key } of drawnLines) {
+    const posA = posMap[a], posB = posMap[b];
+    if (!posA || !posB) continue;
+    // Draw on every chart where both stars appear
+    for (const pa of posA) {
+      for (const pb of posB) {
+        if (pa.svg !== pb.svg) continue;
+        const g = ensureLineGroup(pa.svg);
+
+        // Visible line
+        const vis = document.createElementNS(SVG_NS, 'line');
+        vis.setAttribute('x1', pa.cx.toFixed(2));
+        vis.setAttribute('y1', pa.cy.toFixed(2));
+        vis.setAttribute('x2', pb.cx.toFixed(2));
+        vis.setAttribute('y2', pb.cy.toFixed(2));
+        vis.setAttribute('stroke', 'rgba(255,200,80,0.55)');
+        vis.setAttribute('stroke-width', '1.2');
+        g.appendChild(vis);
+        lineEls.push(vis);
+
+        // Wide invisible hit area for deletion
+        const hit = document.createElementNS(SVG_NS, 'line');
+        hit.setAttribute('x1', pa.cx.toFixed(2));
+        hit.setAttribute('y1', pa.cy.toFixed(2));
+        hit.setAttribute('x2', pb.cx.toFixed(2));
+        hit.setAttribute('y2', pb.cy.toFixed(2));
+        hit.setAttribute('stroke', 'transparent');
+        hit.setAttribute('stroke-width', '14');
+        hit.classList.add('line-hit');
+        hit.dataset.line = key;
+        hit.style.cursor = 'pointer';
+        g.appendChild(hit);
+        lineEls.push(hit);
+      }
+    }
+  }
+}
+
+// ── URL hash sync ──────────────────────────────────────────────────
+
+function syncToHash() {
+  const frag = drawnLines.map(l => `${l.a}-${l.b}`).join(',');
+  history.replaceState(null, '', frag ? '#' + frag : location.pathname);
+}
+
+function loadFromHash() {
+  const hash = location.hash.slice(1);
+  if (!hash) return;
+  drawnLines.length = 0;
+  drawnLineSet.clear();
+  for (const pair of hash.split(',')) {
+    const parts = pair.split('-').map(Number);
+    if (parts.length !== 2 || parts.some(isNaN)) continue;
+    const [a, b] = parts;
+    const key = lineKey(a, b);
+    if (drawnLineSet.has(key)) continue;
+    drawnLineSet.add(key);
+    drawnLines.push({ a, b, key });
+  }
+  renderLines();
+}
+
+// ── Click / touch interaction ──────────────────────────────────────
+
+function handleClick(e) {
+  // Ignore right-clicks
+  if (e.button && e.button !== 0) return;
+
+  const star = e.target.closest('[data-star]');
+  if (star) {
+    const idx = Number(star.dataset.star);
+    if (selectedStarIdx === -1) {
+      selectStar(idx);
+    } else if (idx === selectedStarIdx) {
+      selectStar(-1);
+    } else {
+      addLine(selectedStarIdx, idx);
+      selectStar(idx);
+    }
+    return;
+  }
+
+  // Click on empty space → deselect
+  if (!e.target.closest('.line-hit')) {
+    selectStar(-1);
+  }
+}
+
+function handleContextMenu(e) {
+  const hit = e.target.closest('.line-hit');
+  if (hit) {
+    e.preventDefault();
+    removeLineByKey(hit.dataset.line);
+  }
+}
+
+// Mobile long-press on line to delete
+let longPressTimer = null;
+let longPressTarget = null;
+let longPressMoved = false;
+
+function handleTouchStart(e) {
+  const hit = e.target.closest('.line-hit');
+  if (hit) {
+    longPressTarget = hit;
+    longPressMoved = false;
+    longPressTimer = setTimeout(() => {
+      if (!longPressMoved && longPressTarget) {
+        e.preventDefault();
+        removeLineByKey(longPressTarget.dataset.line);
+        // Suppress the follow-up click
+        longPressTarget = null;
+      }
+    }, 500);
+  }
+  // Let star taps pass through to click handler
+}
+
+function handleTouchMove() {
+  longPressMoved = true;
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+}
+
+function handleTouchEnd() {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+  longPressTarget = null;
+}
+
+function handleStarEvent(e) {
+  handleHover(e);
 }
 
 // ── Save SVG ────────────────────────────────────────────────────────
@@ -376,9 +594,49 @@ const southEl = document.getElementById('south-chart');
 southEl.appendChild(southSvg);
 addSaveButton(southEl, southSvg, 'qaia-stars-south.svg');
 
-// Attach hover/touch listeners to all three SVGs
+// Attach interaction listeners to all three SVGs
 for (const svg of [bandSvg, northSvg, southSvg]) {
   svg.addEventListener('mousemove', handleStarEvent);
   svg.addEventListener('mouseleave', handleStarEvent);
-  svg.addEventListener('touchstart', handleStarEvent, { passive: true });
+  svg.addEventListener('click', handleClick);
+  svg.addEventListener('contextmenu', handleContextMenu);
+  svg.addEventListener('touchstart', handleTouchStart, { passive: false });
+  svg.addEventListener('touchmove', handleTouchMove, { passive: true });
+  svg.addEventListener('touchend', handleTouchEnd, { passive: true });
 }
+
+// Toolbar buttons
+const toolbar = document.getElementById('toolbar');
+
+const undoBtn = document.createElement('button');
+undoBtn.textContent = 'Undo';
+undoBtn.className = 'toolbar-btn';
+undoBtn.addEventListener('click', undoLine);
+toolbar.appendChild(undoBtn);
+
+const clearBtn = document.createElement('button');
+clearBtn.textContent = 'Clear All';
+clearBtn.className = 'toolbar-btn';
+clearBtn.addEventListener('click', () => {
+  drawnLines.length = 0;
+  drawnLineSet.clear();
+  renderLines();
+  syncToHash();
+  selectStar(-1);
+});
+toolbar.appendChild(clearBtn);
+
+const copyBtn = document.createElement('button');
+copyBtn.textContent = 'Copy URL';
+copyBtn.className = 'toolbar-btn';
+copyBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(location.href).then(() => {
+    copyBtn.textContent = 'Copied!';
+    setTimeout(() => { copyBtn.textContent = 'Copy URL'; }, 1500);
+  });
+});
+toolbar.appendChild(copyBtn);
+
+// Load constellation lines from URL hash
+loadFromHash();
+window.addEventListener('hashchange', loadFromHash);

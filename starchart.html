@@ -72,6 +72,36 @@
       border-color: rgba(120, 180, 255, 0.5);
     }
     [data-star] { cursor: crosshair; }
+    #toolbar {
+      position: fixed;
+      top: 10px;
+      right: 14px;
+      display: flex;
+      gap: 6px;
+      z-index: 10;
+    }
+    .toolbar-btn {
+      background: rgba(20, 45, 100, 0.85);
+      border: 1px solid rgba(80, 130, 220, 0.35);
+      color: rgba(180, 215, 255, 0.88);
+      padding: 5px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+    .toolbar-btn:hover {
+      background: rgba(40, 80, 160, 0.9);
+      border-color: rgba(120, 180, 255, 0.5);
+    }
+    .hint {
+      position: fixed;
+      bottom: 10px;
+      right: 14px;
+      font-size: 11px;
+      color: rgba(150, 195, 240, 0.45);
+      z-index: 10;
+    }
     #back-link {
       position: fixed;
       top: 12px;
@@ -86,6 +116,8 @@
 </head>
 <body>
   <a id="back-link" href="index.html">&larr; Simulation</a>
+  <div id="toolbar"></div>
+  <div class="hint">Click stars to draw lines &middot; Right-click line to delete &middot; Long-press on mobile</div>
   <div id="band-container">
     <h2>Ecliptic Band</h2>
     <div id="band-chart"></div>
