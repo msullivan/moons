@@ -1,5 +1,5 @@
 // Star chart — two azimuthal equidistant projections (north + south pole)
-// rendered as inline SVGs for crisp printing and vector editing.
+// plus an ecliptic band chart, rendered as inline SVGs.
 // Reuses the same deterministic star field as the sky view.
 
 import { buildStars } from './skyview.js';
@@ -15,8 +15,8 @@ const stars = buildStars(500, 0xCAFEBABE);
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-// Compute the 3×3 matrix: ecliptic → observer (zen, east, north) frame.
-// Same math as SkyView._starMatrix() but with time=0 and lon=0.
+// ── Shared helpers ──────────────────────────────────────────────────
+
 function starMatrix(latDeg) {
   const phi = latDeg * PI / 180;
   const cP = Math.cos(phi), sP = Math.sin(phi);
@@ -27,16 +27,12 @@ function starMatrix(latDeg) {
   ];
 }
 
-// Convert equatorial direction (Dec=0, RA=ra) to ecliptic coordinates.
-// RA=0 anchored at the vernal equinox: ecliptic direction (0, −1, 0).
 function raToEcliptic(ra) {
   const eqx = Math.sin(ra), eqy = -Math.cos(ra);
   return [cosI * eqx, eqy, -sinI * eqx];
 }
 
-// Project ecliptic direction through matrix M, return screen (x, y).
-// Convention: 0h at bottom, RA counterclockwise (north) / clockwise (south).
-function project(M, ex, ey, ez, R, cx, cy) {
+function projectPolar(M, ex, ey, ez, R, cx, cy) {
   const zen  = M[0] * ex + M[1] * ey + M[2] * ez;
   const east = M[3] * ex + M[4] * ey + M[5] * ez;
   const nor  = M[6] * ex + M[7] * ey + M[8] * ez;
@@ -56,7 +52,25 @@ function el(tag, attrs, ...children) {
   return e;
 }
 
-function buildChart(latDeg) {
+// Track all star circle elements across charts: starElements[starIndex] = [circle, ...]
+const starElements = [];
+for (let i = 0; i < stars.length; i++) starElements.push([]);
+
+function makeStarCircle(starIdx, cx, cy, r, opacity) {
+  const circle = el('circle', {
+    cx: cx.toFixed(2),
+    cy: cy.toFixed(2),
+    r: r.toFixed(2),
+    fill: `rgba(255,255,255,${opacity.toFixed(3)})`,
+    'data-star': starIdx,
+  });
+  starElements[starIdx].push(circle);
+  return circle;
+}
+
+// ── Polar chart ─────────────────────────────────────────────────────
+
+function buildPolarChart(latDeg) {
   const size = 600;
   const margin = 32;
   const R  = size / 2 - margin;
@@ -65,6 +79,7 @@ function buildChart(latDeg) {
   const isNorth = latDeg > 0;
   const clipR = R * 1.11;
   const M = starMatrix(latDeg);
+  const clipId = isNorth ? 'clip-n' : 'clip-s';
 
   const svg = el('svg', {
     viewBox: `0 0 ${size} ${size}`,
@@ -73,19 +88,15 @@ function buildChart(latDeg) {
     height: size,
   });
 
-  // Clip definition for the chart area
   const defs = el('defs', {});
-  const clipPath = el('clipPath', { id: isNorth ? 'clip-n' : 'clip-s' });
-  clipPath.appendChild(el('circle', { cx, cy, r: clipR }));
-  defs.appendChild(clipPath);
+  const cp = el('clipPath', { id: clipId });
+  cp.appendChild(el('circle', { cx, cy, r: clipR }));
+  defs.appendChild(cp);
   svg.appendChild(defs);
 
-  // Background
   svg.appendChild(el('rect', { width: size, height: size, fill: '#04081a' }));
 
-  const clipId = isNorth ? 'clip-n' : 'clip-s';
-
-  // ── Declination circles ──────────────────────────────────────
+  // Declination circles
   for (const dec of [0, 30, 60]) {
     const r = (90 - dec) / 90 * R;
     if (r > clipR) continue;
@@ -98,28 +109,25 @@ function buildChart(latDeg) {
     }));
   }
 
-  // ── RA hour lines ────────────────────────────────────────────
+  // RA hour lines
   for (let h = 0; h < 24; h += 2) {
     const ra = h * PI / 12;
     const [ex, ey, ez] = raToEcliptic(ra);
-    const p = project(M, ex, ey, ez, R, cx, cy);
+    const p = projectPolar(M, ex, ey, ez, R, cx, cy);
 
-    // Spoke
     svg.appendChild(el('line', {
       x1: cx, y1: cy, x2: p.x, y2: p.y,
       stroke: 'rgba(80,130,255,0.18)',
       'stroke-width': 0.75,
     }));
 
-    // Label
     const lr = R + 16;
     const east = M[3] * ex + M[4] * ey + M[5] * ez;
     const nor  = M[6] * ex + M[7] * ey + M[8] * ez;
     const az   = Math.atan2(east, nor);
-    const lx = cx - lr * Math.cos(az);
-    const ly = cy - lr * Math.sin(az);
     svg.appendChild(el('text', {
-      x: lx, y: ly,
+      x: cx - lr * Math.cos(az),
+      y: cy - lr * Math.sin(az),
       fill: 'rgba(140,185,230,0.80)',
       'font-family': 'Courier New, monospace',
       'font-size': '11',
@@ -128,25 +136,23 @@ function buildChart(latDeg) {
     }, h + 'h'));
   }
 
-  // ── Ecliptic ─────────────────────────────────────────────────
-  const eclPts = [];
-  const N_ECL = 120;
-  let segment = [];
-  for (let i = 0; i <= N_ECL; i++) {
-    const ang = (i / N_ECL) * TAU;
+  // Ecliptic
+  const eclSegs = [];
+  let seg = [];
+  for (let i = 0; i <= 120; i++) {
+    const ang = (i / 120) * TAU;
     const ex = Math.cos(ang), ey = Math.sin(ang);
-    const p = project(M, ex, ey, 0, R, cx, cy);
+    const p = projectPolar(M, ex, ey, 0, R, cx, cy);
     if (p.pr > clipR) {
-      if (segment.length) { eclPts.push(segment); segment = []; }
+      if (seg.length) { eclSegs.push(seg); seg = []; }
       continue;
     }
-    segment.push(p);
+    seg.push(p);
   }
-  if (segment.length) eclPts.push(segment);
-  for (const seg of eclPts) {
-    const d = seg.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join('');
+  if (seg.length) eclSegs.push(seg);
+  for (const s of eclSegs) {
     svg.appendChild(el('path', {
-      d,
+      d: s.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(''),
       fill: 'none',
       stroke: 'rgba(200,160,80,0.30)',
       'stroke-width': 1,
@@ -155,23 +161,17 @@ function buildChart(latDeg) {
     }));
   }
 
-  // ── Stars ────────────────────────────────────────────────────
+  // Stars
   const starGroup = el('g', { 'clip-path': `url(#${clipId})` });
-  for (const [ex, ey, ez, r, a] of stars) {
-    const p = project(M, ex, ey, ez, R, cx, cy);
+  for (let i = 0; i < stars.length; i++) {
+    const [ex, ey, ez, r, a] = stars[i];
+    const p = projectPolar(M, ex, ey, ez, R, cx, cy);
     if (p.pr > clipR) continue;
-    const cr = r * 1.8;
-    const opacity = Math.min(a * 1.3, 1);
-    starGroup.appendChild(el('circle', {
-      cx: p.x.toFixed(2),
-      cy: p.y.toFixed(2),
-      r: cr.toFixed(2),
-      fill: `rgba(255,255,255,${opacity.toFixed(3)})`,
-    }));
+    starGroup.appendChild(makeStarCircle(i, p.x, p.y, r * 1.8, Math.min(a * 1.3, 1)));
   }
   svg.appendChild(starGroup);
 
-  // ── Dec labels ───────────────────────────────────────────────
+  // Dec labels
   for (const dec of [0, 30, 60]) {
     const r = (90 - dec) / 90 * R;
     if (r > clipR) continue;
@@ -185,7 +185,6 @@ function buildChart(latDeg) {
     }, label));
   }
 
-  // Pole label
   svg.appendChild(el('text', {
     x: cx + 12, y: cy - 4,
     fill: 'rgba(150,210,255,0.5)',
@@ -198,16 +197,13 @@ function buildChart(latDeg) {
 }
 
 // ── Ecliptic band chart ─────────────────────────────────────────────
-// Equirectangular projection centered on the ecliptic: ecliptic longitude
-// runs left→right (0°–360° from vernal equinox), ecliptic latitude ±30°
-// runs bottom→top.  The ecliptic is a straight horizontal center line.
 
 function buildBandChart() {
   const W = 1200, H = 240;
   const margin = { left: 30, right: 10, top: 14, bottom: 22 };
-  const pw = W - margin.left - margin.right;   // plot width
-  const ph = H - margin.top - margin.bottom;    // plot height
-  const bandHalf = 30;  // ±30° ecliptic latitude
+  const pw = W - margin.left - margin.right;
+  const ph = H - margin.top - margin.bottom;
+  const bandHalf = 30;
 
   const svg = el('svg', {
     viewBox: `0 0 ${W} ${H}`,
@@ -216,22 +212,18 @@ function buildBandChart() {
     height: H,
   });
 
-  // Background
   svg.appendChild(el('rect', { width: W, height: H, fill: '#04081a' }));
 
-  // Clip for the plot area
   const defs = el('defs', {});
   const cp = el('clipPath', { id: 'clip-band' });
   cp.appendChild(el('rect', { x: margin.left, y: margin.top, width: pw, height: ph }));
   defs.appendChild(cp);
   svg.appendChild(defs);
 
-  // Mapping functions: ecliptic longitude (0–2π from VE) → x, latitude → y
-  const lonToX = (lon) => margin.left + ((lon / TAU) * pw);
+  const lonToX = (lon) => margin.left + (lon / TAU) * pw;
   const latToY = (lat) => margin.top + ph / 2 - (lat / (bandHalf * PI / 180)) * (ph / 2);
 
-  // ── Grid ──────────────────────────────────────────────────────
-  // Longitude lines every 30° (12 zodiac segments)
+  // Longitude grid every 30°
   for (let deg = 0; deg <= 360; deg += 30) {
     const x = lonToX(deg * PI / 180);
     svg.appendChild(el('line', {
@@ -239,7 +231,6 @@ function buildBandChart() {
       stroke: 'rgba(80,130,255,0.15)',
       'stroke-width': deg % 90 === 0 ? 0.75 : 0.5,
     }));
-    // Label
     if (deg < 360) {
       svg.appendChild(el('text', {
         x, y: H - 4,
@@ -251,7 +242,7 @@ function buildBandChart() {
     }
   }
 
-  // Latitude lines every 10°
+  // Latitude grid every 10°
   for (let lat = -bandHalf; lat <= bandHalf; lat += 10) {
     const y = latToY(lat * PI / 180);
     svg.appendChild(el('line', {
@@ -260,21 +251,17 @@ function buildBandChart() {
       'stroke-width': lat === 0 ? 1 : 0.5,
       'stroke-dasharray': lat === 0 ? '6 4' : 'none',
     }));
-    // Label
-    if (lat % 10 === 0) {
-      const label = lat === 0 ? '0\u00B0' : (lat > 0 ? '+' : '\u2212') + Math.abs(lat) + '\u00B0';
-      svg.appendChild(el('text', {
-        x: margin.left - 4, y: y + 3,
-        fill: 'rgba(120,170,220,0.40)',
-        'font-family': 'Courier New, monospace',
-        'font-size': '8',
-        'text-anchor': 'end',
-      }, label));
-    }
+    const label = lat === 0 ? '0\u00B0' : (lat > 0 ? '+' : '\u2212') + Math.abs(lat) + '\u00B0';
+    svg.appendChild(el('text', {
+      x: margin.left - 4, y: y + 3,
+      fill: 'rgba(120,170,220,0.40)',
+      'font-family': 'Courier New, monospace',
+      'font-size': '8',
+      'text-anchor': 'end',
+    }, label));
   }
 
-  // ── Celestial equator ─────────────────────────────────────────
-  // In ecliptic coords: β = atan(-tan(I) * cos(λ))
+  // Celestial equator
   const tanI = Math.tan(PRIMUS_INCLINATION);
   const eqPts = [];
   for (let i = 0; i <= 360; i++) {
@@ -291,29 +278,20 @@ function buildBandChart() {
     'clip-path': 'url(#clip-band)',
   }));
 
-  // ── Stars ─────────────────────────────────────────────────────
+  // Stars
   const starGroup = el('g', { 'clip-path': 'url(#clip-band)' });
-  for (const [ex, ey, ez, r, a] of stars) {
-    // Ecliptic longitude from vernal equinox
+  for (let i = 0; i < stars.length; i++) {
+    const [ex, ey, ez, r, a] = stars[i];
     let lon = Math.atan2(ey, ex) + PI / 2;
     if (lon < 0) lon += TAU;
     if (lon >= TAU) lon -= TAU;
     const lat = Math.asin(Math.max(-1, Math.min(1, ez)));
     if (Math.abs(lat) > bandHalf * PI / 180) continue;
-    const sx = lonToX(lon);
-    const sy = latToY(lat);
-    const cr = r * 1.8;
-    const opacity = Math.min(a * 1.3, 1);
-    starGroup.appendChild(el('circle', {
-      cx: sx.toFixed(2),
-      cy: sy.toFixed(2),
-      r: cr.toFixed(2),
-      fill: `rgba(255,255,255,${opacity.toFixed(3)})`,
-    }));
+    starGroup.appendChild(makeStarCircle(i, lonToX(lon), latToY(lat), r * 1.8, Math.min(a * 1.3, 1)));
   }
   svg.appendChild(starGroup);
 
-  // Plot border
+  // Border
   svg.appendChild(el('rect', {
     x: margin.left, y: margin.top, width: pw, height: ph,
     fill: 'none',
@@ -324,21 +302,77 @@ function buildBandChart() {
   return svg;
 }
 
-function addChart(containerId, latDeg) {
-  const svg = buildChart(latDeg);
-  const source = new XMLSerializer().serializeToString(svg);
-  const img = document.createElement('img');
-  img.src = 'data:image/svg+xml,' + encodeURIComponent(source);
-  document.getElementById(containerId).appendChild(img);
+// ── Highlight on hover/touch ────────────────────────────────────────
+
+let activeStarIdx = -1;
+
+function highlightStar(idx) {
+  if (idx === activeStarIdx) return;
+  // Clear previous
+  if (activeStarIdx >= 0) {
+    for (const c of starElements[activeStarIdx]) {
+      c.removeAttribute('stroke');
+      c.removeAttribute('stroke-width');
+    }
+  }
+  activeStarIdx = idx;
+  if (idx < 0) return;
+  for (const c of starElements[idx]) {
+    c.setAttribute('stroke', 'rgba(100,180,255,0.9)');
+    c.setAttribute('stroke-width', '2');
+  }
 }
 
-// Ecliptic band
-const bandSvg = buildBandChart();
-const bandSource = new XMLSerializer().serializeToString(bandSvg);
-const bandImg = document.createElement('img');
-bandImg.src = 'data:image/svg+xml,' + encodeURIComponent(bandSource);
-document.getElementById('band-chart').appendChild(bandImg);
+function handleStarEvent(e) {
+  const star = e.target.closest('[data-star]');
+  if (star) {
+    highlightStar(Number(star.dataset.star));
+  } else if (e.type === 'mouseleave') {
+    highlightStar(-1);
+  }
+}
 
-// Polar charts
-addChart('north-chart', 90);
-addChart('south-chart', -90);
+// ── Save SVG ────────────────────────────────────────────────────────
+
+function saveSvg(svg, filename) {
+  const source = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([source], { type: 'image/svg+xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function addSaveButton(container, svg, filename) {
+  const btn = document.createElement('button');
+  btn.textContent = 'Save SVG';
+  btn.className = 'save-btn';
+  btn.addEventListener('click', () => saveSvg(svg, filename));
+  container.appendChild(btn);
+}
+
+// ── Mount ───────────────────────────────────────────────────────────
+
+const bandSvg = buildBandChart();
+const bandEl = document.getElementById('band-chart');
+bandEl.appendChild(bandSvg);
+addSaveButton(bandEl, bandSvg, 'qaia-ecliptic-band.svg');
+
+const northSvg = buildPolarChart(90);
+const northEl = document.getElementById('north-chart');
+northEl.appendChild(northSvg);
+addSaveButton(northEl, northSvg, 'qaia-stars-north.svg');
+
+const southSvg = buildPolarChart(-90);
+const southEl = document.getElementById('south-chart');
+southEl.appendChild(southSvg);
+addSaveButton(southEl, southSvg, 'qaia-stars-south.svg');
+
+// Attach hover/touch listeners to all three SVGs
+for (const svg of [bandSvg, northSvg, southSvg]) {
+  svg.addEventListener('mousemove', handleStarEvent);
+  svg.addEventListener('mouseleave', handleStarEvent);
+  svg.addEventListener('touchstart', handleStarEvent, { passive: true });
+}
