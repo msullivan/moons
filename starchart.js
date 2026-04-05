@@ -305,21 +305,27 @@ function buildBandChart() {
 // ── Highlight on hover/touch ────────────────────────────────────────
 
 let activeStarIdx = -1;
+const glowCircles = [];  // reusable glow markers
 
 function highlightStar(idx) {
   if (idx === activeStarIdx) return;
-  // Clear previous
-  if (activeStarIdx >= 0) {
-    for (const c of starElements[activeStarIdx]) {
-      c.removeAttribute('stroke');
-      c.removeAttribute('stroke-width');
-    }
-  }
+  // Remove old glows
+  for (const g of glowCircles) g.remove();
+  glowCircles.length = 0;
   activeStarIdx = idx;
   if (idx < 0) return;
+  // Add glow circles next to each instance of this star
   for (const c of starElements[idx]) {
-    c.setAttribute('stroke', 'rgba(100,180,255,0.9)');
-    c.setAttribute('stroke-width', '2');
+    const glow = document.createElementNS(SVG_NS, 'circle');
+    glow.setAttribute('cx', c.getAttribute('cx'));
+    glow.setAttribute('cy', c.getAttribute('cy'));
+    glow.setAttribute('r', '8');
+    glow.setAttribute('fill', 'none');
+    glow.setAttribute('stroke', '#4af');
+    glow.setAttribute('stroke-width', '2');
+    glow.setAttribute('opacity', '0.9');
+    c.parentNode.appendChild(glow);
+    glowCircles.push(glow);
   }
 }
 
