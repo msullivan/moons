@@ -859,9 +859,11 @@ export function buildStars(count, seed) {
     const ex = cp * Math.cos(theta);
     const ey = cp * Math.sin(theta);
     const ez = Math.sin(phi);
-    // Display properties: r = radius, a = base opacity
-    const r = rand() < 0.85 ? 0.5 : rand() * 1.2 + 0.5;
-    const a = 0.25 + rand() * 0.6;
+    // Display properties: r = radius, a = base opacity.
+    // Brightness and size are correlated — larger stars are brighter.
+    const bright = rand();  // 0 = dimmest, 1 = brightest
+    const r = bright < 0.85 ? 0.5 : 0.5 + (bright - 0.85) / 0.15 * 1.2;
+    const a = 0.25 + bright * 0.6;
     stars.push([ex, ey, ez, r, a]);
   }
   // Pole star — bright star on the spin axis (ecliptic coords of the north pole).
