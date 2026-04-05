@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qaia Star Chart</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #04081a;
+      font-family: 'Courier New', Courier, monospace;
+      color: rgba(190, 220, 255, 0.9);
+      overflow: auto;
+    }
+    #chart-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 20px;
+    }
+    .chart-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .chart-wrap h2 {
+      font-size: 14px;
+      font-weight: normal;
+      color: rgba(150, 210, 255, 0.88);
+      letter-spacing: 0.06em;
+    }
+    canvas {
+      display: block;
+      background: #04081a;
+    }
+    #back-link {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      font-size: 12px;
+      color: rgba(150, 195, 240, 0.7);
+      text-decoration: none;
+      z-index: 10;
+    }
+    #back-link:hover { color: rgba(180, 220, 255, 0.95); }
+  </style>
+</head>
+<body>
+  <a id="back-link" href="index.html">&larr; Simulation</a>
+  <div id="chart-container">
+    <div class="chart-wrap">
+      <h2>Northern Hemisphere</h2>
+      <canvas id="north-canvas"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <h2>Southern Hemisphere</h2>
+      <canvas id="south-canvas"></canvas>
+    </div>
+  </div>
+  <script type="module" src="starchart.js"></script>
+</body>
+</html>
