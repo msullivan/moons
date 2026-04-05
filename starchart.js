@@ -197,26 +197,13 @@ function buildChart(latDeg) {
   return svg;
 }
 
-function addChart(containerId, latDeg, filename) {
-  const container = document.getElementById(containerId);
+function addChart(containerId, latDeg) {
   const svg = buildChart(latDeg);
-  container.appendChild(svg);
-
-  const btn = document.createElement('button');
-  btn.textContent = 'Save SVG';
-  btn.className = 'save-btn';
-  btn.addEventListener('click', () => {
-    const serializer = new XMLSerializer();
-    const source = '<?xml version="1.0" encoding="UTF-8"?>\n' + serializer.serializeToString(svg);
-    const blob = new Blob([source], { type: 'image/svg+xml' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-  container.appendChild(btn);
+  const source = new XMLSerializer().serializeToString(svg);
+  const img = document.createElement('img');
+  img.src = 'data:image/svg+xml,' + encodeURIComponent(source);
+  document.getElementById(containerId).appendChild(img);
 }
 
-addChart('north-chart', 90, 'qaia-stars-north.svg');
-addChart('south-chart', -90, 'qaia-stars-south.svg');
+addChart('north-chart', 90);
+addChart('south-chart', -90);
