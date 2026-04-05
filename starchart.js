@@ -197,6 +197,133 @@ function buildChart(latDeg) {
   return svg;
 }
 
+// ── Ecliptic band chart ─────────────────────────────────────────────
+// Equirectangular projection centered on the ecliptic: ecliptic longitude
+// runs left→right (0°–360° from vernal equinox), ecliptic latitude ±30°
+// runs bottom→top.  The ecliptic is a straight horizontal center line.
+
+function buildBandChart() {
+  const W = 1200, H = 240;
+  const margin = { left: 30, right: 10, top: 14, bottom: 22 };
+  const pw = W - margin.left - margin.right;   // plot width
+  const ph = H - margin.top - margin.bottom;    // plot height
+  const bandHalf = 30;  // ±30° ecliptic latitude
+
+  const svg = el('svg', {
+    viewBox: `0 0 ${W} ${H}`,
+    xmlns: SVG_NS,
+    width: W,
+    height: H,
+  });
+
+  // Background
+  svg.appendChild(el('rect', { width: W, height: H, fill: '#04081a' }));
+
+  // Clip for the plot area
+  const defs = el('defs', {});
+  const cp = el('clipPath', { id: 'clip-band' });
+  cp.appendChild(el('rect', { x: margin.left, y: margin.top, width: pw, height: ph }));
+  defs.appendChild(cp);
+  svg.appendChild(defs);
+
+  // Mapping functions: ecliptic longitude (0–2π from VE) → x, latitude → y
+  const lonToX = (lon) => margin.left + ((lon / TAU) * pw);
+  const latToY = (lat) => margin.top + ph / 2 - (lat / (bandHalf * PI / 180)) * (ph / 2);
+
+  // ── Grid ──────────────────────────────────────────────────────
+  // Longitude lines every 30° (12 zodiac segments)
+  for (let deg = 0; deg <= 360; deg += 30) {
+    const x = lonToX(deg * PI / 180);
+    svg.appendChild(el('line', {
+      x1: x, y1: margin.top, x2: x, y2: margin.top + ph,
+      stroke: 'rgba(80,130,255,0.15)',
+      'stroke-width': deg % 90 === 0 ? 0.75 : 0.5,
+    }));
+    // Label
+    if (deg < 360) {
+      svg.appendChild(el('text', {
+        x, y: H - 4,
+        fill: 'rgba(140,185,230,0.70)',
+        'font-family': 'Courier New, monospace',
+        'font-size': '9',
+        'text-anchor': 'middle',
+      }, deg + '\u00B0'));
+    }
+  }
+
+  // Latitude lines every 10°
+  for (let lat = -bandHalf; lat <= bandHalf; lat += 10) {
+    const y = latToY(lat * PI / 180);
+    svg.appendChild(el('line', {
+      x1: margin.left, y1: y, x2: margin.left + pw, y2: y,
+      stroke: lat === 0 ? 'rgba(200,160,80,0.30)' : 'rgba(80,130,255,0.12)',
+      'stroke-width': lat === 0 ? 1 : 0.5,
+      'stroke-dasharray': lat === 0 ? '6 4' : 'none',
+    }));
+    // Label
+    if (lat % 10 === 0) {
+      const label = lat === 0 ? '0\u00B0' : (lat > 0 ? '+' : '\u2212') + Math.abs(lat) + '\u00B0';
+      svg.appendChild(el('text', {
+        x: margin.left - 4, y: y + 3,
+        fill: 'rgba(120,170,220,0.40)',
+        'font-family': 'Courier New, monospace',
+        'font-size': '8',
+        'text-anchor': 'end',
+      }, label));
+    }
+  }
+
+  // ── Celestial equator ─────────────────────────────────────────
+  // In ecliptic coords: β = atan(-tan(I) * cos(λ))
+  const tanI = Math.tan(PRIMUS_INCLINATION);
+  const eqPts = [];
+  for (let i = 0; i <= 360; i++) {
+    const lon = i * PI / 180;
+    const lat = Math.atan(-tanI * Math.cos(lon));
+    eqPts.push(`${i ? 'L' : 'M'}${lonToX(lon).toFixed(2)},${latToY(lat).toFixed(2)}`);
+  }
+  svg.appendChild(el('path', {
+    d: eqPts.join(''),
+    fill: 'none',
+    stroke: 'rgba(80,130,255,0.25)',
+    'stroke-width': 0.75,
+    'stroke-dasharray': '4 4',
+    'clip-path': 'url(#clip-band)',
+  }));
+
+  // ── Stars ─────────────────────────────────────────────────────
+  const starGroup = el('g', { 'clip-path': 'url(#clip-band)' });
+  for (const [ex, ey, ez, r, a] of stars) {
+    // Ecliptic longitude from vernal equinox
+    let lon = Math.atan2(ey, ex) + PI / 2;
+    if (lon < 0) lon += TAU;
+    if (lon >= TAU) lon -= TAU;
+    const lat = Math.asin(Math.max(-1, Math.min(1, ez)));
+    if (Math.abs(lat) > bandHalf * PI / 180) continue;
+    const sx = lonToX(lon);
+    const sy = latToY(lat);
+    const cr = r * 1.8;
+    const opacity = Math.min(a * 1.3, 1);
+    starGroup.appendChild(el('circle', {
+      cx: sx.toFixed(2),
+      cy: sy.toFixed(2),
+      r: cr.toFixed(2),
+      fill: `rgba(255,255,255,${opacity.toFixed(3)})`,
+    }));
+  }
+  svg.appendChild(starGroup);
+
+  // Plot border
+  svg.appendChild(el('rect', {
+    x: margin.left, y: margin.top, width: pw, height: ph,
+    fill: 'none',
+    stroke: 'rgba(80,130,255,0.25)',
+    'stroke-width': 0.75,
+  }));
+
+  return svg;
+}
+
 function addChart(containerId, latDeg) {
   const svg = buildChart(latDeg);
   const source = new XMLSerializer().serializeToString(svg);
@@ -205,5 +332,13 @@ function addChart(containerId, latDeg) {
   document.getElementById(containerId).appendChild(img);
 }
 
+// Ecliptic band
+const bandSvg = buildBandChart();
+const bandSource = new XMLSerializer().serializeToString(bandSvg);
+const bandImg = document.createElement('img');
+bandImg.src = 'data:image/svg+xml,' + encodeURIComponent(bandSource);
+document.getElementById('band-chart').appendChild(bandImg);
+
+// Polar charts
 addChart('north-chart', 90);
 addChart('south-chart', -90);
