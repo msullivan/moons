@@ -69,6 +69,8 @@ function buildChart(latDeg) {
   const svg = el('svg', {
     viewBox: `0 0 ${size} ${size}`,
     xmlns: SVG_NS,
+    width: size,
+    height: size,
   });
 
   // Clip definition for the chart area

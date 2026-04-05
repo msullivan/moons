@@ -16,7 +16,7 @@ const port = await new Promise(r => server.once('listening', () => r(server.addr
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
-await page.setViewportSize({ width: 800, height: 800 });
+await page.setViewportSize({ width: 1280, height: 800 });
 await page.goto(`http://localhost:${port}/starchart.html`);
 await page.waitForTimeout(500);
 await page.screenshot({ path: '/tmp/starchart.png' });
