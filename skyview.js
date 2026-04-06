@@ -564,12 +564,29 @@ export class SkyView {
       if (o.isPlanet) {
         // Fade planets in daylight, similar to stars.  Brighter planets
         // (like Fafnir/Venus) linger a few degrees longer.
-        const dayFade = this.disableSunGlare ? 1
+        // Exception: skip fade when the planet is transiting the Sun
+        // (angularly close and nearer than the Sun).
+        let transiting = false;
+        if (sunObj && o.dist < sunObj.dist) {
+          const dot = o.ux * sunObj.ux + o.uy * sunObj.uy + o.uz * sunObj.uz;
+          const angSep = Math.acos(clamp(dot, -1, 1));
+          // Sun's apparent angular radius (exaggerated same as disc rendering)
+          const sunAngR = this.sim.bodies[0].physicalRadius / sunObj.dist;
+          const sunDiscR = clamp(sunAngR * ANGULAR_SCALE, MIN_DISC_R, MAX_DISC_R);
+          const sunScreenR = sunDiscR / R;  // as fraction of sky radius
+          const sunAngularR = sunScreenR * (PI / 2);  // back to radians
+          if (angSep < sunAngularR * 1.5) transiting = true;
+        }
+        const dayFade = this.disableSunGlare || transiting ? 1
           : sunAltDeg > 0 ? clamp(1 - sunAltDeg / (15 + o.brightness * 10), 0, 1)
           : 1;
         if (dayFade > 0.01) {
           ctx.globalAlpha *= dayFade;
-          this._drawPlanet(ctx, o);
+          if (transiting) {
+            this._drawTransit(ctx, o);
+          } else {
+            this._drawPlanet(ctx, o);
+          }
           if (this.showLabels) {
             ctx.fillStyle = above ? 'rgba(210, 230, 255, 0.85)' : 'rgba(210, 230, 255, 0.4)';
             ctx.font = '11px monospace';
@@ -703,6 +720,17 @@ export class SkyView {
 
     ctx.fillStyle = hexAlpha(o.body.color, alpha);
     ctx.beginPath(); ctx.arc(o.x, o.y, dotR, 0, TAU); ctx.fill();
+  }
+
+  _drawTransit(ctx, o) {
+    // Planet transiting the Sun — draw as a dark silhouette dot
+    const dotR = 2.5;
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.beginPath(); ctx.arc(o.x, o.y, dotR, 0, TAU); ctx.fill();
+    // Subtle ring so it's findable
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.arc(o.x, o.y, dotR + 1, 0, TAU); ctx.stroke();
   }
 
   // ── phase-shaded moon disc ──────────────────────────────────────────
