@@ -1,4 +1,5 @@
 import { AU, LUNAR_DIST } from './bodies.js';
+import { buildStars } from './skyview.js';
 
 export class Renderer {
   constructor(canvas, sim) {
@@ -15,8 +16,8 @@ export class Renderer {
     this.showTrails      = true;
     this.showLabels      = true;
 
-    // Random star field (screen-space, fixed)
-    this.stars = buildStars(350);
+    // Star field from shared ecliptic star data, projected as seen from above the ecliptic
+    this.stars = buildStarBackground();
   }
 
   // ─── coordinate helpers ─────────────────────────────────────────────────
@@ -321,20 +322,20 @@ export class Renderer {
 
 // ─── helpers ──────────────────────────────────────────────────────────────
 
-function buildStars(count) {
-  // Seeded PRNG (mulberry32) so the star field is identical every page load.
-  let s = 0xdeadbeef;
-  const rand = () => { s |= 0; s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-
-  const stars = [];
-  for (let i = 0; i < count; i++) {
-    const fx    = rand();
-    const fy    = rand();
-    const r     = rand() < 0.85 ? 0.5 : rand() * 1.2 + 0.6;
-    const alpha = 0.3 + rand() * 0.6;
-    stars.push([fx, fy, r, alpha]);
+function buildStarBackground() {
+  const PI = Math.PI;
+  const src = buildStars(500, 0xCAFEBABE);  // same seed as sky view / star chart
+  const result = [];
+  for (const [ex, ey, ez, r, a] of src) {
+    // Ecliptic longitude → fractional x, latitude → fractional y
+    let lon = Math.atan2(ey, ex);  // [-π, π]
+    if (lon < 0) lon += 2 * PI;
+    const lat = Math.asin(Math.max(-1, Math.min(1, ez)));  // [-π/2, π/2]
+    const fx = lon / (2 * PI);
+    const fy = lat / PI + 0.5;    // 0 at south pole, 1 at north pole
+    result.push([fx, fy, r, a]);
   }
-  return stars;
+  return result;
 }
 
 function hexAlpha(hex, alpha) {
