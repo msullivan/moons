@@ -32,8 +32,9 @@ async function getStarPos(chart, starIdx) {
     const vb = svg.viewBox.baseVal;
     const star = container.querySelector(`[data-star="${starIdx}"]`);
     if (!star) return null;
-    const cx = parseFloat(star.getAttribute('cx'));
-    const cy = parseFloat(star.getAttribute('cy'));
+    const circle = star.querySelector ? star.querySelector('circle') : star;
+    const cx = parseFloat(circle.getAttribute('cx'));
+    const cy = parseFloat(circle.getAttribute('cy'));
     // Convert SVG coords to page coords
     const scaleX = rect.width / vb.width;
     const scaleY = rect.height / vb.height;

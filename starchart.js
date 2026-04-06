@@ -57,15 +57,23 @@ const starElements = [];
 for (let i = 0; i < stars.length; i++) starElements.push([]);
 
 function makeStarCircle(starIdx, cx, cy, r, opacity) {
-  const circle = el('circle', {
+  const g = el('g', { 'data-star': starIdx });
+  // Invisible hit target (minimum 8px radius)
+  g.appendChild(el('circle', {
+    cx: cx.toFixed(2),
+    cy: cy.toFixed(2),
+    r: Math.max(r, 8).toFixed(2),
+    fill: 'transparent',
+  }));
+  // Visible star
+  g.appendChild(el('circle', {
     cx: cx.toFixed(2),
     cy: cy.toFixed(2),
     r: r.toFixed(2),
     fill: `rgba(255,255,255,${opacity.toFixed(3)})`,
-    'data-star': starIdx,
-  });
-  starElements[starIdx].push(circle);
-  return circle;
+  }));
+  starElements[starIdx].push(g);
+  return g;
 }
 
 // ── Polar chart ─────────────────────────────────────────────────────
@@ -302,6 +310,13 @@ function buildBandChart() {
   return svg;
 }
 
+// ── Helpers for star group elements ─────────────────────────────────
+
+function starPos(g) {
+  const c = g.querySelector('circle');
+  return { cx: c.getAttribute('cx'), cy: c.getAttribute('cy') };
+}
+
 // ── Highlight on hover/touch ────────────────────────────────────────
 
 let activeStarIdx = -1;
@@ -313,16 +328,17 @@ function highlightStar(idx) {
   glowCircles.length = 0;
   activeStarIdx = idx;
   if (idx < 0) return;
-  for (const c of starElements[idx]) {
+  for (const g of starElements[idx]) {
+    const { cx, cy } = starPos(g);
     const glow = document.createElementNS(SVG_NS, 'circle');
-    glow.setAttribute('cx', c.getAttribute('cx'));
-    glow.setAttribute('cy', c.getAttribute('cy'));
+    glow.setAttribute('cx', cx);
+    glow.setAttribute('cy', cy);
     glow.setAttribute('r', '8');
     glow.setAttribute('fill', 'none');
     glow.setAttribute('stroke', '#4af');
     glow.setAttribute('stroke-width', '2');
     glow.setAttribute('opacity', '0.9');
-    c.parentNode.appendChild(glow);
+    g.parentNode.appendChild(glow);
     glowCircles.push(glow);
   }
 }
@@ -351,16 +367,17 @@ function selectStar(idx) {
   selectionRings.length = 0;
   selectedStarIdx = idx;
   if (idx < 0) return;
-  for (const c of starElements[idx]) {
+  for (const g of starElements[idx]) {
+    const { cx, cy } = starPos(g);
     const ring = document.createElementNS(SVG_NS, 'circle');
-    ring.setAttribute('cx', c.getAttribute('cx'));
-    ring.setAttribute('cy', c.getAttribute('cy'));
+    ring.setAttribute('cx', cx);
+    ring.setAttribute('cy', cy);
     ring.setAttribute('r', '10');
     ring.setAttribute('fill', 'none');
     ring.setAttribute('stroke', '#fc4');
     ring.setAttribute('stroke-width', '2');
     ring.setAttribute('opacity', '0.9');
-    c.parentNode.appendChild(ring);
+    g.parentNode.appendChild(ring);
     selectionRings.push(ring);
   }
 }
@@ -414,12 +431,13 @@ function renderLines() {
   // Build lookup: starIdx → [{svg, cx, cy}, ...]
   const posMap = {};
   for (let i = 0; i < starElements.length; i++) {
-    for (const c of starElements[i]) {
+    for (const g of starElements[i]) {
       if (!posMap[i]) posMap[i] = [];
+      const p = starPos(g);
       posMap[i].push({
-        svg: c.closest('svg'),
-        cx: parseFloat(c.getAttribute('cx')),
-        cy: parseFloat(c.getAttribute('cy')),
+        svg: g.closest('svg'),
+        cx: parseFloat(p.cx),
+        cy: parseFloat(p.cy),
       });
     }
   }

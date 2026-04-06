@@ -22,7 +22,7 @@ await page.waitForTimeout(500);
 
 // Find a bigger star in the band chart and hover it
 const star = await page.locator('#band-chart [data-star]').nth(5);
-await star.hover();
+await star.hover({ force: true });
 await page.waitForTimeout(200);
 
 // Check how many elements got highlighted
