@@ -20,7 +20,7 @@ const QATURN_A = 0.10 * AU;         // hot Saturn — ~11-day orbit
 
 // Orbital inclinations to ecliptic (degrees → radians)
 const BAHAMUT_INC = 45.0 * Math.PI / 180;  // heavily inclined hot Saturn
-const QARS_INC    = 1.85 * Math.PI / 180;  // Mars
+const VRITRA_INC    = 1.85 * Math.PI / 180;  // Mars
 const FAFNIR_INC  = 3.40 * Math.PI / 180;  // Venus
 const TIAMAT_INC  = 1.30 * Math.PI / 180;  // Jupiter
 
@@ -109,7 +109,7 @@ export function createInitialBodies() {
   const v_cal = Math.sqrt(mu_J * (1 + E_CALLISTO) / (A_CALLISTO * (1 - E_CALLISTO)));
   // Starting phase angles for the outer planets (radians, CCW from +x)
   const FAFNIR_PHASE  = 300 * Math.PI / 180;
-  const QARS_PHASE    =  40 * Math.PI / 180;
+  const VRITRA_PHASE    =  40 * Math.PI / 180;
   const TIAMAT_PHASE  = 160 * Math.PI / 180;
   const BAHAMUT_PHASE = 240 * Math.PI / 180;
   const cosF = Math.cos(FAFNIR_PHASE), sinF = Math.sin(FAFNIR_PHASE);
@@ -223,13 +223,13 @@ export function createInitialBodies() {
       physicalRadius: R_SATURN, minDisplayPx: 8,
       color: '#E8D080', trailColor: '#E8D080', trailMaxLen: 800, albedo: 0.47,
     }),
-    // Qars (10): super-Earth at 1.52 AU (Mars position), inclined 1.85°
+    // Vritra (10): super-Earth at 1.52 AU (Mars position), inclined 1.85°
     new Body({
-      name: 'Qars', mass: 3 * M_EARTH,
-      x: 1.52 * AU * Math.cos(QARS_PHASE), y: 1.52 * AU * Math.sin(QARS_PHASE),
-      vx: -Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.sin(QARS_PHASE) * Math.cos(QARS_INC),
-      vy:  Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.cos(QARS_PHASE) * Math.cos(QARS_INC),
-      vz:  Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.sin(QARS_INC),
+      name: 'Vritra', mass: 3 * M_EARTH,
+      x: 1.52 * AU * Math.cos(VRITRA_PHASE), y: 1.52 * AU * Math.sin(VRITRA_PHASE),
+      vx: -Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.sin(VRITRA_PHASE) * Math.cos(VRITRA_INC),
+      vy:  Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.cos(VRITRA_PHASE) * Math.cos(VRITRA_INC),
+      vz:  Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.sin(VRITRA_INC),
       physicalRadius: R_EARTH * Math.pow(3, 1 / 3), minDisplayPx: 5,
       color: '#C1440E', trailColor: '#C1440E', trailMaxLen: 2000, albedo: 0.25,
     }),

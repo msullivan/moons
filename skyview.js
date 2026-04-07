@@ -14,7 +14,7 @@ import { PRIMUS_INCLINATION, QAIA_SIDEREAL_DAY } from './bodies.js';
 
 // Body indices to display
 const SKY_BODIES = [0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12];
-// Sun, moons (Primus–Septimus), planets (Bahamut, Qars, Fafnir, Tiamat)
+// Sun, moons (Primus–Septimus), planets (Bahamut, Vritra, Fafnir, Tiamat)
 const SKY_PLANETS = new Set([9, 10, 11, 12]);
 
 // Disc sizes are exaggerated — real angular diameters are sub-pixel.

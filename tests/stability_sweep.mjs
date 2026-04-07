@@ -86,7 +86,7 @@ function makeSystem({ sec_mf, sec_a, ter_mf, ter_a, qrt_a }) {
   const v_gan = Math.sqrt(mu_J * (1+E_GANYMEDE)/(A_GANYMEDE*(1-E_GANYMEDE)));
   const v_cal = Math.sqrt(mu_J * (1+E_CALLISTO)/(A_CALLISTO*(1-E_CALLISTO)));
 
-  const QARS_PHASE = 40 * Math.PI / 180;
+  const VRITRA_PHASE = 40 * Math.PI / 180;
   const TIAMAT_PHASE = 160 * Math.PI / 180;
   const BAHAMUT_PHASE = 240 * Math.PI / 180;
   const cosT = Math.cos(TIAMAT_PHASE), sinT = Math.sin(TIAMAT_PHASE);
@@ -146,10 +146,10 @@ function makeSystem({ sec_mf, sec_a, ter_mf, ter_a, qrt_a }) {
       vx: -Math.sqrt(G * M_SUN / QATURN_A) * Math.sin(BAHAMUT_PHASE),
       vy: Math.sqrt(G * M_SUN / QATURN_A) * Math.cos(BAHAMUT_PHASE),
       physicalRadius: R_SATURN, minDisplayPx: 8, color: '#E8D080', trailColor: '#E8D080', trailMaxLen: 800 }),
-    new Body({ name: 'Qars', mass: 3 * M_EARTH,
-      x: 1.52 * AU * Math.cos(QARS_PHASE), y: 1.52 * AU * Math.sin(QARS_PHASE),
-      vx: -Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.sin(QARS_PHASE),
-      vy: Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.cos(QARS_PHASE),
+    new Body({ name: 'Vritra', mass: 3 * M_EARTH,
+      x: 1.52 * AU * Math.cos(VRITRA_PHASE), y: 1.52 * AU * Math.sin(VRITRA_PHASE),
+      vx: -Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.sin(VRITRA_PHASE),
+      vy: Math.sqrt(G * M_SUN / (1.52 * AU)) * Math.cos(VRITRA_PHASE),
       physicalRadius: R_EARTH * Math.pow(3, 1/3), minDisplayPx: 5, color: '#C1440E', trailColor: '#C1440E', trailMaxLen: 2000 }),
     new Body({ name: 'Tiamat', mass: M_JUPITER,
       x: QUPITER_A * cosT, y: QUPITER_A * sinT,
