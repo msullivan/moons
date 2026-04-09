@@ -59,9 +59,9 @@ export class SkyView {
     // Sidereal rotation rate (rad/s).  One full turn = one sidereal day.
     this.omega = TAU / QAIA_SIDEREAL_DAY;
 
-    // Observer location on Qaia's surface.  Default: Qarangil (45°N, 30°W).
+    // Observer location on Qaia's surface.  Default: Qarangil (45°N, 30°E).
     // setLocation() precomputes trig for the observer frame.
-    this.setLocation(45, -30);
+    this.setLocation(45, 30);
 
     // Seeded star field (same PRNG as renderer.js but different seed)
     this.stars = buildStars(500, 0xCAFEBABE);
