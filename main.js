@@ -471,9 +471,9 @@ function buildUI(canvas) {
 }
 
 const SKY_LOCATIONS = [
-  { name: 'Qarangil (45\u00b0N, 30\u00b0E)',     lat:  45, lon:  30 },
-  { name: 'Potosia (33\u00b0N, 15\u00b0E)',      lat:  33, lon:  15 },
-  { name: 'Qama (40\u00b0N, 45\u00b0E)',         lat:  40, lon:  45 },
+  { name: 'Qarangil (45\u00b0N, 30\u00b0W)',     lat:  45, lon:  -30 },
+  { name: 'Potosia (33\u00b0N, 45\u00b0W)',      lat:  33, lon:  -45 },
+  { name: 'Qama (40\u00b0N, 15\u00b0W)',         lat:  40, lon:  -15 },
   { name: 'Pe\u03c7avn (25\u00b0S, 5\u00b0W)',   lat: -25, lon:  -5 },
   { name: 'Sub-Primus (0\u00b0N, 0\u00b0)',      lat:   0, lon:   0 },
   { name: 'North Pole (90\u00b0N)',               lat:  90, lon:   0 },
