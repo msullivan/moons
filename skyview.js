@@ -394,8 +394,9 @@ export class SkyView {
           // Rapid initial brightening (first 2%), then slow fade
           const peak = snProgress < 0.02 ? snProgress / 0.02 : 1;
           const intensity = peak * fade;
-          // Supernova is bright enough to be visible in daytime (early on)
-          const snAlpha = Math.max(starAlpha, intensity * 0.6);
+          // Visible in daytime for ~3 weeks (like Kepler's SN 1604)
+          const dayVis = snElapsed < 21 * 86400 ? (1 - snElapsed / (21 * 86400)) * 0.6 : 0;
+          const snAlpha = Math.max(starAlpha, dayVis);
           // Outer glow — warm orange/red nebula remnant
           const glowR = 8 + 20 * intensity;
           const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR);
