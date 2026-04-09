@@ -10,7 +10,7 @@
 //   5. Altitude / azimuth — from local frame components
 //   6. Screen (x,y) — azimuthal equidistant projection onto a circle
 
-import { PRIMUS_INCLINATION, QAIA_SIDEREAL_DAY } from './bodies.js';
+import { PRIMUS_INCLINATION, QAIA_SIDEREAL_DAY, MEAN_SOLAR_DAY } from './bodies.js';
 
 // Body indices to display
 const SKY_BODIES = [0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12];
@@ -296,7 +296,7 @@ export class SkyView {
     if (!this.syncMode) {
       this._syncTime = null;
     } else {
-      const period = this.syncMode === 'sidereal' ? QAIA_SIDEREAL_DAY : 86400;
+      const period = this.syncMode === 'sidereal' ? QAIA_SIDEREAL_DAY : MEAN_SOLAR_DAY;
       if (this._lastSyncRender === -Infinity) {
         // First render after enabling sync — record current phase within
         // the period so subsequent renders land at the same time of day.
@@ -389,11 +389,16 @@ export class SkyView {
 
         // Supernova rendering for star 52
         if (si === SUPERNOVA_STAR && snActive) {
-          // After explosion: star is gone, replaced by expanding nebula glow
           const fade = 1 - snProgress;  // 1 at start, 0 at end
           // Rapid initial brightening (first 2%), then slow fade
           const peak = snProgress < 0.02 ? snProgress / 0.02 : 1;
           const intensity = peak * fade;
+          // Draw the original star fading out as the nova brightens
+          if (peak < 1) {
+            const starFade = (1 - peak) * a * starAlpha;
+            ctx.fillStyle = `rgba(255,255,255,${starFade.toFixed(3)})`;
+            ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
+          }
           // Visible in daytime for ~3 weeks (like Kepler's SN 1604)
           const dayVis = snElapsed < 21 * 86400 ? (1 - snElapsed / (21 * 86400)) * 0.6 : 0;
           const snAlpha = Math.max(starAlpha, dayVis);

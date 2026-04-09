@@ -1,5 +1,5 @@
 import { G, Simulation } from './simulation.js';
-import { createInitialBodies, applySnapshot, AU, LUNAR_DIST, R_MOON } from './bodies.js';
+import { createInitialBodies, applySnapshot, AU, LUNAR_DIST, R_MOON, MEAN_SOLAR_DAY } from './bodies.js';
 import { Renderer } from './renderer.js';
 import { SkyView } from './skyview.js';
 
@@ -154,7 +154,7 @@ const EPOCH_MS    = Date.UTC(EPOCH_YEAR, 0, 1); // ms since Unix epoch
 const MON_DAYS   = [31,28,31,30,31,30,31,31,30,31,30,31];
 const MON_NAMES  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function simDate(t) {
-  let d = Math.floor(t / 86400);
+  let d = Math.floor(t / MEAN_SOLAR_DAY);
   let y = EPOCH_YEAR;
   while (true) {
     const leap = (y % 4 === 0) && (y % 100 !== 0 || y % 400 === 0);
@@ -171,18 +171,17 @@ function simDate(t) {
 }
 
 // Primus Mean Time: mean solar time at the sub-Primus meridian.
-// Derived from sidereal day (86164s) and measured orbital period (365.248 days).
 // At t=0 the Sun is anti-Primus (midnight), so PMT 0h = t mod MEAN_SOLAR_DAY = 0.
-const MEAN_SOLAR_DAY = 86399.905;
 function primusMeanTime(t) {
   const frac = ((t % MEAN_SOLAR_DAY) + MEAN_SOLAR_DAY) % MEAN_SOLAR_DAY / MEAN_SOLAR_DAY;
   const h = Math.floor(frac * 24).toString().padStart(2, '0');
   return `${h}h PMT`;
 }
 
-// Convert year/month(0-indexed)/day(1-indexed) → sim seconds via Date.UTC
+// Convert year/month(0-indexed)/day(1-indexed) → sim seconds.
+// Uses MEAN_SOLAR_DAY so the calendar stays in sync with PMT.
 function calToSimTime(year, month0, day) {
-  return (Date.UTC(year, month0, day) - EPOCH_MS) / 1000;
+  return (Date.UTC(year, month0, day) - EPOCH_MS) / 1000 * (MEAN_SOLAR_DAY / 86400);
 }
 
 function updateHUD() {
@@ -200,7 +199,7 @@ function updateHUD() {
     const label = skyView.syncMode === 'sidereal' ? 'Sidereal' : 'Solar';
     // Always display solar (clock) time — in sidereal mode this drifts
     // ~4 min earlier each day, which is the whole point.
-    const frac = ((t % 86400) + 86400) % 86400 / 86400;
+    const frac = ((t % MEAN_SOLAR_DAY) + MEAN_SOLAR_DAY) % MEAN_SOLAR_DAY / MEAN_SOLAR_DAY;
     const hh = Math.floor(frac * 24).toString().padStart(2, '0');
     const mm = Math.floor((frac * 24 % 1) * 60).toString().padStart(2, '0');
     syncEl.textContent = `${label} sync: ${simDate(t)}, ${hh}:${mm}`;

@@ -44,6 +44,7 @@ const M_GANYMEDE = 1.482e23;  const R_GANYMEDE = 2.631e6;
 const M_CALLISTO = 1.076e23;  const R_CALLISTO = 2.410e6;
 
 export const QAIA_SIDEREAL_DAY = 86164;  // seconds — Qaia's sidereal rotation period
+export const MEAN_SOLAR_DAY = 86399.905; // seconds — empirical, from sidereal day + orbital period (365.248 d)
 
 // Primus orbital mechanics (geosynchronous anchor)
 const PRIMUS_OMEGA        = 2 * Math.PI / QAIA_SIDEREAL_DAY;
