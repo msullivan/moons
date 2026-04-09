@@ -1,5 +1,5 @@
 import { G, Simulation } from './simulation.js';
-import { createInitialBodies, applySnapshot, AU, LUNAR_DIST, R_MOON, QAIA_SIDEREAL_DAY } from './bodies.js';
+import { createInitialBodies, applySnapshot, AU, LUNAR_DIST, R_MOON } from './bodies.js';
 import { Renderer } from './renderer.js';
 import { SkyView } from './skyview.js';
 
@@ -170,28 +170,12 @@ function simDate(t) {
   }
 }
 
-// Primus Mean Time: true solar time at the sub-Primus meridian.
-// Computed from the sun's hour angle in the body-fixed frame.
-// θ_sidereal − ecliptic_lon_sun + π maps midnight to 0h.
-const _omega = 2 * Math.PI / QAIA_SIDEREAL_DAY;
+// Primus Mean Time: mean solar time at the sub-Primus meridian.
+// Derived from sidereal day (86164s) and measured orbital period (365.248 days).
+// At t=0 the Sun is anti-Primus (midnight), so PMT 0h = t mod MEAN_SOLAR_DAY = 0.
+const MEAN_SOLAR_DAY = 86399.905;
 function primusMeanTime(t) {
-  const qaia = sim.bodies[1], sun = sim.bodies[0];
-  const dx = sun.x - qaia.x, dy = sun.y - qaia.y, dz = sun.z - qaia.z;
-  // Project sun direction onto equatorial frame (rotate by axial tilt 23.5°)
-  const I = 23.5 * Math.PI / 180;
-  const cosI = Math.cos(I), sinI = Math.sin(I);
-  const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-  const p1 = (dx * cosI - dz * sinI) / dist;
-  const p2 = dy / dist;
-  // Rotate into body-fixed frame by sidereal angle
-  const theta = _omega * t;
-  const c = Math.cos(theta), s = Math.sin(theta);
-  const b1 = c * p1 + s * p2;   // toward sub-Primus
-  const b2 = -s * p1 + c * p2;  // east
-  // Sun hour angle: 0 = transit (noon), π = midnight
-  const ha = Math.atan2(b2, b1);
-  // Convert: HA=π → 0h, HA=0 → 12h
-  const frac = ((-ha / (2 * Math.PI) + 0.5) % 1 + 1) % 1;
+  const frac = ((t % MEAN_SOLAR_DAY) + MEAN_SOLAR_DAY) % MEAN_SOLAR_DAY / MEAN_SOLAR_DAY;
   const h = Math.floor(frac * 24).toString().padStart(2, '0');
   return `${h}h PMT`;
 }
