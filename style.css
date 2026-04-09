@@ -76,6 +76,7 @@ html, body {
   bottom: 0;
   left: 0;
   right: 0;
+  z-index: 15;
   background: rgba(4, 8, 24, 0.82);
   border-top: 1px solid rgba(80, 130, 255, 0.18);
   backdrop-filter: blur(12px);
