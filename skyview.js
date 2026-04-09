@@ -27,6 +27,8 @@ const PI  = Math.PI;
 const TAU = 2 * PI;
 
 // Supernova event: star 52 explodes on 17 Sep 2253, fades over 1.5 years.
+// Enabled by ?nova=1 query parameter.
+const SUPERNOVA_ENABLED = new URLSearchParams(window.location.search).get('nova') === '1';
 const SUPERNOVA_STAR = 52;
 const SUPERNOVA_START = (Date.UTC(2253, 8, 17) - Date.UTC(2053, 0, 1)) / 1000; // sim seconds
 const SUPERNOVA_DURATION = 1.5 * 365.25 * 86400; // 1.5 years in seconds
@@ -363,7 +365,7 @@ export class SkyView {
       : sunAltDeg > 0 ? clamp(1 - sunAltDeg / 15, 0, 0.15) : 0.8;
     const t = this.renderTime;
     const snElapsed = t - SUPERNOVA_START;
-    const snActive = snElapsed >= 0 && snElapsed < SUPERNOVA_DURATION;
+    const snActive = SUPERNOVA_ENABLED && snElapsed >= 0 && snElapsed < SUPERNOVA_DURATION;
     const snProgress = snActive ? snElapsed / SUPERNOVA_DURATION : -1;
     // Draw stars if visible at night, or if supernova is active (visible in daylight)
     if (starAlpha > 0.01 || snActive) {
@@ -418,7 +420,7 @@ export class SkyView {
           continue;
         }
         // After supernova has fully faded, star 52 is gone
-        if (si === SUPERNOVA_STAR && t >= SUPERNOVA_START) continue;
+        if (SUPERNOVA_ENABLED && si === SUPERNOVA_STAR && t >= SUPERNOVA_START) continue;
         // Skip normal stars during daytime
         if (starAlpha <= 0.01) continue;
 
