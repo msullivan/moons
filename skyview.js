@@ -26,6 +26,11 @@ const RAD = 180 / Math.PI;
 const PI  = Math.PI;
 const TAU = 2 * PI;
 
+// Supernova event: star 52 explodes on 17 Sep 2253, fades over 1.5 years.
+const SUPERNOVA_STAR = 52;
+const SUPERNOVA_START = (Date.UTC(2253, 8, 17) - Date.UTC(2053, 0, 1)) / 1000; // sim seconds
+const SUPERNOVA_DURATION = 1.5 * 365.25 * 86400; // 1.5 years in seconds
+
 export class SkyView {
   constructor(canvas, sim) {
     this.canvas = canvas;
@@ -356,11 +361,17 @@ export class SkyView {
     // Opacity fades with sun altitude: full at night, invisible in daytime.
     const starAlpha = this.disableSunGlare ? 0.8
       : sunAltDeg > 0 ? clamp(1 - sunAltDeg / 15, 0, 0.15) : 0.8;
-    if (starAlpha > 0.01) {
+    const t = this.renderTime;
+    const snElapsed = t - SUPERNOVA_START;
+    const snActive = snElapsed >= 0 && snElapsed < SUPERNOVA_DURATION;
+    const snProgress = snActive ? snElapsed / SUPERNOVA_DURATION : -1;
+    // Draw stars if visible at night, or if supernova is active (visible in daylight)
+    if (starAlpha > 0.01 || snActive) {
       const M = this._starMatrix();
       ctx.save();
       ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip();
-      for (const [ex, ey, ez, r, a] of this.stars) {
+      for (let si = 0; si < this.stars.length; si++) {
+        const [ex, ey, ez, r, a] = this.stars[si];
         // Rotate ecliptic unit vector into observer's local frame
         const zen  = M[0] * ex + M[1] * ey + M[2] * ez;
         if (zen < -0.17) continue;  // skip stars well below horizon (> ~10°)
@@ -375,6 +386,36 @@ export class SkyView {
         // Cull outside horizon circle
         const ddx = sx - cx, ddy = sy - cy;
         if (ddx * ddx + ddy * ddy > R * R) continue;
+
+        // Supernova rendering for star 52
+        if (si === SUPERNOVA_STAR && snActive) {
+          // After explosion: star is gone, replaced by expanding nebula glow
+          const fade = 1 - snProgress;  // 1 at start, 0 at end
+          // Rapid initial brightening (first 2%), then slow fade
+          const peak = snProgress < 0.02 ? snProgress / 0.02 : 1;
+          const intensity = peak * fade;
+          // Supernova is bright enough to be visible in daytime (early on)
+          const snAlpha = Math.max(starAlpha, intensity * 0.6);
+          // Outer glow — warm orange/red nebula remnant
+          const glowR = 8 + 20 * intensity;
+          const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR);
+          // Core: white-hot → yellow → orange → transparent
+          const coreA = (intensity * 0.95 * snAlpha).toFixed(3);
+          const midA  = (intensity * 0.6 * snAlpha).toFixed(3);
+          const outerA = (intensity * 0.25 * snAlpha).toFixed(3);
+          grad.addColorStop(0,   `rgba(255,255,240,${coreA})`);
+          grad.addColorStop(0.15, `rgba(255,220,120,${midA})`);
+          grad.addColorStop(0.45, `rgba(255,140,60,${outerA})`);
+          grad.addColorStop(1,   `rgba(200,60,40,0)`);
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(sx, sy, glowR, 0, TAU); ctx.fill();
+          continue;
+        }
+        // After supernova has fully faded, star 52 is gone
+        if (si === SUPERNOVA_STAR && t >= SUPERNOVA_START) continue;
+        // Skip normal stars during daytime
+        if (starAlpha <= 0.01) continue;
+
         ctx.fillStyle = `rgba(255,255,255,${(a * starAlpha).toFixed(3)})`;
         ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
       }
