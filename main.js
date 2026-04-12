@@ -488,10 +488,35 @@ function buildLocationSelect() {
     opt.textContent = loc.name;
     sel.appendChild(opt);
   });
+  // "Custom" option for arbitrary lat/lon
+  const customOpt = document.createElement('option');
+  customOpt.value = 'custom';
+  customOpt.textContent = 'Custom\u2026';
+  sel.appendChild(customOpt);
+
+  const customCoords = document.getElementById('sky-custom-coords');
+  const latInput = document.getElementById('sky-lat');
+  const lonInput = document.getElementById('sky-lon');
+
   sel.addEventListener('change', () => {
-    const loc = SKY_LOCATIONS[parseInt(sel.value)];
-    skyView.setLocation(loc.lat, loc.lon);
+    if (sel.value === 'custom') {
+      customCoords.style.display = '';
+      skyView.setLocation(+latInput.value, +lonInput.value);
+    } else {
+      customCoords.style.display = 'none';
+      const loc = SKY_LOCATIONS[parseInt(sel.value)];
+      skyView.setLocation(loc.lat, loc.lon);
+    }
   });
+
+  function applyCustom() {
+    if (sel.value !== 'custom') return;
+    const lat = Math.max(-90, Math.min(90, +latInput.value || 0));
+    const lon = Math.max(-180, Math.min(180, +lonInput.value || 0));
+    skyView.setLocation(lat, lon);
+  }
+  latInput.addEventListener('input', applyCustom);
+  lonInput.addEventListener('input', applyCustom);
 
   // Sky view option checkboxes
   document.getElementById('sky-hide-moons').addEventListener('change', (e) => {
