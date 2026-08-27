@@ -343,6 +343,18 @@ button.ctrl-btn.active {
   font-size: 11px;
 }
 
+#sky-localtime {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(150, 210, 255, 0.88);
+  text-shadow: 0 0 8px rgba(80, 160, 255, 0.4);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
 #sky-options {
   display: flex;
   flex-direction: column;
@@ -539,6 +551,10 @@ button.ctrl-btn.active {
 
   #sky-panel {
     bottom: 42px;
+  }
+
+  #sky-localtime {
+    font-size: 11px;
   }
 
   #doc-links {

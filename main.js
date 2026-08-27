@@ -178,6 +178,31 @@ function primusMeanTime(t) {
   return `${h}h PMT`;
 }
 
+// Local civil time at the observer's location.  Time zones are whole-hour
+// offsets from PMT, one per 15° of longitude (east positive), so Qarangil at
+// 30°E keeps PMT+2 and the Sun crosses its meridian near 12:00 local.
+function zoneOffset(lonDeg) {
+  return Math.round(lonDeg / 15);
+}
+
+// "14:32 PMT+2", with the local date appended when the offset has carried it
+// across midnight relative to the PMT date shown in the HUD.
+function localZoneTime(t, lonDeg) {
+  const off  = zoneOffset(lonDeg);
+  const tl   = t + off * (MEAN_SOLAR_DAY / 24);
+  const frac = ((tl % MEAN_SOLAR_DAY) + MEAN_SOLAR_DAY) % MEAN_SOLAR_DAY / MEAN_SOLAR_DAY;
+  const hh   = Math.floor(frac * 24).toString().padStart(2, '0');
+  const mm   = Math.floor((frac * 24 % 1) * 60).toString().padStart(2, '0');
+  const zone = `PMT${off < 0 ? '\u2212' : '+'}${Math.abs(off)}`;
+  // simDate() only handles t ≥ 0, so skip the date when a westward zone puts
+  // the local clock before the epoch.
+  const local = tl >= 0 ? simDate(tl) : null;
+  const day   = local && local !== simDate(t)
+    ? ` · ${local.split(' ').slice(0, 2).join(' ')}`
+    : '';
+  return `${hh}:${mm} ${zone}${day}`;
+}
+
 // Convert year/month(0-indexed)/day(1-indexed) → sim seconds.
 // Uses MEAN_SOLAR_DAY so the calendar stays in sync with PMT.
 function calToSimTime(year, month0, day) {
@@ -206,6 +231,13 @@ function updateHUD() {
     syncEl.style.display = '';
   } else {
     syncEl.style.display = 'none';
+  }
+
+  // Sky view: local civil time at the observer's longitude.  Uses the sky
+  // view's render time so it matches the sky actually on screen in sync mode.
+  if (skyView && document.getElementById('sky-panel').classList.contains('open')) {
+    document.getElementById('sky-localtime-value').textContent =
+      localZoneTime(skyView.renderTime, skyView.lonDeg);
   }
 
   updateMoonPhases();
