@@ -1,5 +1,6 @@
 import { G, Simulation } from './simulation.js';
-import { createInitialBodies, applySnapshot, AU, LUNAR_DIST, R_MOON, MEAN_SOLAR_DAY } from './bodies.js';
+import { createInitialBodies, applySnapshot, AU, LUNAR_DIST, R_MOON } from './bodies.js';
+import { simDate, primusMeanTime, localZoneTime, calToSimTime, clockHM } from './calendar.js';
 import { Renderer } from './renderer.js';
 import { SkyView } from './skyview.js';
 
@@ -148,67 +149,6 @@ function orbitalElements(body, primary) {
   return { a, e, inc, T, r };
 }
 
-// Calendar: t=0 = 1 Jan 2053 AD (Arrival of Dragons). Gregorian rules.
-const EPOCH_YEAR  = 2053;
-const EPOCH_MS    = Date.UTC(EPOCH_YEAR, 0, 1); // ms since Unix epoch
-const MON_DAYS   = [31,28,31,30,31,30,31,31,30,31,30,31];
-const MON_NAMES  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-function simDate(t) {
-  let d = Math.floor(t / MEAN_SOLAR_DAY);
-  let y = EPOCH_YEAR;
-  while (true) {
-    const leap = (y % 4 === 0) && (y % 100 !== 0 || y % 400 === 0);
-    const diy  = leap ? 366 : 365;
-    if (d < diy) break;
-    d -= diy; y++;
-  }
-  const leap = (y % 4 === 0) && (y % 100 !== 0 || y % 400 === 0);
-  for (let m = 0; m < 12; m++) {
-    const dim = MON_DAYS[m] + (m === 1 && leap ? 1 : 0);
-    if (d < dim) return `${d + 1} ${MON_NAMES[m]} ${y} AD`;
-    d -= dim;
-  }
-}
-
-// Primus Mean Time: mean solar time at the sub-Primus meridian.
-// At t=0 the Sun is anti-Primus (midnight), so PMT 0h = t mod MEAN_SOLAR_DAY = 0.
-function primusMeanTime(t) {
-  const frac = ((t % MEAN_SOLAR_DAY) + MEAN_SOLAR_DAY) % MEAN_SOLAR_DAY / MEAN_SOLAR_DAY;
-  const h = Math.floor(frac * 24).toString().padStart(2, '0');
-  return `${h}h PMT`;
-}
-
-// Local civil time at the observer's location.  Time zones are whole-hour
-// offsets from PMT, one per 15° of longitude (east positive), so Qarangil at
-// 30°E keeps PMT+2 and the Sun crosses its meridian near 12:00 local.
-function zoneOffset(lonDeg) {
-  return Math.round(lonDeg / 15);
-}
-
-// "14:32 PMT+2", with the local date appended when the offset has carried it
-// across midnight relative to the PMT date shown in the HUD.
-function localZoneTime(t, lonDeg) {
-  const off  = zoneOffset(lonDeg);
-  const tl   = t + off * (MEAN_SOLAR_DAY / 24);
-  const frac = ((tl % MEAN_SOLAR_DAY) + MEAN_SOLAR_DAY) % MEAN_SOLAR_DAY / MEAN_SOLAR_DAY;
-  const hh   = Math.floor(frac * 24).toString().padStart(2, '0');
-  const mm   = Math.floor((frac * 24 % 1) * 60).toString().padStart(2, '0');
-  const zone = `PMT${off < 0 ? '\u2212' : '+'}${Math.abs(off)}`;
-  // simDate() only handles t ≥ 0, so skip the date when a westward zone puts
-  // the local clock before the epoch.
-  const local = tl >= 0 ? simDate(tl) : null;
-  const day   = local && local !== simDate(t)
-    ? ` · ${local.split(' ').slice(0, 2).join(' ')}`
-    : '';
-  return `${hh}:${mm} ${zone}${day}`;
-}
-
-// Convert year/month(0-indexed)/day(1-indexed) → sim seconds.
-// Uses MEAN_SOLAR_DAY so the calendar stays in sync with PMT.
-function calToSimTime(year, month0, day) {
-  return (Date.UTC(year, month0, day) - EPOCH_MS) / 1000 * (MEAN_SOLAR_DAY / 86400);
-}
-
 function updateHUD() {
   const err  = sim.energyError() * 100;
   const sign = err >= 0 ? '+' : '';
@@ -224,10 +164,7 @@ function updateHUD() {
     const label = skyView.syncMode === 'sidereal' ? 'Sidereal' : 'Solar';
     // Always display solar (clock) time — in sidereal mode this drifts
     // ~4 min earlier each day, which is the whole point.
-    const frac = ((t % MEAN_SOLAR_DAY) + MEAN_SOLAR_DAY) % MEAN_SOLAR_DAY / MEAN_SOLAR_DAY;
-    const hh = Math.floor(frac * 24).toString().padStart(2, '0');
-    const mm = Math.floor((frac * 24 % 1) * 60).toString().padStart(2, '0');
-    syncEl.textContent = `${label} sync: ${simDate(t)}, ${hh}:${mm}`;
+    syncEl.textContent = `${label} sync: ${simDate(t)}, ${clockHM(t)}`;
     syncEl.style.display = '';
   } else {
     syncEl.style.display = 'none';
