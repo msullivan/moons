@@ -99,7 +99,7 @@ export class SkyView {
   // The time used for sidereal rotation in all rendering code.
   // In sync mode this is the snapped time (so stars/sun stay fixed);
   // otherwise it's the live sim time.
-  get renderTime() { return this._syncTime ?? this.sim.time; }
+  get renderTime() { return this._syncTime ?? this.sim.renderTime; }
 
   // ── coordinate transform ──────────────────────────────────────────────
   //

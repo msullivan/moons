@@ -107,6 +107,12 @@ function tick(ts) {
     const trailInterval = Math.max(10, Math.floor(actual / 300));
 
     if (actual > 0) sim.advance(actual, trailInterval, renderer.followIndex);
+
+    // Fill in the gap between integrator steps.  stepAccum is the fraction of
+    // the next step already elapsed in wall-clock terms, so this makes the
+    // rendered state track real time exactly and continuously: at the moment a
+    // step lands, time jumps forward by dt while stepAccum drops by 1.
+    sim.setRenderTau(stepAccum * sim.dt);
   }
 
   renderer.render();
@@ -153,8 +159,8 @@ function updateHUD() {
   const err  = sim.energyError() * 100;
   const sign = err >= 0 ? '+' : '';
 
-  document.getElementById('hud-date').textContent   = simDate(sim.time);
-  document.getElementById('hud-pmt').textContent    = primusMeanTime(sim.time);
+  document.getElementById('hud-date').textContent   = simDate(sim.renderTime);
+  document.getElementById('hud-pmt').textContent    = primusMeanTime(sim.renderTime);
   document.getElementById('hud-energy').textContent = `ΔE/E₀: ${sign}${err.toExponential(2)}`;
 
   // Show the snapped render time when sync mode is active

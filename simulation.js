@@ -59,6 +59,7 @@ export class Simulation {
   constructor(bodies) {
     this.dt     = 360;   // simulation timestep: 6 minutes in seconds
     this.time   = 0;     // elapsed simulation seconds
+    this._renderTau = 0; // sub-step offset baked into the body objects (see setRenderTau)
     this.bodies = bodies;
     // Cache anchored bodies (by index) to avoid scanning all bodies every step.
     this._anchors = bodies
@@ -91,8 +92,14 @@ export class Simulation {
     this.initialEnergy = this.totalEnergy();
   }
 
+  // Sim time that the body objects currently represent.  Equal to `time`
+  // except between integrator steps, where setRenderTau() has pushed them
+  // forward — see the note there.
+  get renderTime() { return this.time + this._renderTau; }
+
   // Copy typed-array state back to body objects (called at end of advance()).
   _syncToObjects() {
+    this._renderTau = 0;
     const n = this._n;
     const bx = this._bx, by = this._by, bz = this._bz;
     const bvx = this._bvx, bvy = this._bvy, bvz = this._bvz;
@@ -102,6 +109,36 @@ export class Simulation {
       b.x = bx[i];  b.y = by[i];  b.z = bz[i];
       b.vx = bvx[i]; b.vy = bvy[i]; b.vz = bvz[i];
       b.ax = tax[i]; b.ay = tay[i]; b.az = taz[i];
+    }
+  }
+
+  // Push the body objects tau seconds past the last integrator step.
+  //
+  // The integrator advances in fixed 6-minute jumps, which at low speeds is
+  // far coarser than the frame rate: at 10 min/s a step lands only twice a
+  // second, so the view sits frozen for ~30 frames and then lurches (1.5° of
+  // sky rotation at a time).  Body objects are display-only — nothing in the
+  // integrator or the energy/trail bookkeeping reads them back — so we can
+  // write a sub-step extrapolation into them without perturbing the physics.
+  //
+  // Second-order Taylor from the state at `time`.  Over a single dt the
+  // truncation error is metres against orbital radii of 10^5 km, and it is
+  // discarded on the next step rather than accumulating.
+  setRenderTau(tau) {
+    this._renderTau = tau;
+    const n = this._n;
+    const bx = this._bx, by = this._by, bz = this._bz;
+    const bvx = this._bvx, bvy = this._bvy, bvz = this._bvz;
+    const tax = this._tax, tay = this._tay, taz = this._taz;
+    const half = 0.5 * tau * tau;
+    for (let i = 0; i < n; i++) {
+      const b = this.bodies[i];
+      b.x = bx[i] + bvx[i] * tau + tax[i] * half;
+      b.y = by[i] + bvy[i] * tau + tay[i] * half;
+      b.z = bz[i] + bvz[i] * tau + taz[i] * half;
+      b.vx = bvx[i] + tax[i] * tau;
+      b.vy = bvy[i] + tay[i] * tau;
+      b.vz = bvz[i] + taz[i] * tau;
     }
   }
 
