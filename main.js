@@ -72,6 +72,18 @@ function makeBodies() {
   return bodies;
 }
 
+// Rebuild the simulation from scratch.  Every holder of the old Simulation has
+// to be repointed — the sky view was previously left on the discarded object,
+// which froze it after a reset.
+function resetSim() {
+  sim = new Simulation(makeBodies());
+  if (snapshot) sim.time = snapshot.time;
+  window.sim = sim;
+  renderer.sim = sim;
+  skyView.sim = sim;
+  stepAccum = 0;
+}
+
 function resizeCanvas(canvas) {
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -337,13 +349,7 @@ function buildUI(canvas) {
   document.getElementById('btn-play').addEventListener('click', togglePause);
 
   // Reset
-  document.getElementById('btn-reset').addEventListener('click', () => {
-    sim = new Simulation(makeBodies());
-    if (snapshot) sim.time = snapshot.time;
-    window.sim = sim;
-    renderer.sim = sim;
-    stepAccum = 0;
-  });
+  document.getElementById('btn-reset').addEventListener('click', resetSim);
 
   // Go-to-date popup
   const gotoPopup = document.getElementById('goto-popup');
@@ -646,10 +652,7 @@ function handleKey(e) {
       renderer.zoomAt(2, renderer.W / 2, renderer.H / 2);
       break;
     case 'r': case 'R':
-      sim = new Simulation(makeBodies());
-      if (snapshot) sim.time = snapshot.time;
-      renderer.sim = sim;
-      stepAccum = 0;
+      resetSim();
       break;
     case 't': case 'T':
       renderer.showTrails = !renderer.showTrails;
