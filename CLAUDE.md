@@ -98,10 +98,21 @@ simulation.js   — Body class, Simulation class, Velocity Verlet integrator, G 
 bodies.js       — Physical constants (AU, masses, radii), moon orbital params, createInitialBodies()
 renderer.js     — Canvas rendering (trails, glow, shadow, scale bar)
 main.js         — Animation loop, UI, zoom/pan, keyboard handling
+frame.js        — Ecliptic → body-fixed → observer frames (shared by skyview.js and tides.js)
+tides.js        — Location tide model: equilibrium species, resonator & channel ocean models
+ports.js        — Tide ports and basins (worldbuilding parameters, map-derived coordinates)
+tide_analysis.js — Ephemeris recording, port runs, partial-tide fits, range stats (Node + browser)
+tides.html      — Port tides page: tide tables and charts, computed live in tides_worker.js
+tides_page.js   — tides.html UI and SVG charts;  tides_worker.js — runs the sim + tide models
 tests/          — Playwright screenshot and stability scripts
+  tide_channel_check.mjs  — Channel model vs analytic quarter-wave response
+  skyview_frame_check.mjs — Dump sky-view transforms; diff before/after frame refactors
+  screenshot_tides.mjs    — Screenshot tides.html (desktop + mobile), report console errors
 analysis/       — Node.js analysis scripts (no browser needed)
   moon_stats.mjs  — Physical/observational stats for all moons → MOONS.md
   tide_sim.mjs    — Tidal periods and 72h simulation → TIDES.md
+  tide_table.mjs  — High/low water table for a port: `node analysis/tide_table.mjs kard 2253-03-01 7`
+  port_report.mjs — Port tuning diagnostics (partial tides, ranges, --plot → analysis/ports/)
 ```
 
 Files use ES modules — imports are explicit. To add or change a moon, edit `bodies.js` only.
@@ -184,6 +195,9 @@ across α = 5°–175° at multiple radii revealed complete phase inversion in s
 
 ### Tidal notes
 
+- Port tides (`tides.js`/`ports.js`) are driven by the sim's real geometry, so they
+  depend on the 200-yr snapshot and `MOON_PARAMS`; rerun `analysis/port_report.mjs all`
+  after moon changes. The Central Sea channel must still pass `tests/tide_channel_check.mjs`.
 - Primus is geosynchronous → raises a static ~20 cm tidal bulge, not an oscillating tide.
   It is excluded from `tide_sim.mjs`.
 - Oscillating drivers: Secundus 9.85 h ±39 cm, Tertius 13.69 h ±55 cm, Quartus 12.43 h ±25 cm.

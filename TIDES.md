@@ -850,3 +850,110 @@ when Tertius and Secundus are in the same part of the sky, expect amplified tide
 **Long-term**: Secundus (retrograde) spirals inward over geological time due to tidal
 friction, slowly increasing its tidal contribution. Tertius and Quartus (prograde) recede,
 like Earth's Moon. Primus is magically anchored — no migration.
+
+---
+
+## Location-Specific Tides (ports)
+
+Everything above is a global, location-free model. For tide tables at actual places, open
+**[Port tides](tides.html)** (`tides.html`): pick a port and date for a tide table and charts,
+plus a year overview of every port, computed live in the browser. The model is `tides.js`,
+port parameters are in `ports.js`, and two scripts give the same results on the command line:
+
+```bash
+node analysis/tide_table.mjs qaringil 2253-03-01 7      # high/low water table, local time
+node analysis/port_report.mjs all 2253-02-01 365 --plot  # tuning diagnostics + 14-day plots
+```
+
+### Method
+
+1. **Equilibrium forcing from the simulated geometry.** Each body's tide at a site is
+   `K · P₂(cos z)` with `K = (M/M_Qaia)(R/r)³R`, split exactly into long-period, diurnal
+   (`¾ sin2φ sin2δ cos H`) and semidiurnal (`¾ cos²φ cos²δ cos 2H`) species. The declination
+   δ, hour angle H and distance r come straight from the N-body sim, so eccentricity,
+   declination cycles and orbital precession (the "nodal corrections" of Earth tide tables)
+   are built in.
+2. **Ocean response**, as a linear time-domain system driven by that forcing:
+   - *Resonator ports* (open coasts): per species, a damped oscillator
+     `x'' + (ω₀/Q)x' + ω₀²x = G·ω₀²·F(t)` plus a propagation delay τ.
+   - *Channel ports* (inside the Central Sea): a 1-D linear shallow-water channel, closed at
+     the isthmus and open to the ocean at the southwest mouth, forced at the mouth and
+     directly along its length. Verified against the analytic damped quarter-wave solution
+     to < 1% (`tests/tide_channel_check.mjs`).
+
+### The Central Sea
+
+From the map, the Central Sea is a ~900 km basin closed at the north by the wizard-built
+isthmus and open to the deep ocean in the southwest. Geometrically it is the Adriatic,
+with Qaringil in Venice's spot at the head. At 220 m mean depth its quarter-wave period is
+~21.7 h, close to the Adriatic's 21.5 h seiche, so it **resonates in the diurnal band**.
+This gives a structure along the sea:
+
+- **Qaringil** (head, antinode): biggest tides in the sea, mixed but mostly once-daily, peaking
+  when Tertius and Quartus are far from the equator.
+- **Kard** (mid-sea): sits near the *semidiurnal node*. The twice-daily tide almost vanishes
+  (Quartus 0.17×, Sun 0.16× equilibrium), so Kard has a once-daily tide 85% of days.
+- **Jia** (near the mouth): close to the open-ocean tide.
+
+Qaia's moons put tidal forcing all through 9.8–27.3 h, so no depth avoids resonance entirely.
+Around 120 m the second mode lands on Secundus, and at ≳ 500 m the fundamental lands on
+Tertius. A Venice-like *microtidal* Qaringil (< 1 m) isn't reachable with an open
+sea: Qaia's equilibrium tide is 2–3× Earth's. That would need extra sheltering, such as a
+lagoon behind narrow inlets (not modelled).
+
+### Current ports (1 year from 1 Feb 2253, heights relative to mean sea level)
+
+| Port | Model | Character | Median / spring daily range | Highs per day |
+|---|---|---|---|---|
+| Qaringil | Central Sea, head | Mixed, mainly diurnal (F = 1.6) | 3.4 / 4.4 m | 1: 58%, 2: 38% |
+| Kard | Central Sea, mid | Diurnal (F = 4.2) | 2.2 / 3.0 m | 1: 85% |
+| Jia | Central Sea, mouth | Mixed, mainly semidiurnal (F = 0.7) | 1.6 / 2.1 m | 2: 57%, 3: 23% |
+| Qis (river mouth) | Resonator, 12.6 h | Semidiurnal, Tertius-dominated (F = 0.27) | 3.1 / 4.5 m | 2: 76% |
+| Freeport | Resonator, 10 h | Semidiurnal, Secundus-dominated (F = 0.14) | 4.3 / 5.7 m | 2: 54%, 3: 41% |
+
+F is the form number, Σ diurnal / Σ semidiurnal partial-tide amplitudes. Spring range is
+the 90th percentile of the daily range. All port parameters are worldbuilding choices; see
+the comments in `ports.js` for their rationale and for map coordinates (~1.72 km per map
+pixel, anchored on Qaringil and Qama).
+
+**Not modelled:** Coriolis effects (amphidromic rotation; the Central Sea is about one Rossby
+radius wide), shallow-water distortion (fast flood and slow ebb), storm surge, and tidal
+currents.
+
+### The isthmus, the bridges and Qaringil
+
+Qaringil is on the western shore of the volcanic island in the isthmus, facing the Great
+Western Bridge, at the north end (head) of the Central Sea. The isthmus is partly
+wizard-made: the causeway and two enormous bridges span what used to be open water. So the
+Central Sea was once a strait to the sea in the north.
+
+**The model treats the head as closed** (no flow at the isthmus). Rough check, with guessed
+gap sizes of ~5 km wide × ~20 m deep under each bridge:
+
+- About 100 km from the head, the once-daily tide moves ~4×10⁶ m³/s through the sea
+  (~400 km wide, 220 m deep).
+- A 10⁵ m² gap passes at most ~2–3×10⁵ m³/s even at 2–3 m/s, about 5% of that.
+- So the leak changes Qaringil's tide heights by ~5–10%, and the closed head is fine for
+  tide tables.
+- This fails if the spans cross a real strait (tens of km wide or ~100 m deep). Then the
+  Central Sea becomes a channel between two seas, and Qaringil's tide depends on the
+  northern sea's tide too.
+
+**Currents under the bridges.** Qaringil's tide is amplified 2–3× and lags a few hours. If
+the water north of the isthmus (dark blue on the map, probably open ocean) has an ordinary
+tide, the two sides of each gap differ by 1–3 m. The hydraulic limit `√(2gΔη)` gives
+4–7 m/s (8–15 knots) before friction, in the class of the Strait of Messina (Charybdis) or
+Saltstraumen. The flow is mostly once-daily, like Qaringil's tide: north around Central Sea
+high water, south around low water. Slack water is the only safe time to pass a bridge.
+
+Worldbuilding hooks: bridge pilots and slack-water tables as a Qaringil monopoly; tide
+mills; whirlpools at the gap mouths. Also, "the tides rose when the wizards closed the
+strait": with the strait open, Qaringil was not at a closed head and its tides would have
+been smaller.
+
+**To model the currents** (speeds, slack-water times), the head boundary would become a
+"leaky" one: gap flow driven by the level difference against a northern-sea tide, with
+friction (~20 lines in `Channel`). That needs gap widths and depths, whether the northern
+water is open ocean or another enclosed sea, and whether the bridges have large flow-blocking
+piers. Not yet decided. The Port tides page uses a crude upper bound instead: northern side =
+equilibrium tide, speed = `√(2g|Δη|)`.

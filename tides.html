@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qaia — Port Tides</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #06060f;
+      --panel: rgba(12, 24, 56, 0.55);
+      --line: rgba(80, 130, 255, 0.18);
+      --text: rgba(190, 220, 255, 0.9);
+      --bright: rgba(220, 238, 255, 0.97);
+      --muted: rgba(140, 180, 230, 0.62);
+      --accent: rgba(140, 190, 255, 0.85);
+      --grid: rgba(80, 130, 255, 0.11);
+      --axis: rgba(140, 180, 255, 0.35);
+    }
+
+    html, body {
+      background: var(--bg);
+      font-family: 'Courier New', Courier, monospace;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    body { padding: 32px 24px 64px; max-width: 1120px; margin: 0 auto; font-size: 13px; }
+
+    /* ── Nav bar (same as docs.html) ─────────────────────────── */
+    nav {
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      margin-bottom: 28px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+    }
+    nav a {
+      color: var(--accent); text-decoration: none; font-size: 13px;
+      padding: 4px 10px; border: 1px solid rgba(80, 130, 220, 0.3); border-radius: 4px;
+      background: rgba(20, 45, 100, 0.45); transition: background 0.12s, border-color 0.12s;
+    }
+    nav a:hover, nav a.active { background: rgba(50, 110, 200, 0.7); border-color: rgba(140, 200, 255, 0.6); color: #fff; }
+
+    h1 { font-size: 20px; color: var(--bright); text-shadow: 0 0 12px rgba(80, 160, 255, 0.4); margin-bottom: 8px; }
+    h2 { font-size: 16px; color: rgba(180, 220, 255, 0.92); margin: 36px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+    h3 { font-size: 14px; color: rgba(160, 210, 255, 0.9); margin-bottom: 4px; }
+    p { margin-bottom: 8px; max-width: 80ch; }
+    .muted { color: var(--muted); }
+    a { color: var(--accent); }
+    code { background: rgba(20, 45, 100, 0.45); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+
+    /* ── Controls ─────────────────────────────────────────────── */
+    .controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; margin: 18px 0 10px; }
+    .controls label { display: grid; gap: 3px; font-size: 11px; color: var(--muted); letter-spacing: 0.04em; }
+    select, input[type=date] {
+      font: inherit; font-size: 13px; color: var(--bright); background: rgba(20, 45, 100, 0.55);
+      border: 1px solid rgba(80, 130, 220, 0.4); border-radius: 4px; padding: 4px 8px; color-scheme: dark;
+    }
+    select:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid rgba(140, 200, 255, 0.8); outline-offset: 1px; }
+    .status { font-size: 12px; color: var(--muted); min-height: 1.6em; }
+    .status.error { color: #ff8a8a; }
+    .portinfo { color: var(--muted); font-size: 12px; margin-bottom: 14px; max-width: 90ch; }
+    .portinfo b { color: var(--bright); font-weight: normal; }
+
+    /* ── Cards ────────────────────────────────────────────────── */
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; margin-top: 14px; min-width: 0; }
+    .card > p { font-size: 12px; color: var(--muted); }
+    .grid2 { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); }
+    .grid2 > .card { margin-top: 0; }
+    .grid2 { margin-top: 14px; }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--muted); margin: 6px 0; align-items: center; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; }
+    .legend label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+
+    /* ── Charts ───────────────────────────────────────────────── */
+    .chart { position: relative; min-width: 0; }
+    .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .chart text { font-family: 'Courier New', Courier, monospace; }
+    .tick { fill: var(--muted); font-size: 11px; }
+    .barval { fill: var(--muted); font-size: 10px; }
+    .label { fill: var(--text); font-size: 12px; }
+    .gridline { stroke: var(--grid); stroke-width: 1; }
+    .zero { stroke: var(--axis); stroke-width: 1; }
+    .ref { stroke: rgba(160, 200, 255, 0.4); stroke-width: 1; stroke-dasharray: 4 3; }
+    .rule { stroke: rgba(180, 210, 255, 0.5); stroke-width: 1; pointer-events: none; }
+    .tip {
+      position: absolute; z-index: 3; pointer-events: none; min-width: 11em;
+      background: rgba(8, 14, 34, 0.96); border: 1px solid rgba(100, 150, 255, 0.4); border-radius: 4px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5); padding: 6px 9px; font-size: 12px; display: grid; gap: 1px;
+    }
+    .tip[hidden] { display: none; }
+    .tip .head { color: var(--muted); margin-bottom: 2px; }
+    .tip .row { display: flex; gap: 8px; align-items: center; }
+    .tip .row .v { margin-left: auto; padding-left: 14px; color: var(--bright); }
+    .tip .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+    .placeholder { color: var(--muted); font-size: 12px; padding: 24px 0; text-align: center; }
+
+    /* ── Tables ───────────────────────────────────────────────── */
+    .tablewrap { overflow-x: auto; }
+    table { border-collapse: collapse; font-size: 12px; width: 100%; }
+    th, td { padding: 4px 8px; border: 1px solid rgba(80, 130, 255, 0.15); white-space: nowrap; }
+    th { background: rgba(20, 45, 100, 0.5); color: rgba(160, 210, 255, 0.9); font-weight: normal; text-align: left; }
+    td { color: rgba(170, 210, 240, 0.88); }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tr:hover td { background: rgba(30, 60, 130, 0.25); }
+    .tidetable td.date { color: var(--bright); }
+    .tidetable td:last-child { white-space: normal; }
+    .ev { display: inline-block; white-space: nowrap; min-width: 13ch; margin-right: 10px; }
+    .ev b { font-weight: normal; color: var(--bright); }
+    .ev.H .kind { color: #8fd0ff; }
+    .ev.L .kind { color: #c9a0ff; }
+
+    footer { margin-top: 40px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+
+    @media (max-width: 560px) { body { padding: 20px 14px 48px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Simulation</a>
+    <a href="docs.html?file=MOONS.md">Moons</a>
+    <a href="docs.html?file=TIDES.md">Tides</a>
+    <a href="tides.html" class="active">Port tides</a>
+    <a href="docs.html?file=NAVIGATION.md">Navigation</a>
+  </nav>
+
+  <h1>Port tides</h1>
+  <p class="muted">Tide predictions computed in your browser from the N-body simulation: each moon's real position drives the equilibrium tide, and a model of each port's sea turns it into local high and low water. Heights are metres from mean sea level; times are local zone time.</p>
+
+  <div class="controls">
+    <label>Port <select id="port"></select></label>
+    <label>From <input type="date" id="date" min="2253-01-15" max="2299-12-31" value="2253-02-01"></label>
+    <label>Length
+      <select id="days">
+        <option value="7">7 days</option>
+        <option value="14" selected>14 days</option>
+        <option value="28">28 days</option>
+      </select>
+    </label>
+    <div class="status" id="win-status" role="status"></div>
+  </div>
+  <p class="portinfo" id="portinfo"></p>
+
+  <div class="card">
+    <h3>High and low water</h3>
+    <div class="tablewrap"><table class="tidetable" id="tidetable"></table></div>
+  </div>
+
+  <div class="card">
+    <h3>Water level</h3>
+    <div class="legend" id="win-legend">
+      <span><i style="background: var(--bright)"></i>Total</span>
+      <label><input type="checkbox" id="show-bodies" checked> each body's partial tide</label>
+    </div>
+    <div class="chart" id="win-chart"><div class="placeholder">Computing…</div></div>
+  </div>
+
+  <h2 id="year-title">Year overview</h2>
+  <div class="status" id="year-status" role="status"></div>
+
+  <div class="card">
+    <h3>Every port over one year</h3>
+    <p>Daily range is a day's highest minus lowest water; neap and spring are its 10th and 90th percentiles. HW = high waters per day (share of days). The form number is Σ once-daily ÷ Σ twice-daily partial-tide amplitudes: below 0.25 is twice-daily, above 3 once-daily.</p>
+    <div class="tablewrap"><table id="summary"></table></div>
+  </div>
+
+  <div class="card">
+    <h3>All ports on one scale, first two weeks</h3>
+    <div class="chart" id="multiples"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>What drives each port</h3>
+      <p>Typical amplitude of each body's partial tide at the port: local equilibrium tide × the sea's response. Hover a row for gain and lag.</p>
+      <div class="legend"><span><i class="sw-diurnal"></i>once-daily</span><span><i class="sw-semi"></i>twice-daily</span></div>
+      <div class="chart" id="drivers"></div>
+    </div>
+    <div class="card">
+      <h3>Along the Central Sea</h3>
+      <p id="profile-note">Typical tide amplitude from the isthmus (left) to the open mouth (right).</p>
+      <div class="legend"><span><i class="sw-diurnal"></i>once-daily</span><span><i class="sw-semi"></i>twice-daily</span></div>
+      <div class="chart" id="profile"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 id="yearrange-title">Daily range through the year</h3>
+    <p>Top: each local day's range at the selected port. Bottom: declination of Tertius, Quartus and the Sun. Once-daily tides grow when the moons stand far from the equator, so the Central Sea ports (Kard most clearly) follow the lower panel; the open-coast ports follow the moons lining up instead.</p>
+    <div class="legend" id="decl-legend"></div>
+    <div class="chart" id="yearrange"></div>
+    <div class="chart" id="decl"></div>
+  </div>
+
+  <div class="card">
+    <h3>Under Qaringil's bridges</h3>
+    <p>An upper bound, not a model of the currents: it assumes the water north of the isthmus follows the plain equilibrium tide and that the whole level difference across a bridge gap becomes speed, with no friction. Positive current runs north out of the Central Sea.</p>
+    <div class="legend">
+      <span><i style="background: var(--bright)"></i>Qaringil</span>
+      <span><i style="background: rgba(140, 170, 220, 0.55)"></i>north of the isthmus</span>
+      <span><i style="background: #ff9f6b"></i>implied current</span>
+    </div>
+    <div class="chart" id="bridge-levels"></div>
+    <div class="chart" id="bridge-current"></div>
+  </div>
+
+  <footer>
+    Model and parameters: <code>tides.js</code>, <code>ports.js</code>, <code>tide_analysis.js</code>; method notes in <a href="docs.html?file=TIDES.md">TIDES.md</a>.
+    Command-line equivalents: <code>node analysis/tide_table.mjs</code> and <code>node analysis/port_report.mjs</code>.
+  </footer>
+
+  <script type="module" src="tides_page.js"></script>
+</body>
+</html>

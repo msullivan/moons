@@ -2,7 +2,7 @@
 // as seen from Qaia's surface at a configurable (lat, lon) location.
 // Zenith at center, horizon at rim. North up, east right.
 //
-// Coordinate pipeline:
+// Coordinate pipeline (stages 1–4 live in frame.js, shared with tides.js):
 //   1. Inertial ecliptic (x,y,z) — the simulation frame
 //   2. Equatorial basis (p1,p2,p3) — rotated 23.5° around y to align with Qaia's equator
 //   3. Body-fixed (b1,b2,b3) — spinning with Qaia's sidereal rotation
@@ -10,7 +10,8 @@
 //   5. Altitude / azimuth — from local frame components
 //   6. Screen (x,y) — azimuthal equidistant projection onto a circle
 
-import { PRIMUS_INCLINATION, QAIA_SIDEREAL_DAY, MEAN_SOLAR_DAY } from './bodies.js';
+import { QAIA_SIDEREAL_DAY, MEAN_SOLAR_DAY } from './bodies.js';
+import { AXIAL_TILT, bodyFixedMatrix, observerMatrix, apply, compose } from './frame.js';
 
 // Body indices to display
 const SKY_BODIES = [0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12];
@@ -51,14 +52,8 @@ export class SkyView {
     this._tracePoints = new Map();  // body index → [{alt, az}, ...]
     this._traceMaxLen = 2000;
 
-    // Precompute trig for the 23.5° axial tilt (ecliptic → equatorial rotation).
-    this.cosI = Math.cos(PRIMUS_INCLINATION);
-    this.sinI = Math.sin(PRIMUS_INCLINATION);
-    // Sidereal rotation rate (rad/s).  One full turn = one sidereal day.
-    this.omega = TAU / QAIA_SIDEREAL_DAY;
-
-    // Observer location on Qaia's surface.  Default: Qarangil (45°N, 30°E).
-    // setLocation() precomputes trig for the observer frame.
+    // Observer location on Qaia's surface.  Default: Qaringil (45°N, 30°E).
+    // setLocation() precomputes the observer-frame matrix.
     this.setLocation(45, 30);
 
     // Seeded star field (same PRNG as renderer.js but different seed)
@@ -70,12 +65,7 @@ export class SkyView {
   setLocation(latDeg, lonDeg) {
     this.latDeg = latDeg;
     this.lonDeg = lonDeg;
-    const phi = latDeg * PI / 180;
-    const lam = lonDeg * PI / 180;
-    this._cosPhi = Math.cos(phi);
-    this._sinPhi = Math.sin(phi);
-    this._cosLam = Math.cos(lam);
-    this._sinLam = Math.sin(lam);
+    this._obs = observerMatrix(latDeg, lonDeg);
   }
 
   resize(w, h) {
@@ -107,42 +97,8 @@ export class SkyView {
   // observer standing on Qaia's surface at (latitude φ, longitude λ)
   // relative to the sub-Primus meridian.
   //
-  // The transform has three stages:
-  //
-  //  (a) Ecliptic → equatorial: rotate (dx, dz) by the axial tilt I = 23.5°
-  //      around the y-axis.  This aligns the coordinate system with Qaia's
-  //      equator rather than the orbital plane.
-  //
-  //      Equatorial basis vectors (in inertial/ecliptic components):
-  //        e1(0) = (cosI, 0, −sinI)  — prime meridian at t=0 (toward Primus)
-  //        e2    = (0, 1, 0)         — 90° east in the equatorial plane
-  //        e3    = (sinI, 0, cosI)   — spin axis (north pole)
-  //
-  //      p1, p2, p3 = dot products of the direction vector with these basis
-  //      vectors.  They are still inertial (non-rotating).
-  //
-  //  (b) Inertial equatorial → body-fixed: apply Qaia's sidereal rotation
-  //      as a 2D rotation of (p1, p2) by angle θ = ω·t.  The spin-axis
-  //      component p3 is unaffected (rotation around an axis doesn't change
-  //      the component along that axis).
-  //
-  //      After rotation:
-  //        b1 = direction toward sub-Primus equatorial point
-  //        b2 = east at that point
-  //        b3 = north pole  (= p3, unchanged)
-  //
-  //  (c) Body-fixed → observer's local frame at (φ, λ):
-  //
-  //      The observer's zenith direction in body-fixed coords is:
-  //        ẑ = (cosφ·cosλ,  cosφ·sinλ,  sinφ)
-  //
-  //      Local east and north directions:
-  //        ê = (−sinλ,  cosλ,  0)
-  //        n̂ = (−sinφ·cosλ,  −sinφ·sinλ,  cosφ)
-  //
-  //      Project the body direction onto these to get:
-  //        zenith_component → altitude = arcsin(zen / dist)
-  //        east_component, north_component → azimuth = atan2(east, north)
+  // See frame.js for the ecliptic → body-fixed → observer stages.  From the
+  // local frame: altitude = arcsin(zen / dist), azimuth = atan2(east, north).
 
   altAz(bodyIndex) {
     const qaia = this.sim.bodies[1];
@@ -155,25 +111,8 @@ export class SkyView {
     const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
     if (dist === 0) return null;
 
-    // (a) Project onto equatorial basis — rotation of (x,z) by tilt I
-    const p1 = dx * this.cosI - dz * this.sinI;   // equatorial radial
-    const p2 = dy;                                  // equatorial east
-    const p3 = dx * this.sinI + dz * this.cosI;   // spin axis (north)
-
-    // (b) Rotate into body-fixed frame by sidereal angle θ
-    const theta = this.omega * this.renderTime;
-    const c = Math.cos(theta), s = Math.sin(theta);
-    const b1 =  c * p1 + s * p2;   // toward sub-Primus equatorial point
-    const b2 = -s * p1 + c * p2;   // east at sub-Primus point
-    const b3 = p3;                   // north pole (unchanged by rotation)
-
-    // (c) Project onto observer's local frame at (φ, λ)
-    const cP = this._cosPhi, sP = this._sinPhi;
-    const cL = this._cosLam, sL = this._sinLam;
-
-    const zen  =  b1 * cP * cL + b2 * cP * sL + b3 * sP;   // zenith
-    const east = -b1 * sL       + b2 * cL;                   // east
-    const nor  = -b1 * sP * cL - b2 * sP * sL + b3 * cP;   // north
+    const [b1, b2, b3] = apply(bodyFixedMatrix(this.renderTime), dx, dy, dz);
+    const [zen, east, nor] = apply(this._obs, b1, b2, b3);
 
     // Convert to altitude and azimuth
     const alt = Math.asin(clamp(zen / dist, -1, 1));
@@ -191,11 +130,7 @@ export class SkyView {
   // Convert body-fixed unit direction (b1, b2, b3) to (alt, az) using
   // the current observer lat/lon.  Shared by altAz() and trace drawing.
   _bodyFixedToAltAz(b1, b2, b3) {
-    const cP = this._cosPhi, sP = this._sinPhi;
-    const cL = this._cosLam, sL = this._sinLam;
-    const zen  =  b1 * cP * cL + b2 * cP * sL + b3 * sP;
-    const east = -b1 * sL       + b2 * cL;
-    const nor  = -b1 * sP * cL - b2 * sP * sL + b3 * cP;
+    const [zen, east, nor] = apply(this._obs, b1, b2, b3);
     return {
       alt: Math.asin(clamp(zen, -1, 1)),
       az:  Math.atan2(east, nor),
@@ -878,34 +813,7 @@ export class SkyView {
   // where row 0 = zenith, row 1 = east, row 2 = north.
 
   _starMatrix() {
-    const cI = this.cosI, sI = this.sinI;
-    const theta = this.omega * this.renderTime;
-    const c = Math.cos(theta), s = Math.sin(theta);
-    const cP = this._cosPhi, sP = this._sinPhi;
-    const cL = this._cosLam, sL = this._sinLam;
-
-    // Step 1+2: ecliptic (x,y,z) → body-fixed (b1,b2,b3)
-    // b1 = c·cI·x + s·y - c·sI·z
-    // b2 = -s·cI·x + c·y + s·sI·z
-    // b3 = sI·x + cI·z
-    const a00 = c * cI,  a01 = s,  a02 = -c * sI;
-    const a10 = -s * cI, a11 = c,  a12 = s * sI;
-    const a20 = sI,      a21 = 0,  a22 = cI;
-
-    // Step 3: body-fixed (b1,b2,b3) → observer (zen,east,nor)
-    // zen  = cP·cL·b1 + cP·sL·b2 + sP·b3
-    // east = -sL·b1 + cL·b2
-    // nor  = -sP·cL·b1 - sP·sL·b2 + cP·b3
-    const o00 = cP * cL, o01 = cP * sL, o02 = sP;
-    const o10 = -sL,     o11 = cL,      o12 = 0;
-    const o20 = -sP * cL, o21 = -sP * sL, o22 = cP;
-
-    // Compose: M = O × A
-    return [
-      o00*a00 + o01*a10 + o02*a20,  o00*a01 + o01*a11 + o02*a21,  o00*a02 + o01*a12 + o02*a22,
-      o10*a00 + o11*a10 + o12*a20,  o10*a01 + o11*a11 + o12*a21,  o10*a02 + o11*a12 + o12*a22,
-      o20*a00 + o21*a10 + o22*a20,  o20*a01 + o21*a11 + o22*a21,  o20*a02 + o21*a12 + o22*a22,
-    ];
+    return compose(this._obs, bodyFixedMatrix(this.renderTime));
   }
 
 }
@@ -943,7 +851,7 @@ export function buildStars(count, seed) {
   }
   // Pole star — bright star on the spin axis (ecliptic coords of the north pole).
   // I = 23.5° axial tilt → ecliptic unit vector = (sinI, 0, cosI).
-  const I = 23.5 * PI / 180;
+  const I = AXIAL_TILT;
   stars.push([Math.sin(I), 0, Math.cos(I), 1.4, 0.9]);
   return stars;
 }

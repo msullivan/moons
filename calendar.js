@@ -58,7 +58,7 @@ export function primusMeanTime(t) {
 }
 
 // Time zones are whole-hour offsets from PMT, one per 15° of longitude
-// (east positive), so Qarangil at 30°E keeps PMT+2 and the Sun crosses its
+// (east positive), so Qaringil at 30°E keeps PMT+2 and the Sun crosses its
 // meridian near 12:00 local.
 export function zoneOffset(lonDeg) {
   return Math.round(lonDeg / 15);
