@@ -932,15 +932,15 @@ its middle (the "Along the Central Sea" chart, typical amplitudes over 120 days 
 | twice-daily | 39 cm | 31 | 9 | 32 | 31 | 36 | 77 | 76 |
 
 - **Qaringil** (head): once-daily tides pile up at the closed end. It's the most once-daily
-  port (F = 1.4): about half the days have one high water. Median daily range 1.8 m.
+  port (F = 1.4): most days (~60%) have one high water. Median daily range 1.8 m.
 - The twice-daily tide nearly vanishes ~280 km down the sea, among the northern islands.
   With Coriolis it's a rotating amphidrome rather than a 1-D node, and Kard, mid-sea, is
   clear of it.
 - **Kard** (mid-sea, Qamis shore): the smallest tides on the map, median 1.3 m, mostly twice
   daily (F = 0.7), led by Tertius.
 - **Jia** and **Templado** (the mouth): out of the sea's shelter, the twice-daily tide
-  doubles. Secundus and Tertius are about equal there, so a third of days have three high
-  waters. Median ~2.3–2.4 m.
+  doubles. Secundus and Tertius are about equal there, so over a quarter of days have three
+  high waters. Median ~2.3–2.4 m.
 
 Qaia's moons put tidal forcing all through 9.8–27.3 h, so no depth avoids resonance entirely.
 A Venice-like *microtidal* Qaringil (< 1 m) isn't reachable with an open sea: Qaia's
@@ -951,15 +951,17 @@ narrow inlets (not modelled).
 
 | Port | Character | Largest partial tides | Median / spring daily range | Highs per day |
 |---|---|---|---|---|
-| Qaringil | Mixed, on the edge of diurnal (F = 1.4) | Tertius D 40, Tertius SD 36, Quartus D 19 cm | 1.8 / 2.5 m | 1: 49%, 2: 48% |
-| Kard | Mixed, mainly semidiurnal (F = 0.7) | Tertius SD 37, Tertius D 25, Quartus SD 14 cm | 1.3 / 1.9 m | 1: 21%, 2: 74% |
-| Jia | Mixed, mainly semidiurnal (F = 0.7) | Secundus SD 32, Tertius SD 30, Tertius D 29 cm | 2.4 / 3.5 m | 2: 57%, 3+: 35% |
-| Templado | Mixed, mainly semidiurnal (F = 0.6) | Secundus SD 41, Tertius SD 36, Tertius D 27 cm | 2.3 / 3.4 m | 2: 59%, 3+: 31% |
-| Qis (river mouth) | Semidiurnal, Secundus-dominated (F = 0.19) | Secundus SD 150, Tertius SD 61, Quartus SD 36 cm | 4.3 / 5.7 m | 2: 54%, 3+: 45% |
-| Freeport | Semidiurnal (F = 0.24) | Secundus SD 133, Tertius SD 104, Quartus SD 54 cm | 4.9 / 6.5 m | 2: 57%, 3+: 39% |
+| Qaringil | Mixed, on the edge of diurnal (F = 1.4) | Tertius D 40, Tertius SD 36, Quartus D 19 cm | 1.8 / 2.5 m | 1: 59%, 2: 37% |
+| Kard | Mixed, mainly semidiurnal (F = 0.7) | Tertius SD 37, Tertius D 25, Quartus SD 14 cm | 1.3 / 1.9 m | 1: 30%, 2: 68% |
+| Jia | Mixed, mainly semidiurnal (F = 0.7) | Secundus SD 32, Tertius SD 30, Tertius D 29 cm | 2.4 / 3.5 m | 2: 58%, 3+: 29% |
+| Templado | Mixed, mainly semidiurnal (F = 0.6) | Secundus SD 41, Tertius SD 36, Tertius D 27 cm | 2.3 / 3.4 m | 2: 59%, 3+: 27% |
+| Qis (river mouth) | Semidiurnal, Secundus-dominated (F = 0.19) | Secundus SD 150, Tertius SD 61, Quartus SD 36 cm | 4.3 / 5.7 m | 2: 54%, 3+: 44% |
+| Freeport | Semidiurnal (F = 0.24) | Secundus SD 133, Tertius SD 104, Quartus SD 54 cm | 4.9 / 6.5 m | 2: 57%, 3+: 38% |
 
 F is the form number, Σ diurnal / Σ semidiurnal partial-tide amplitudes. Spring range is
-the 90th percentile of the daily range. Qis's shelf resonates near Secundus's 9.9 h, so Qis is
+the 90th percentile of the daily range. A high water must stand at least 10 cm above the
+lows either side of it to count (`findExtrema`); smaller bumps are absorbed, as a tide
+table would. Qis's shelf resonates near Secundus's 9.9 h, so Qis is
 Secundus-dominated. Retune the Qis shelf in `ocean_grid.js` (wider or shallower) if it should
 be Tertius-dominated. The tides are those of an invented bathymetry; see `ports.js` for each
 port's map coordinates (~1.72 km per map pixel, anchored on Qaringil and Qama).

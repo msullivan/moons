@@ -20,7 +20,7 @@ export const PORTS = [
   {
     id: 'qaringil', name: 'Qaringil', lat: 44.51, lon: 29.71, sea: 'Central Sea',
     notes: 'Island city just south of the isthmus (map px ~146,367), at the head of the Central Sea. ' +
-           'Mixed tide on the edge of once-daily: about half the days have a single high water, ' +
+           'Mixed tide on the edge of once-daily: most days (~60%) have a single high water, ' +
            'largest when Tertius stands far from the equator; median daily range ~1.8 m.',
   },
   {
@@ -32,7 +32,7 @@ export const PORTS = [
     id: 'jia', name: 'Jia', lat: 37.23, lon: 31.83, sea: 'Central Sea',
     notes: 'Peninsula capital of Edrad, on the tip of the peninsula near the mouth of the ' +
            'Central Sea (px ~247,840). Twice-daily tides from Secundus and Tertius about equally, ' +
-           'so the highs come irregularly — three in a day about a third of the time; median range ~2.4 m.',
+           'so the highs come irregularly — three in a day on more than a quarter of days; median range ~2.4 m.',
   },
   {
     id: 'templado', name: 'Templado', lat: 35.77, lon: 29.22, sea: 'Central Sea',

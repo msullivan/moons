@@ -229,9 +229,11 @@ export function gapCurrent(strait, hA, hB, FA, FB, dt) {
 
 // Find high and low waters in a uniformly sampled series.  Each extremum is
 // refined with a parabola through its three samples.  Wiggles smaller than
-// minProminence (m) are absorbed, so highs and lows strictly alternate.
+// minProminence (m) are absorbed, so highs and lows strictly alternate.  The
+// default, 10 cm, is about what a tide table would bother to print: below it,
+// a mixed tide's second high is a stand or a slight bump, not a high water.
 // Returns [{ t, h, type: 'H' | 'L' }].
-export function findExtrema(t0, dt, h, minProminence = 0.02) {
+export function findExtrema(t0, dt, h, minProminence = 0.10) {
   const raw = [];
   for (let k = 1; k < h.length - 1; k++) {
     const a = h[k - 1], b = h[k], c = h[k + 1];
