@@ -30,5 +30,7 @@ jobs:
           cp MOONS.md TIDES.md NAVIGATION.md dist/
           mkdir -p dist/analysis
           cp analysis/tide_plot.png analysis/primsine.png dist/analysis/
+          mkdir -p dist/docket
+          cp docket/map-nice-marked-flat.jpeg dist/docket/
           sudo apt-get install -y rclone
           rclone sync dist/ ":sftp,host=$DEPLOY_HOST,user=$DEPLOY_USER,key_file=$HOME/.ssh/deploy_key:$DEPLOY_TARGET"
