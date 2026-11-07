@@ -1022,7 +1022,15 @@ from one run. Ranges and twice-daily partials are fine.
 **Open questions**: retune the Qis shelf (wider/shallower) if Qis should be Tertius-dominated;
 refit the port models (`ports.js`) to the 2-D results so `tides.html` agrees with the map.
 
-**Speed**: ~5.8 s per simulated day on a 1.2 GHz laptop core (~2 ms per 40 s step). From a
+**Speed**: the CPU solver takes ~5.8 s per simulated day on a 1.2 GHz laptop core (~2 ms per
+40 s step). The WebGL2 solver (`ocean2d_gl.js`: the same scheme as four fragment-shader passes
+per step on float textures) takes ~0.44 s per day on the laptop's integrated Intel GPU, ~20×
+faster, and agrees with the CPU solver to ~0.01 mm after a day (`tests/ocean_gpu_check.mjs`).
+The Tide map uses it when WebGL2 float render targets are available (`?engine=cpu` forces the
+CPU): ready in ~2 s instead of ~22 s, and playing at up to ~2.5 sim days per second (the
+solver's own limit). The 48 h history behind the point chart stays on the GPU (a texture
+array, one layer per 12-min snapshot); reading the whole field back every snapshot instead
+stalled the GPU and cost ~95% of the frame time. From a
 start at the equilibrium tide with still water, the start-up transient decays ~3× per day:
 after 3 days the field is within ~18 cm (max over the map) of a 6-day spin-up.
 

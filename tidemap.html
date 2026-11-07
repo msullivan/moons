@@ -118,6 +118,10 @@
         <option value="2" selected>2 hours / s</option>
         <option value="4">4 hours / s</option>
         <option value="8">8 hours / s</option>
+        <option value="16">16 hours / s</option>
+        <option value="24">1 day / s</option>
+        <option value="48">2 days / s</option>
+        <option value="96">4 days / s</option>
       </select>
     </label>
     <label>Show
@@ -170,7 +174,7 @@
   </div>
 
   <footer>
-    Model: <code>ocean_grid.js</code> (mask, invented bathymetry), <code>ocean2d.js</code> (solver), run in <code>tidemap_worker.js</code>.
+    Model: <code>ocean_grid.js</code> (mask, invented bathymetry), <code>ocean2d_gl.js</code> (WebGL solver; <code>ocean2d.js</code> on the CPU when WebGL2 isn't available), run in <code>tidemap_worker.js</code>.
     Notes and caveats in <a href="docs.html?file=TIDES.md">TIDES.md</a> (2-D Tide Model). Each new date spins the ocean up for 3 simulated days first.
   </footer>
 

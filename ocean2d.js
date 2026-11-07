@@ -154,15 +154,17 @@ export class Ocean2D {
     this._step = 0;
   }
 
-  // Integrate from frame0 (at this.time) to frame1 (at this.time + span),
-  // interpolating the forcing linearly.  span must be a multiple of dt.
-  advance(frame0, frame1, span) {
+  // Integrate across the interval from frame0 to frame1 (span seconds),
+  // interpolating the forcing linearly.  span must be a multiple of dt.  By
+  // default runs the whole interval; steps [s0, s1) run only part of it (the
+  // caller tracks where it is), so playback isn't tied to the frame spacing.
+  advance(frame0, frame1, span, s0 = 0, s1 = null) {
     forcingTensor(frame0, this._A0);
     forcingTensor(frame1, this._A1);
     const n = Math.round(span / this.dt), E = this.eqEvery;
     if (Math.abs(n * this.dt - span) > 1e-6) throw new Error(`advance: span ${span} s is not a multiple of dt ${this.dt} s`);
     const A = this._A;
-    for (let s = 0; s < n; s++) {
+    for (let s = s0; s < (s1 ?? n); s++) {
       if (this._step % E === 0) {
         // η_eq for the next E steps, evaluated at their midpoint.
         const w = Math.min(1, (s + E / 2) / n);
@@ -184,6 +186,14 @@ export class Ocean2D {
     const { nx, ny, dt, dx, eta, eq, U, V, rowLo, rowHi } = this;
     const NX1 = nx + 1;
 
+    // Gap momentum, from the levels at the start of the step (the GPU solver
+    // does the same, in a pass before continuity).
+    for (const gp of this.gaps) {
+      const [kA, kB] = gp.cells;
+      const d = (eta[kA] - eq[kA]) - (eta[kB] - eq[kB]);
+      gp.u = (gp.u + dt * G * d / gp.length) / (1 + dt * gp.drag * Math.abs(gp.u));
+    }
+
     // Continuity (closed faces carry zero transport).
     const idx = dt / dx;
     for (let j = 0; j < ny; j++) {
@@ -192,11 +202,8 @@ export class Ocean2D {
         eta[rc + i] -= idx * (U[ru + i + 1] - U[ru + i] + V[rc + nx + i] - V[rc + i]);
     }
 
-    // Gaps: momentum, then move the volume.
+    // Gaps: move the volume.
     for (const gp of this.gaps) {
-      const [kA, kB] = gp.cells;
-      const d = (eta[kA] - eq[kA]) - (eta[kB] - eq[kB]);
-      gp.u = (gp.u + dt * G * d / gp.length) / (1 + dt * gp.drag * Math.abs(gp.u));
       const vol = gp.u * gp.area * dt;
       for (const [k, w] of gp.foot[0]) eta[k] -= vol * w;
       for (const [k, w] of gp.foot[1]) eta[k] += vol * w;
@@ -257,6 +264,43 @@ export class Ocean2D {
         const vc = 0.5 * (V[j * nx + i] * iHv[j * nx + i] + V[(j + 1) * nx + i] * iHv[(j + 1) * nx + i]);
         out[j * nx + i] = Math.hypot(uc, vc);
       }
+    return out;
+  }
+
+  // ── readout (shared with Ocean2DGL) ──
+  // Region { i0, j0, w, h } of cells; out[j·w + i] for cell (i0 + i, j0 + j).
+  readEta(region, out = new Float32Array(region.w * region.h)) {
+    const { nx, eta } = this;
+    for (let j = 0; j < region.h; j++)
+      for (let i = 0; i < region.w; i++) out[j * region.w + i] = eta[(region.j0 + j) * nx + region.i0 + i];
+    return out;
+  }
+
+  readSpeed(region, out = new Float32Array(region.w * region.h)) {
+    const sp = this.speed();
+    for (let j = 0; j < region.h; j++)
+      for (let i = 0; i < region.w; i++) out[j * region.w + i] = sp[(region.j0 + j) * this.nx + region.i0 + i];
+    return out;
+  }
+
+  gapCurrents() { return this.gaps.map(gp => gp.u); }
+
+  // ── water-level history (shared with Ocean2DGL) ──
+  // A ring of `len` snapshots of η over a region; the caller picks the slot.
+  initHistory(region, len) {
+    this.hist = { region, len, data: new Int16Array(len * region.w * region.h) };   // cm
+  }
+
+  recordHistory(slot) {
+    const { region, data } = this.hist, n = region.w * region.h, base = slot * n, { nx, eta } = this;
+    for (let j = 0; j < region.h; j++)
+      for (let i = 0; i < region.w; i++) data[base + j * region.w + i] = Math.round(100 * eta[(region.j0 + j) * nx + region.i0 + i]);
+  }
+
+  // η (m) at region cell m in every slot, indexed by slot.
+  readHistory(m) {
+    const { region, len, data } = this.hist, n = region.w * region.h, out = new Float32Array(len);
+    for (let s = 0; s < len; s++) out[s] = data[s * n + m] / 100;
     return out;
   }
 

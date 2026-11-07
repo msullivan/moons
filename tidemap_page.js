@@ -28,6 +28,9 @@ const state = {
   frame: null, prevPorts: null, rate: null, lut: null,
 };
 
+// Test hook (tests/tidemap_rate_check.mjs): the model time of the shown frame.
+window.__tidemapTime = () => state.frame?.t ?? null;
+
 // ── worker ──────────────────────────────────────────────────────────────
 const worker = new Worker('tidemap_worker.js', { type: 'module' });
 worker.onmessage = ({ data: m }) => {
@@ -171,9 +174,10 @@ $('play').onclick = () => {
   state.playing = !state.playing;
   $('play').textContent = state.playing ? 'Pause' : 'Play';
   state.lastReq = performance.now();
-  state.lastFrameWall = null; state.rate = null;
+  anchor();
+  state.rate = null; state.rateWin = [];
 };
-$('speed').onchange = e => { state.speed = +e.target.value; };
+$('speed').onchange = e => { state.speed = +e.target.value; anchor(); state.rate = null; state.rateWin = []; };
 $('layer').onchange = e => { state.show = e.target.value; setScaleOptions(); requestFrame(0); };
 $('scale').onchange = e => { state.scale = +e.target.value; drawColorbar(); if (state.frame) render(state.frame); };
 $('date').onchange = () => start();
@@ -188,7 +192,7 @@ function start() {
   state.probeSeries = { t: [], h: [] };
   $('play').disabled = true;
   showOverlay('Starting…', 0);
-  worker.postMessage({ type: 'start', run: state.run, date, spinDays: SPIN_DAYS });
+  worker.postMessage({ type: 'start', run: state.run, date, spinDays: SPIN_DAYS, engine: params.get('engine') ?? 'auto' });
 }
 
 function requestFrame(seconds) {
@@ -198,15 +202,23 @@ function requestFrame(seconds) {
   worker.postMessage({ type: 'step', run: state.run, seconds, probe: state.probe?.cell ?? null, layer: state.show });
 }
 
-// Playback: each request asks for the sim time that has elapsed at the chosen
-// speed, capped at a quarter second's worth so a slow machine plays smoothly
-// (just slower) instead of jumping.
+// Playback keeps a target: sim time = anchor + speed × wall time since the
+// anchor, and each request asks for the gap between the target and where the
+// model is, so the worker's rounding to whole steps never loses time.  If the
+// model can't keep up, the gap is capped at a quarter second's worth and the
+// anchor slides forward, so a slow machine plays slower instead of jumping.
+const OCEAN_DT = 40;
+function anchor(now = performance.now()) {
+  state.anchorWall = now;
+  state.anchorSim = state.frame?.t ?? 0;
+}
 function tick(now) {
   requestAnimationFrame(tick);
-  if (!state.playing || !state.ready || state.inFlight) return;
-  const want = state.speed * 3600;
-  const seconds = Math.min(want * (now - state.lastReq) / 1000, want / 4);
-  if (seconds >= 360) requestFrame(seconds);
+  if (!state.playing || !state.ready || state.inFlight || !state.frame) return;
+  const want = state.speed * 3600, cap = want / 4;
+  let gap = state.anchorSim + want * (now - state.anchorWall) / 1000 - state.frame.t;
+  if (gap > cap) { state.anchorSim -= gap - cap; gap = cap; }
+  if (gap >= OCEAN_DT) requestFrame(gap);
 }
 requestAnimationFrame(tick);
 
@@ -216,21 +228,23 @@ function onFrame(m) {
   state.inFlight = false;
   if (first) {
     state.ready = true;
+    state.frame = m; anchor();
     $('overlay').hidden = true;
     $('play').disabled = false;
     if (state.probe) worker.postMessage({ type: 'probe', run: state.run, cell: state.probe.cell });
   }
   // Achieved playback rate: sim hours per wall-clock second between frames.
+  // Achieved rate over the last ~2 s of frames.
   const nowWall = performance.now();
-  if (state.frame && !first && state.playing && state.lastFrameWall) {
-    const r = (m.t - state.frame.t) / 3600 / Math.max((nowWall - state.lastFrameWall) / 1000, 1e-3);
-    if (m.t > state.frame.t) state.rate = state.rate == null ? r : 0.85 * state.rate + 0.15 * r;
-  }
-  state.lastFrameWall = nowWall;
+  if (state.playing && !first) {
+    const w = state.rateWin ??= [];
+    w.push([nowWall, m.t]);
+    while (w.length > 2 && nowWall - w[0][0] > 2000) w.shift();
+    if (w.length > 1 && nowWall > w[0][0]) state.rate = (m.t - w[0][1]) / 3600 / ((nowWall - w[0][0]) / 1000);
+  } else state.rateWin = [];
   if (m.probe && m.probe.cell === state.probe?.cell) {
-    const s = state.probeSeries;
-    if (!s.t.length || m.t > s.t[s.t.length - 1]) { s.t.push(m.t); s.h.push(m.probe.h); }
-    while (s.t.length && s.t[0] < m.t - HIST_H * 3600) { s.t.shift(); s.h.shift(); }
+    const { t, h } = m.probe.series;
+    state.probeSeries = { t: [...t, m.t], h: [...h, m.probe.h] };
   }
   state.prevPorts = state.frame?.ports ?? null;
   state.frame = m;
@@ -313,7 +327,8 @@ function buildPortsTable() {
 function updatePanel(m) {
   const lt = localTime(m.t, QARINGIL_LON);
   $('clock').innerHTML = `${lt.date.replace(' AD', '')} ${lt.clock} <small>${zoneName(QARINGIL_LON)} (Qaringil)</small>`;
-  $('rate').textContent = state.playing && state.rate != null ? `running at ${state.rate.toFixed(1)} sim hours per second` : (state.playing ? '' : 'paused');
+  const eng = m.engine === 'gpu' ? 'WebGL' : 'CPU';
+  $('rate').textContent = `${eng} · ` + (state.playing ? (state.rate != null ? `running at ${state.rate.toFixed(1)} sim hours per second` : '') : 'paused');
   state.info.ports.forEach((p, n) => {
     const h = m.ports[n];
     $(`port-${n}`).textContent = `${h >= 0 ? '+' : '−'}${Math.abs(h).toFixed(2)} m`;

@@ -1,5 +1,5 @@
 // Screenshot tidemap.html (2-D tide model over the map) and report console errors.
-//   node tests/screenshot_tidemap.mjs [date] [--mobile]
+//   node tests/screenshot_tidemap.mjs [date] [--mobile] [--gpu] [--engine=cpu|gpu]
 // Waits for the spin-up, screenshots, plays for a few seconds, screenshots again.
 import { chromium } from 'playwright';
 import { createServer } from 'http';
@@ -23,19 +23,23 @@ const mobile = args.includes('--mobile');
 const date = args.find(a => /^\d{4}-/.test(a)) ?? '2253-02-01';
 const views = mobile ? [[412, 915, 'mobile']] : [[1280, 900, 'desktop'], [412, 915, 'mobile']];
 
-const browser = await chromium.launch();
+// --gpu: use the real GPU (Vulkan) even headless; otherwise SwiftShader (software WebGL).
+const gpuFlags = args.includes('--gpu') ? ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=vulkan', '--enable-features=Vulkan'] : [];
+const engine = args.find(a => a.startsWith('--engine='))?.slice(9) ?? 'auto';
+const browser = await chromium.launch({ args: gpuFlags });
 for (const [w, h, name] of views) {
   const page = await browser.newPage({ viewport: { width: w, height: h } });
-  page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.log(`[${name} ${m.type()}]`, m.text()); });
+  page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning' || m.text().startsWith('TIMING')) console.log(`[${name} ${m.type()}]`, m.text()); });
   page.on('pageerror', e => console.log(`[${name} pageerror]`, e.message));
   const t = Date.now();
-  await page.goto(`http://localhost:${port}/tidemap.html?date=${date}`);
+  await page.goto(`http://localhost:${port}/tidemap.html?date=${date}&engine=${engine}`);
   await page.waitForFunction(() => document.getElementById('overlay').hidden ||
                                    document.getElementById('overlay-msg').classList.contains('error'), null, { timeout: 180000 });
   const err = await page.evaluate(() => document.getElementById('overlay').hidden ? null : document.getElementById('overlay-msg').textContent);
   if (err) { console.log(`${name}: error overlay: ${err}`); await page.screenshot({ path: `/tmp/tidemap_${name}.png` }); continue; }
   console.log(`${name}: ready after ${((Date.now() - t) / 1000).toFixed(1)} s`);
   await page.screenshot({ path: `/tmp/tidemap_${name}_start.png`, fullPage: !mobile && name === 'desktop' ? false : true });
+  if (args.includes('--fast')) await page.selectOption('#speed', args.find(a => a.startsWith('--speed='))?.slice(8) ?? '24');
   await page.click('#play');
   await page.waitForTimeout(5000);
   console.log(`${name}: ${await page.textContent('#clock')} — ${await page.textContent('#rate')}`);

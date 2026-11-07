@@ -105,6 +105,7 @@ tide_analysis.js — Ephemeris recording, port runs, partial-tide fits, range st
 ocean_grid.js   — 2-D tide model grid: land/sea mask + invented bathymetry (regions, shelves)
 ocean_mask.json — Land/sea mask, 6 px cells, from docket/tools/sea_mask.py
 ocean2d.js      — 2-D shallow-water tide solver (C grid, Coriolis, friction, sponge, isthmus gap)
+ocean2d_gl.js   — WebGL2 version of the same solver (~20× faster); createOcean() picks GPU or CPU
 tidemap.html    — Tide map page: live 2-D tide heatmap over the map (tidemap_page.js + tidemap_worker.js)
 tides.html      — Port tides page: tide tables and charts, computed live in tides_worker.js
 tides_page.js   — tides.html UI and SVG charts;  tides_worker.js — runs the sim + tide models
@@ -112,7 +113,9 @@ tests/          — Playwright screenshot and stability scripts
   tide_channel_check.mjs  — Channel model vs analytic quarter-wave response
   skyview_frame_check.mjs — Dump sky-view transforms; diff before/after frame refactors
   screenshot_tides.mjs    — Screenshot tides.html (desktop + mobile), report console errors
-  screenshot_tidemap.mjs  — Screenshot tidemap.html after spin-up and a few seconds of play
+  screenshot_tidemap.mjs  — Screenshot tidemap.html after spin-up and a few seconds of play (--gpu for real GPU)
+  ocean_gpu_check.mjs     — WebGL solver vs CPU solver: field difference and speed (--gpu for real GPU)
+  tidemap_rate_check.mjs  — tidemap.html playback: achieved vs requested speed for each setting
 analysis/       — Node.js analysis scripts (no browser needed)
   moon_stats.mjs  — Physical/observational stats for all moons → MOONS.md
   tide_sim.mjs    — Tidal periods and 72h simulation → TIDES.md
@@ -201,6 +204,12 @@ shortcuts masked the extremes, making it look intermittent. A standalone pixel-c
 across α = 5°–175° at multiple radii revealed complete phase inversion in seconds.
 
 ### Tidal notes
+
+- Headless Chromium renders WebGL with SwiftShader (software, slower than the CPU solver).
+  Pass `--enable-gpu --ignore-gpu-blocklist --use-angle=vulkan --enable-features=Vulkan`
+  (the `--gpu` flag of the tide test scripts) to use this machine's Intel GPU.
+- `ocean2d.js` and `ocean2d_gl.js` must stay in step: any change to the equations goes in
+  both, then `node tests/ocean_gpu_check.mjs 1 --gpu` (expect ≲0.1 mm difference).
 
 - Port tides (`tides.js`/`ports.js`) are driven by the sim's real geometry, so they
   depend on the 200-yr snapshot and `MOON_PARAMS`; rerun `analysis/port_report.mjs all`
