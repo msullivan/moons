@@ -111,7 +111,6 @@
     .ev.H .kind { color: #8fd0ff; }
     .ev.L .kind { color: #c9a0ff; }
 
-    footer { margin-top: 40px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
 
     @media (max-width: 560px) { body { padding: 20px 14px 48px; } }
   </style>
@@ -127,7 +126,6 @@
   </nav>
 
   <h1>Port tides</h1>
-  <p class="muted">Tide predictions computed in your browser from the N-body simulation: each moon's real position drives the equilibrium tide, and each port's response — fitted to the 2-D <a href="tidemap.html">tide map</a> model of the seas — turns it into local high and low water. Heights are metres from mean sea level; times are local zone time.</p>
 
   <div class="controls">
     <label>Port <select id="port"></select></label>
@@ -162,7 +160,6 @@
 
   <div class="card">
     <h3>Every port over one year</h3>
-    <p>Daily range is a day's highest minus lowest water; neap and spring are its 10th and 90th percentiles. HW = high waters per day (share of days), counting a high only if it stands 10 cm above the lows either side. The form number is Σ once-daily ÷ Σ twice-daily partial-tide amplitudes: below 0.25 is twice-daily, above 3 once-daily.</p>
     <div class="tablewrap"><table id="summary"></table></div>
   </div>
 
@@ -174,13 +171,11 @@
   <div class="grid2">
     <div class="card">
       <h3>What drives each port</h3>
-      <p>Typical amplitude of each body's partial tide at the port: local equilibrium tide × the sea's response. Hover a row for gain and lag.</p>
       <div class="legend"><span><i class="sw-diurnal"></i>once-daily</span><span><i class="sw-semi"></i>twice-daily</span></div>
       <div class="chart" id="drivers"></div>
     </div>
     <div class="card">
       <h3>Along the Central Sea</h3>
-      <p id="profile-note">Typical tide amplitude down the middle of the sea.</p>
       <div class="legend"><span><i class="sw-diurnal"></i>once-daily</span><span><i class="sw-semi"></i>twice-daily</span></div>
       <div class="chart" id="profile"></div>
     </div>
@@ -188,7 +183,6 @@
 
   <div class="card">
     <h3 id="yearrange-title">Daily range through the year</h3>
-    <p>Top: each local day's range at the selected port. Bottom: declination of Tertius, Quartus and the Sun. Once-daily tides grow when the moons stand far from the equator, so Qaringil, the most once-daily port, follows the lower panel; the twice-daily ports follow the moons lining up instead.</p>
     <div class="legend" id="decl-legend"></div>
     <div class="chart" id="yearrange"></div>
     <div class="chart" id="decl"></div>
@@ -196,7 +190,6 @@
 
   <div class="card">
     <h3 id="bridge-title">Under the Great Western Bridge</h3>
-    <p>The one deep gap through the isthmus, 1.6 km wide and 60 m deep, like the Golden Gate. Top: the water level at either end. Bottom: the current through it, driven by the difference and held back by friction and the losses at the narrows, as in the 2-D model. Positive current runs north, out of the Central Sea.</p>
     <div class="legend">
       <span><i style="background: var(--bright)"></i>Central Sea side</span>
       <span><i style="background: rgba(140, 170, 220, 0.55)"></i>north of the isthmus</span>
@@ -206,10 +199,6 @@
     <div class="chart" id="bridge-current"></div>
   </div>
 
-  <footer>
-    Model: <code>tides.js</code>, <code>tide_analysis.js</code>, ports in <code>ports.js</code>, fitted weights in <code>port_response.js</code> (from <code>analysis/fit_port_response.mjs</code>); method notes in <a href="docs.html?file=TIDES.md">TIDES.md</a>.
-    Command-line equivalents: <code>node analysis/tide_table.mjs</code> and <code>node analysis/port_report.mjs</code>.
-  </footer>
 
   <script type="module" src="tides_page.js"></script>
 </body>

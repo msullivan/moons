@@ -226,8 +226,8 @@ function drawWindow() {
   const lat = `${Math.abs(port.lat).toFixed(2)}°${port.lat >= 0 ? 'N' : 'S'}`, lon = `${Math.abs(port.lon).toFixed(2)}°${port.lon >= 0 ? 'E' : 'W'}`;
   const info = $('portinfo');
   info.replaceChildren();
-  const b = document.createElement('b'); b.textContent = `${port.name}, ${lat} ${lon}, times ${r.zone}. `;
-  info.append(b, document.createTextNode(port.notes ?? ''));
+  const b = document.createElement('b'); b.textContent = `${port.name}, ${lat} ${lon}, times ${r.zone}`;
+  info.append(b);
 
   // Table: one row per local day.
   const table = $('tidetable');
@@ -384,9 +384,6 @@ function drawDrivers() {
 
 function drawProfile() {
   const r = yearData, b = r.basin;
-  $('profile-note').textContent = `Typical tide amplitude down the middle of the sea, from Qaringil under the isthmus (left), ` +
-    `past the islands and Jia, to the open water south of Templado (right), ${b.lengthKm.toFixed(0)} km. ` +
-    `Ports are marked where they sit along it.`;
   const xs = r.profile.map(p => p.km);
   const series = [
     { name: 'once-daily', color: SP_COLOR.diurnal, xs, ys: r.profile.map(p => p.diurnal * 100) },

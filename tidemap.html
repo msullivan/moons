@@ -92,7 +92,6 @@
     .chart .line { fill: none; stroke: var(--bright); stroke-width: 1.5; }
     .chart .now { fill: #ffb38a; }
 
-    footer { margin-top: 32px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
     @media (max-width: 560px) { body { padding: 20px 14px 48px; } }
   </style>
 </head>
@@ -107,7 +106,6 @@
   </nav>
 
   <h1>Tide map</h1>
-  <p class="muted">The tide across Qamis, computed live in your browser: the N-body simulation moves the moons, and a 2-D shallow-water model of the seas around the map (invented depths, Coriolis, one gap in the isthmus) responds. Colour is water level relative to mean sea level. Click the sea to chart any point.</p>
 
   <div class="controls">
     <label>Date <input type="date" id="date" min="2253-01-20" max="2299-12-31" value="2253-02-01"></label>
@@ -168,15 +166,9 @@
       <div class="card">
         <h3>Great Western Bridge</h3>
         <div id="gap">—</div>
-        <p>The one gap in the isthmus, sized like the Golden Gate (1.6 km wide, 60 m deep). Current through it, from the level difference across the isthmus.</p>
       </div>
     </aside>
   </div>
-
-  <footer>
-    Model: <code>ocean_grid.js</code> (mask, invented bathymetry), <code>ocean2d.js</code> (WebGL2 solver), run in <code>tidemap_worker.js</code>.
-    Notes and caveats in <a href="docs.html?file=TIDES.md">TIDES.md</a> (2-D Tide Model). Each new date spins the ocean up for 3 simulated days first.
-  </footer>
 
   <script type="module" src="tidemap_page.js"></script>
 </body>
