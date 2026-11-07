@@ -104,18 +104,22 @@ ports.js        — Tide ports and basins (worldbuilding parameters, map-derived
 tide_analysis.js — Ephemeris recording, port runs, partial-tide fits, range stats (Node + browser)
 ocean_grid.js   — 2-D tide model grid: land/sea mask + invented bathymetry (regions, shelves)
 ocean_mask.json — Land/sea mask, 6 px cells, from docket/tools/sea_mask.py
+ocean2d.js      — 2-D shallow-water tide solver (C grid, Coriolis, friction, sponge, isthmus gap)
+tidemap.html    — Tide map page: live 2-D tide heatmap over the map (tidemap_page.js + tidemap_worker.js)
 tides.html      — Port tides page: tide tables and charts, computed live in tides_worker.js
 tides_page.js   — tides.html UI and SVG charts;  tides_worker.js — runs the sim + tide models
 tests/          — Playwright screenshot and stability scripts
   tide_channel_check.mjs  — Channel model vs analytic quarter-wave response
   skyview_frame_check.mjs — Dump sky-view transforms; diff before/after frame refactors
   screenshot_tides.mjs    — Screenshot tides.html (desktop + mobile), report console errors
+  screenshot_tidemap.mjs  — Screenshot tidemap.html after spin-up and a few seconds of play
 analysis/       — Node.js analysis scripts (no browser needed)
   moon_stats.mjs  — Physical/observational stats for all moons → MOONS.md
   tide_sim.mjs    — Tidal periods and 72h simulation → TIDES.md
   tide_table.mjs  — High/low water table for a port: `node analysis/tide_table.mjs kard 2253-03-01 7`
   port_report.mjs — Port tuning diagnostics (partial tides, ranges, --plot → analysis/ports/)
   bathymetry_plot.mjs — Render ocean_grid.js depths over the map → analysis/bathymetry.png
+  ocean_run.mjs   — Run the 2-D model: speed, ranges and partial tides at ports vs port models
 ```
 
 Files use ES modules — imports are explicit. To add or change a moon, edit `bodies.js` only.

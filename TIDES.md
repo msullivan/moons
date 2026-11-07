@@ -959,3 +959,102 @@ friction (~20 lines in `Channel`). That needs gap widths and depths, whether the
 water is open ocean or another enclosed sea, and whether the bridges have large flow-blocking
 piers. Not yet decided. The Port tides page uses a crude upper bound instead: northern side =
 equilibrium tide, speed = `√(2g|Δη|)`.
+
+## 2-D Tide Model (the Qamis map)
+
+A depth-averaged shallow-water model on the flat-sea map (`ocean_grid.js`, `ocean2d.js`),
+shown live on the **Tide map** page (`tidemap.html`). Unlike the port models it has the real
+coastline, Coriolis, and the open ocean around the map, so it produces amphidromes,
+coastal amplification and currents on its own.
+
+### Grid and bathymetry
+
+- **Mask**: `docket/tools/sea_mask.py` → `ocean_mask.json`, 6 map px ≈ 10.3 km cells. The map
+  is treated as flat with square pixels (1.71 km/px); lat/lon (for forcing and Coriolis) use
+  the `ports.js` conversion. Lettering in the water is forced to sea; the isthmus is drawn in
+  as a wall (its thin causeway otherwise breaks into a 10 km channel).
+- **Domain**: the map plus ~300 km of extra ocean on every side, so the open boundaries sit
+  in deep water. The western landmass continues off-map, its north coast angled steeply and
+  its south coast shallowly (`OCEAN.westLand`).
+- **Depth is invented** from distance to the coast: a shelf (15 m at the coast →
+  `shelfDepth` at `shelfWidth`), then an S-shaped slope to `deep` over `slopeWidth`. Defaults
+  140 m / 80 km / 120 km / 3000 m. Regions override the four numbers near an anchor point,
+  blended by `exp(−(r/radius)²)` with r measured *through water* (depths blend in log space):
+  Central Sea (floor 270 m, narrow margins, ~200 m mean), a shallow southern strait (≤150 m),
+  a 300 km Qis shelf and a 230 km Freeport shelf. `node analysis/bathymetry_plot.mjs` draws
+  it (`analysis/bathymetry.png`). The deep ocean is 3000 m rather than 4000 m: tides here
+  barely care, and it allows a 40 s time step.
+- **One gap in the isthmus**, under the Great Western Bridge where the map shows water
+  between the causeway and the volcanic island, sized like the Golden Gate: 1.6 km wide,
+  60 m mean depth, 5 km long, entry + exit loss coefficient 1.0. It is a sub-grid 1-D channel
+  joining the sea cells at its two ends.
+
+### Equations
+
+Linear shallow water with quadratic bottom friction, on an Arakawa C grid (η at cell centres,
+transports on faces), forward–backward time stepping with semi-implicit friction:
+
+    ∂η/∂t = −∇·(H u)
+    ∂u/∂t = −g ∇(η − η_eq) − f k̂×u − Cd (|u| + 0.05 m/s) u / H
+
+η_eq is the equilibrium tide of the moons and Sun from the N-body sim (Primus left out: its
+tide is static). It is a quadratic form in each cell's zenith vector, so a step needs only
+six numbers from the ephemeris. f = 2Ω sin φ with Qaia's sidereal rate. Open boundary: the
+outermost ring is held at η_eq and a 12-cell sponge relaxes toward it. Gap:
+`du/dt = g Δ(η − η_eq)/L − (Cd/h + loss/2L)|u|u`, with the flux spread over the sea cells
+within 1.5 cells of each end.
+
+### First results (34 days from 1 Feb 2253, after 4 days of spin-up)
+
+| Port | 2-D daily range | Port model | Notes |
+|---|---|---|---|
+| Qaringil | 1.8 m | 3.7 m | Once-daily tides about the same; the twice-daily tide mostly cancels |
+| Kard | 1.4 m | 2.2 m | No clean twice-daily node any more (Coriolis): Tertius twice-daily 38 cm vs 8 cm |
+| Jia | 2.6 m | 1.7 m | The sea's mouth amplifies more than the port model assumed |
+| Qis | 4.2 m | 3.0 m | Secundus-dominated (1.5 m): the shelf resonates near 10 h, not the intended 12.6 h |
+| Freeport | 5.2 m | 4.1 m | Twice-daily partials within ~5% of the port model |
+
+Gap peak current 5.9 m/s (11.6 kn), ~570 000 m³/s. The per-moon split of the *once-daily*
+tides from a joint fit to one run isn't reliable: every body's once-daily tide contains a
+component at exactly one sidereal day (Earth's K1), so the bodies' shares can't be separated
+from one run. Ranges and twice-daily partials are fine.
+
+**Open questions**: retune the Qis shelf (wider/shallower) if Qis should be Tertius-dominated;
+refit the port models (`ports.js`) to the 2-D results so `tides.html` agrees with the map.
+
+**Speed**: ~5.8 s per simulated day on a 1.2 GHz laptop core (~2 ms per 40 s step). From a
+start at the equilibrium tide with still water, the start-up transient decays ~3× per day:
+after 3 days the field is within ~18 cm (max over the map) of a 6-day spin-up.
+
+### Planned: a stored tidal start (not implemented)
+
+Starting from the equilibrium tide is poor exactly where it matters (the Central Sea and the
+shelves are 2–5× bigger and hours late), and still water doesn't match a moving tide. Plan:
+
+- **Store** per sea cell, for Secundus, Tertius, Quartus and the Sun × {once-daily,
+  twice-daily}, the in-phase and quadrature response coefficients (a, b) of η, u and v:
+  response ≈ a·C + b·S, where C, S are that tide's in-phase and quadrature equilibrium
+  forcing at the cell (the same regression as the port fits). 52k cells × 3 fields × 16
+  numbers as int16 with per-field scales ≈ 5 MB, with a header recording the mask,
+  bathymetry and moon parameters it came from (fall back to the equilibrium start on a
+  mismatch).
+- **Compute** (`analysis/ocean_harmonics.mjs`, ~30 min): one full run (~10 days) to get each
+  face's RMS current speed; then eight runs each forced by one body and one species, with the
+  quadratic friction (and the gap's losses) replaced by fixed linear ones calibrated from those
+  speeds, so the responses superpose exactly; fit each cell over ~30 days after spin-up.
+  Separate runs avoid the K1 ambiguity of a joint fit.
+  - The species split is exact in the forcing, not emergent: P₂(cos z) separates by
+    longitude order m = 0, 1, 2 into long-period, once-daily and twice-daily parts. In the
+    tensor A these are {zz, xx+yy}, {xz, yz} and {xx−yy, xy}; a single-species run keeps only
+    its terms. What's emergent is the response, and its non-additivity comes only from the
+    nonlinear friction and gap losses, hence the linearisation.
+- **Start**: at the chosen date, set η, u, v from Σ (a·C + b·S) plus the equilibrium
+  long-period tide (Sextus and Septimus as equilibrium), run ~12 h, then show. Expected to cut
+  spin-up from ~3 days to under one; check with the same convergence test.
+- **Limits**: one complex gain per body and species blurs the sidebands (e.g. K1 vs O1-like
+  frequencies respond differently near the Central Sea's diurnal resonance), and the linear
+  friction is off where currents are strongest.
+- **Bonus**: the coefficients are co-tidal maps (amphidromes per moon) and exactly what's
+  needed to refit the port models.
+- **When**: after the bathymetry is settled; every bathymetry or moon change invalidates the
+  file (regenerate like `state_200yr.json`).

@@ -67,10 +67,10 @@ await page.evaluate(async ({ nx, ny, cellPx, pad, depth, sea, ports, regions, ga
   const cv = document.getElementById('c'), ctx = cv.getContext('2d');
   ctx.fillStyle = '#06060f'; ctx.fillRect(0, 0, cv.width, cv.height);
 
-  // Colormap: log depth, coastDepth → 4000 m.
+  // Colormap: log depth, coastDepth → 3000 m.
   const STOPS = [[0, [232, 246, 236]], [0.25, [150, 215, 190]], [0.45, [70, 170, 190]],
                  [0.65, [40, 110, 175]], [0.85, [30, 55, 140]], [1, [12, 22, 80]]];
-  const lo = Math.log(coastDepth), hi = Math.log(4000);
+  const lo = Math.log(coastDepth), hi = Math.log(3000);
   const color = h => {
     const t = Math.min(1, Math.max(0, (Math.log(h) - lo) / (hi - lo)));
     let k = 1; while (k < STOPS.length - 1 && STOPS[k][0] < t) k++;
@@ -199,7 +199,7 @@ await page.evaluate(async ({ nx, ny, cellPx, pad, depth, sea, ports, regions, ga
   ctx.strokeStyle = 'rgba(200,220,255,0.5)'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, bw, bh);
   ctx.fillStyle = 'rgba(200,225,255,0.9)'; ctx.font = '14px Courier New, monospace';
   ctx.fillText('depth', bx - 6, by - 24); ctx.fillText('(m)', bx, by - 8);
-  for (const L of [15, 50, 100, 200, 500, 1000, 2000, 4000]) {
+  for (const L of [15, 50, 100, 200, 500, 1000, 2000, 3000]) {
     const y = by + (Math.log(L) - lo) / (hi - lo) * (bh - 1);
     ctx.fillRect(bx + bw, y, 6, 1); ctx.fillText(String(L), bx + bw + 9, y + 5);
   }

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qaia — Tide Map</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #06060f;
+      --panel: rgba(12, 24, 56, 0.55);
+      --line: rgba(80, 130, 255, 0.18);
+      --text: rgba(190, 220, 255, 0.9);
+      --bright: rgba(220, 238, 255, 0.97);
+      --muted: rgba(140, 180, 230, 0.62);
+      --accent: rgba(140, 190, 255, 0.85);
+    }
+
+    html, body { background: var(--bg); font-family: 'Courier New', Courier, monospace; color: var(--text); line-height: 1.6; }
+    body { padding: 32px 24px 64px; max-width: 1280px; margin: 0 auto; font-size: 13px; }
+
+    nav {
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      margin-bottom: 28px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+    }
+    nav a {
+      color: var(--accent); text-decoration: none; font-size: 13px;
+      padding: 4px 10px; border: 1px solid rgba(80, 130, 220, 0.3); border-radius: 4px;
+      background: rgba(20, 45, 100, 0.45); transition: background 0.12s, border-color 0.12s;
+    }
+    nav a:hover, nav a.active { background: rgba(50, 110, 200, 0.7); border-color: rgba(140, 200, 255, 0.6); color: #fff; }
+
+    h1 { font-size: 20px; color: var(--bright); text-shadow: 0 0 12px rgba(80, 160, 255, 0.4); margin-bottom: 8px; }
+    h3 { font-size: 14px; color: rgba(160, 210, 255, 0.9); margin-bottom: 6px; }
+    p { margin-bottom: 8px; max-width: 80ch; }
+    .muted { color: var(--muted); }
+    a { color: var(--accent); }
+    code { background: rgba(20, 45, 100, 0.45); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; margin: 18px 0 14px; }
+    .controls label { display: grid; gap: 3px; font-size: 11px; color: var(--muted); letter-spacing: 0.04em; }
+    select, input[type=date], button {
+      font: inherit; font-size: 13px; color: var(--bright); background: rgba(20, 45, 100, 0.55);
+      border: 1px solid rgba(80, 130, 220, 0.4); border-radius: 4px; padding: 4px 8px; color-scheme: dark;
+    }
+    button { cursor: pointer; min-width: 6.5em; }
+    button:hover:not(:disabled) { background: rgba(50, 110, 200, 0.7); }
+    button:disabled { opacity: 0.5; cursor: default; }
+    select:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid rgba(140, 200, 255, 0.8); outline-offset: 1px; }
+
+    .layout { display: grid; gap: 18px; grid-template-columns: minmax(0, calc(88vh * 1080 / 1521)) minmax(300px, 380px); align-items: start; }
+    @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+    .mapcol { min-width: 0; }
+    .mapwrap { position: relative; margin: 0; max-width: calc(88vh * 1080 / 1521); }
+    .mapwrap canvas { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); cursor: crosshair; }
+    .overlay {
+      position: absolute; inset: 0; display: grid; place-content: center; gap: 10px; text-align: center;
+      background: rgba(6, 6, 15, 0.55); border-radius: 6px; padding: 24px;
+    }
+    .overlay[hidden] { display: none; }
+    .overlay .msg { color: var(--bright); font-size: 14px; max-width: 34ch; }
+    .overlay .msg.error { color: #ff9a9a; }
+    .bar { width: min(320px, 70vw); height: 6px; border-radius: 3px; background: rgba(80, 130, 255, 0.2); overflow: hidden; margin: 0 auto; }
+    .bar i { display: block; height: 100%; width: 0; background: rgba(140, 200, 255, 0.85); transition: width 0.2s; }
+
+    .colorbar { margin: 10px 0 0; max-width: calc(88vh * 1080 / 1521); }
+    .colorbar canvas { display: block; width: 100%; height: 12px; border-radius: 3px; }
+    .colorbar .ticks { position: relative; height: 18px; font-size: 11px; color: var(--muted); }
+    .colorbar .ticks span { position: absolute; transform: translateX(-50%); top: 2px; white-space: nowrap; }
+    .colorbar .title { font-size: 11px; color: var(--muted); text-align: center; }
+
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; margin-bottom: 12px; min-width: 0; }
+    .card > p { font-size: 12px; color: var(--muted); }
+    .clock { font-size: 18px; color: var(--bright); }
+    .clock small { font-size: 12px; color: var(--muted); }
+    .rate { font-size: 12px; color: var(--muted); }
+
+    table { border-collapse: collapse; font-size: 12px; width: 100%; }
+    th, td { padding: 3px 6px; border-bottom: 1px solid rgba(80, 130, 255, 0.12); white-space: nowrap; text-align: left; }
+    th { color: var(--muted); font-weight: normal; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--bright); }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover td, tbody tr.sel td { background: rgba(30, 60, 130, 0.35); }
+    .up { color: #ffb38a; } .down { color: #8fc0ff; }
+
+    .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .chart text { font-family: 'Courier New', Courier, monospace; font-size: 10px; fill: var(--muted); }
+    .chart .grid { stroke: rgba(80, 130, 255, 0.12); }
+    .chart .zero { stroke: rgba(140, 180, 255, 0.35); }
+    .chart .line { fill: none; stroke: var(--bright); stroke-width: 1.5; }
+    .chart .now { fill: #ffb38a; }
+
+    footer { margin-top: 32px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+    @media (max-width: 560px) { body { padding: 20px 14px 48px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Simulation</a>
+    <a href="docs.html?file=MOONS.md">Moons</a>
+    <a href="docs.html?file=TIDES.md">Tides</a>
+    <a href="tides.html">Port tides</a>
+    <a href="tidemap.html" class="active">Tide map</a>
+    <a href="docs.html?file=NAVIGATION.md">Navigation</a>
+  </nav>
+
+  <h1>Tide map</h1>
+  <p class="muted">The tide across Qamis, computed live in your browser: the N-body simulation moves the moons, and a 2-D shallow-water model of the seas around the map (invented depths, Coriolis, one gap in the isthmus) responds. Colour is water level relative to mean sea level. Click the sea to chart any point.</p>
+
+  <div class="controls">
+    <label>Date <input type="date" id="date" min="2253-01-20" max="2299-12-31" value="2253-02-01"></label>
+    <button id="play" disabled>Play</button>
+    <label>Speed
+      <select id="speed">
+        <option value="1">1 hour / s</option>
+        <option value="2" selected>2 hours / s</option>
+        <option value="4">4 hours / s</option>
+        <option value="8">8 hours / s</option>
+      </select>
+    </label>
+    <label>Show
+      <select id="layer">
+        <option value="eta" selected>Water level</option>
+        <option value="speed">Current speed</option>
+      </select>
+    </label>
+    <label>Scale <select id="scale"></select></label>
+  </div>
+
+  <div class="layout">
+    <div class="mapcol">
+      <div class="mapwrap">
+        <canvas id="map" width="1080" height="1521" aria-label="Map of Qamis with the tide drawn over the sea"></canvas>
+        <div class="overlay" id="overlay">
+          <div class="msg" id="overlay-msg">Loading…</div>
+          <div class="bar"><i id="overlay-bar"></i></div>
+        </div>
+      </div>
+      <div class="colorbar">
+        <canvas id="colorbar" width="512" height="12"></canvas>
+        <div class="ticks" id="colorbar-ticks"></div>
+        <div class="title" id="colorbar-title"></div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="card">
+        <div class="clock" id="clock">—</div>
+        <div class="rate" id="rate"></div>
+      </div>
+      <div class="card">
+        <h3>Ports</h3>
+        <table>
+          <thead><tr><th>Port</th><th class="num">Level</th><th></th></tr></thead>
+          <tbody id="ports"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3 id="probe-title">Last 48 hours</h3>
+        <div class="chart" id="probe-chart"></div>
+      </div>
+      <div class="card">
+        <h3>Great Western Bridge</h3>
+        <div id="gap">—</div>
+        <p>The one gap in the isthmus, sized like the Golden Gate (1.6 km wide, 60 m deep). Current through it, from the level difference across the isthmus.</p>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    Model: <code>ocean_grid.js</code> (mask, invented bathymetry), <code>ocean2d.js</code> (solver), run in <code>tidemap_worker.js</code>.
+    Notes and caveats in <a href="docs.html?file=TIDES.md">TIDES.md</a> (2-D Tide Model). Each new date spins the ocean up for 3 simulated days first.
+  </footer>
+
+  <script type="module" src="tidemap_page.js"></script>
+</body>
+</html>

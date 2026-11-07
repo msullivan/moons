@@ -50,7 +50,7 @@ export const OCEAN = {
     { name: 'Great Western Bridge', ends: [[127, 320], [127, 352]],
       width: 1600, depth: 60, length: 5000, loss: 1.0 },
   ],
-  defaults: { shelfDepth: 140, shelfWidth: 80, slopeWidth: 120, deep: 4000 },   // m, km
+  defaults: { shelfDepth: 140, shelfWidth: 80, slopeWidth: 120, deep: 3000 },   // m, km (3000 m: tides here barely care, and it allows a 40 s step)
   regions: [
     // The Central Sea: a flooded continental basin ~230 m deep with narrow
     // margins, matching the 1-D channel model's 220 m mean.  Three anchors
@@ -175,20 +175,8 @@ export function buildOceanGrid(mask, cfg = OCEAN) {
   }
 
   // Gaps: snap each end to the nearest sea cell.
-  const nearestSea = (px, py) => {
-    const k0 = mapCell(px, py), i0 = k0 % nx, j0 = (k0 - i0) / nx;
-    for (let r = 0; r < 5; r++) {
-      let best = -1, bd = Infinity;
-      for (let j = j0 - r; j <= j0 + r; j++) for (let i = i0 - r; i <= i0 + r; i++) {
-        const k = j * nx + i;
-        if (!sea[k]) continue;
-        const d = (i - i0) ** 2 + (j - j0) ** 2;
-        if (d < bd) { bd = d; best = k; }
-      }
-      if (best >= 0) return best;
-    }
-    throw new Error(`ocean gap: no sea within 5 cells of (${px}, ${py})`);
-  };
+  const partial = { nx, ny, sea, mapCell };
+  const nearestSea = (px, py) => nearestSeaCell(partial, px, py);
   const gaps = (cfg.gaps ?? []).map(gp => {
     const cells = gp.ends.map(([px, py]) => nearestSea(px, py));
     if (cells[0] === cells[1]) throw new Error(`ocean gap ${gp.name}: both ends in the same cell`);
@@ -196,6 +184,23 @@ export function buildOceanGrid(mask, cfg = OCEAN) {
   });
 
   return { nx, ny, dx: dxKm * 1000, pad, cellPx, sea, depth, coastKm, lat, lon, gaps, mapCell, cellCentrePx };
+}
+
+// Index of the sea cell nearest map pixel (px, py) (searching up to 5 cells).
+export function nearestSeaCell(grid, px, py) {
+  const { nx, sea } = grid;
+  const k0 = grid.mapCell(px, py), i0 = k0 % nx, j0 = (k0 - i0) / nx;
+  for (let r = 0; r < 6; r++) {
+    let best = -1, bd = Infinity;
+    for (let j = j0 - r; j <= j0 + r; j++) for (let i = i0 - r; i <= i0 + r; i++) {
+      const k = j * nx + i;
+      if (!sea[k]) continue;
+      const d = (i - i0) ** 2 + (j - j0) ** 2;
+      if (d < bd) { bd = d; best = k; }
+    }
+    if (best >= 0) return best;
+  }
+  throw new Error(`no sea within 5 cells of map px (${px}, ${py})`);
 }
 
 // 5×5 chamfer distance (in cells) from cells where isSource(k).
