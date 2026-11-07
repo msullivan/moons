@@ -2,6 +2,7 @@
 // tides_worker.js; this module only draws.
 
 import { PORTS, PORTS_BY_ID } from './ports.js';
+import { setTideLinkDate, dateFromURL } from './tide_links.js';
 import { MOON_PARAMS } from './bodies.js';
 
 const BODIES = ['Secundus', 'Tertius', 'Quartus', 'Sun'];
@@ -472,12 +473,13 @@ const portSel = $('port');
 for (const p of PORTS) portSel.append(new Option(p.name, p.id));
 const params = new URLSearchParams(location.search);
 if (PORTS_BY_ID[params.get('port')]) portSel.value = params.get('port');
-if (/^\d{4}-\d{2}-\d{2}$/.test(params.get('date') ?? '')) $('date').value = params.get('date');
+dateFromURL($('date'));
 if (['7', '14', '28'].includes(params.get('days'))) $('days').value = params.get('days');
 
 const dateOk = () => { const d = $('date'); return d.value && d.value >= d.min && d.value <= d.max; };
 function onChange() {
   if (!dateOk()) { $('win-status').textContent = `Pick a date between ${$('date').min} and ${$('date').max}.`; $('win-status').classList.add('error'); return; }
+  setTideLinkDate($('date').value);
   requestWindow();
   requestYear();
 }

@@ -76,6 +76,13 @@ export function localZoneTime(t, lonDeg) {
   return `${clockHM(tl)} ${zone}${day}`;
 }
 
+// Local calendar date at a longitude as "YYYY-MM-DD" (zone time, as in
+// localZoneTime) — the form the tide pages take in their URLs.
+export function isoLocalDate(t, lonDeg) {
+  const tl = t + zoneOffset(lonDeg) * (MEAN_SOLAR_DAY / 24);
+  return new Date(EPOCH_MS + Math.floor(tl / MEAN_SOLAR_DAY) * 86400000).toISOString().slice(0, 10);
+}
+
 // Convert year/month(0-indexed)/day(1-indexed) → sim seconds.
 // Uses MEAN_SOLAR_DAY so the calendar stays in sync with PMT.
 export function calToSimTime(year, month0, day) {

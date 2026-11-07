@@ -1,6 +1,7 @@
 // tidemap.html: draws the 2-D tide model (tidemap_worker.js) over the flat map.
 
 import { localTime, zoneName } from './tide_analysis.js';
+import { setTideLinkDate, dateFromURL, timeFromURL } from './tide_links.js';
 
 const MAP_SRC = 'docket/map-nice-marked-flat.jpeg';
 const FLAT = [214, 232, 246];                  // the flat map's sea colour
@@ -56,7 +57,10 @@ function showOverlay(text, frac, error = false) {
 
 // ── setup ───────────────────────────────────────────────────────────────
 const params = new URLSearchParams(location.search);
-if (params.get('date')) $('date').value = params.get('date');
+// ?date= and ?time= (from the simulation's Tide map link) set the start.
+// The time is dropped if the date had to be clamped into range.
+let startMinutes = dateFromURL($('date')) && $('date').value === params.get('date') ? timeFromURL() : 0;
+setTideLinkDate($('date').value);
 
 const imgReady = new Promise((res, rej) => {
   const img = new Image();
@@ -180,19 +184,21 @@ $('play').onclick = () => {
 $('speed').onchange = e => { state.speed = +e.target.value; anchor(); state.rate = null; state.rateWin = []; };
 $('layer').onchange = e => { state.show = e.target.value; setScaleOptions(); requestFrame(0); };
 $('scale').onchange = e => { state.scale = +e.target.value; drawColorbar(); if (state.frame) render(state.frame); };
-$('date').onchange = () => start();
+$('date').onchange = () => { startMinutes = 0; start(); };
 
 function start() {
   const date = $('date').value;
   if (!date) return;
   params.set('date', date);
+  if (startMinutes) params.set('time', `${String(Math.floor(startMinutes / 60)).padStart(2, '0')}:${String(startMinutes % 60).padStart(2, '0')}`);
+  else params.delete('time');
   history.replaceState(null, '', `?${params}`);
   state.run++;
   state.ready = false; state.inFlight = true; state.rate = null;
   state.probeSeries = { t: [], h: [] };
   $('play').disabled = true;
   showOverlay('Starting…', 0);
-  worker.postMessage({ type: 'start', run: state.run, date, spinDays: SPIN_DAYS });
+  worker.postMessage({ type: 'start', run: state.run, date, minutes: startMinutes, spinDays: SPIN_DAYS });
 }
 
 function requestFrame(seconds) {
@@ -326,6 +332,7 @@ function buildPortsTable() {
 
 function updatePanel(m) {
   const lt = localTime(m.t, QARINGIL_LON);
+  if (lt.iso !== state.linkDate) { state.linkDate = lt.iso; setTideLinkDate(lt.iso); }   // nav links follow the clock
   $('clock').innerHTML = `${lt.date.replace(' AD', '')} ${lt.clock} <small>${zoneName(QARINGIL_LON)} (Qaringil)</small>`;
   $('rate').textContent = state.playing ? (state.rate != null ? `running at ${state.rate.toFixed(1)} sim hours per second` : '') : 'paused';
   state.info.ports.forEach((p, n) => {

@@ -32,7 +32,7 @@ self.onmessage = async ({ data: req }) => {
 };
 
 function checkStart(snap, t) {
-  if (t < snap.time) throw new Error('Dates before mid-January 2253 need the simulation run from the 2053 epoch; pick a later date.');
+  if (t < snap.time) throw new Error('Pick a date from 8 January 2253 on (the simulation snapshot is from 1 January 2253, and the port models need 6 days of forcing before the first day).');
 }
 
 // Tide table and curves for one port over `days` local days from `date`.

@@ -2,7 +2,8 @@
 //
 // Messages in:
 //   { type: 'init' }                          → { type: 'init', info }
-//   { type: 'start', run, date, spinDays } → progress…, then { type: 'frame', run, … }
+//   { type: 'start', run, date, minutes, spinDays } → progress…, then { type: 'frame', run, … }
+//     (the map starts `minutes` after local midnight at Qaringil on `date`)
 //   { type: 'step', run, seconds, probe, layer } → { type: 'frame', run, … }
 //     seconds is rounded down to whole ocean steps (40 s); the frame's t says where it got to
 //   { type: 'probe', run, cell }              → { type: 'probe', run, cell, series }
@@ -67,9 +68,9 @@ self.onmessage = async ({ data: msg }) => {
 
 const yieldToMessages = () => new Promise(r => setTimeout(r, 0));
 
-async function start({ run: id, date, spinDays }) {
-  const t0 = parseLocalDate(date, 30), tStart = t0 - spinDays * DAY;
-  if (tStart < snapshot.time) throw new Error('Pick a date from 20 January 2253 on (the simulation snapshot starts mid-January 2253).');
+async function start({ run: id, date, minutes = 0, spinDays }) {
+  const t0 = parseLocalDate(date, 30) + minutes * DAY / 1440, tStart = t0 - spinDays * DAY;
+  if (tStart < snapshot.time) throw new Error('Pick a date from 5 January 2253 on (the simulation snapshot is from 1 January 2253, and the ocean needs 3 days to spin up).');
   const progress = (text, frac) => self.postMessage({ type: 'progress', run: id, text, frac });
   const me = { id };
   run = me;

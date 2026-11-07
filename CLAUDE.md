@@ -109,11 +109,13 @@ ocean2d.js      — 2-D shallow-water tide solver on WebGL2 (C grid, Coriolis, f
 tidemap.html    — Tide map page: live 2-D tide heatmap over the map (tidemap_page.js + tidemap_worker.js)
 tides.html      — Port tides page: tide tables and charts, computed live in tides_worker.js
 tides_page.js   — tides.html UI and SVG charts;  tides_worker.js — runs the sim + tide models
+tide_links.js   — Keeps links to the tide pages on the current date (?date=), from the sim and between tide pages
 tests/          — Playwright screenshot and stability scripts
   skyview_frame_check.mjs — Dump sky-view transforms; diff before/after frame refactors
   screenshot_tides.mjs    — Screenshot tides.html (desktop + mobile), report console errors
   screenshot_tidemap.mjs  — Screenshot tidemap.html after spin-up and a few seconds of play (--gpu for real GPU)
   tidemap_rate_check.mjs  — tidemap.html playback: achieved vs requested speed for each setting
+  tide_links_check.mjs    — Tide pages open on the sim's / each other's date (links, ?date= clamping)
   ocean_bench.mjs         — 2-D model speed: ocean stepping, N-body and both, s per sim day
 analysis/       — Node.js analysis scripts (no browser needed)
   moon_stats.mjs  — Physical/observational stats for all moons → MOONS.md

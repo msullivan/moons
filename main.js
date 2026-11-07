@@ -1,6 +1,7 @@
 import { G, Simulation } from './simulation.js';
-import { createInitialBodies, applySnapshot, AU, LUNAR_DIST, R_MOON } from './bodies.js';
-import { simDate, primusMeanTime, localZoneTime, calToSimTime, clockHM } from './calendar.js';
+import { createInitialBodies, applySnapshot, AU, LUNAR_DIST, R_MOON, MEAN_SOLAR_DAY } from './bodies.js';
+import { simDate, primusMeanTime, localZoneTime, calToSimTime, clockHM, isoLocalDate, zoneOffset } from './calendar.js';
+import { setTideLinkDate } from './tide_links.js';
 import { Renderer } from './renderer.js';
 import { SkyView } from './skyview.js';
 
@@ -13,6 +14,7 @@ const PHASE_R_BASE = 24;
 
 let sim, renderer, skyView;
 let snapshot       = null;  // loaded from state_200yr.json, or null
+let lastTideDate   = null;  // date + time last written into the tide page links
 let running        = false;
 let orbitBodyIndex = 5;  // default: Quartus (1.00 LD)
 let lastTs         = null;
@@ -172,6 +174,11 @@ function updateHUD() {
   const sign = err >= 0 ? '+' : '';
 
   document.getElementById('hud-date').textContent   = simDate(sim.renderTime);
+  // Tides / Tide map links open on the sim's date, and the Tide map at its time
+  // (local at Qaringil, PMT+2).
+  const tideDate = isoLocalDate(sim.renderTime, 30);
+  const tideTime = clockHM(sim.renderTime + zoneOffset(30) * MEAN_SOLAR_DAY / 24);
+  if (tideDate + tideTime !== lastTideDate) { lastTideDate = tideDate + tideTime; setTideLinkDate(tideDate, tideTime); }
   document.getElementById('hud-pmt').textContent    = primusMeanTime(sim.renderTime);
   document.getElementById('hud-energy').textContent = `ΔE/E₀: ${sign}${err.toExponential(2)}`;
 
