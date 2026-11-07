@@ -70,6 +70,14 @@ export const PORTS = [
            'Tide close to the open-ocean tide.',
   },
   {
+    id: 'templado', name: 'Templado', lat: 35.77, lon: 29.22,
+    semi:    { G: 1.0, tau: 0 },
+    diurnal: { G: 1.0, tau: 0 },
+    notes: 'East coast of the southernmost island in the Central Sea, just south of its ENE point, ' +
+           'west-southwest of Jia (px ~123,935), just outside the mouth of the 1-D channel. ' +
+           'Placeholder model: the open-ocean tide, unamplified.',
+  },
+  {
     id: 'qis', name: 'Qis (river mouth)', lat: 39.54, lon: 47.1,
     forcing: { lat: 39.5, lon: 50.0 },
     semi:    { G: 1.4, T0: 12.6, Q: 2.5, tau: 1.5 },

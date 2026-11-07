@@ -88,7 +88,7 @@ function yearOverview(snap, { date }, progress) {
   for (const p of PORTS) {
     const h = hs.get(p.id), st = portStats(p, eph, h, k0);
     const { F, type } = formNumber(partials[p.id]);
-    summary.push({ id: p.id, name: p.name, model: p.basin ? `${BASINS[p.basin].name} channel` : `Resonator ${p.semi.T0} h`,
+    summary.push({ id: p.id, name: p.name, model: p.basin ? `${BASINS[p.basin].name} channel` : (p.semi?.T0 ? `Resonator ${p.semi.T0} h` : 'Open ocean'),
                    F, type, neap: st.neap, median: st.median, spring: st.spring, highest: st.highest, lowest: st.lowest,
                    highsPerDay: st.highsPerDay });
     daily[p.id] = st.daily;

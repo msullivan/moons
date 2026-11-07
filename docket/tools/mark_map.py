@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Mark the Qamis map: move Jia to the peninsula tip (as on map-sketch.jpeg),
-and add city dots and labels for Freeport and Qaringil.
+and add city dots and labels for Freeport, Qaringil and Templado.
 
     python3 mark_map.py <in> <out> [font]
 
@@ -140,5 +140,9 @@ put_dot(146, 367, scale=0.55)
 lt = letter("QARINGIL", 10)
 qa = place_text(lt, cx=146, y0=374)
 
+# ── Templado: ENE point of the southernmost island in the Central Sea ──
+put_dot(123, 935, scale=0.7)
+tp = place_text(letter("TEMPLADO", 9), x0=136, cy=929)
+
 Image.fromarray(np.clip(im, 0, 255).astype(np.uint8)).save(OUT, quality=95)
-print('ink T', INK_T.round(2), 'freeport box', fp, 'qaringil box', qa)
+print('ink T', INK_T.round(2), 'freeport box', fp, 'qaringil box', qa, 'templado box', tp)

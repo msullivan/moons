@@ -32,7 +32,8 @@ TOL = 18                                 # JPEG noise is < 15 in open sea
 # (their city dots stay as painted and fall to the speck filter).
 LETTERING = [(745, 1128, 1075, 1240),    # QAMIS
              (96, 372, 198, 390),        # QARINGIL
-             (230, 812, 264, 830)]       # JIA
+             (230, 812, 264, 830),       # JIA
+             (139, 920, 223, 939)]       # TEMPLADO
 
 im = np.asarray(Image.open(SRC).convert('RGB')).astype(float)
 H, W, _ = im.shape
