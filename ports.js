@@ -50,22 +50,23 @@ export const BASINS = {
 //   notes                — rationale
 export const PORTS = [
   {
-    id: 'qaringil', name: 'Qaringil', lat: 45.0, lon: 30.0,
+    id: 'qaringil', name: 'Qaringil', lat: 44.51, lon: 29.71,
     basin: 'centralSea', s: 0.0,
-    notes: 'Island city between the two bridges at the head of the Central Sea. ' +
+    notes: 'Island city just south of the isthmus (map px ~146,367), at the head of the Central Sea. ' +
            'Antinode of the basin mode: the largest tides in the sea, mostly diurnal, ' +
            'peaking when Tertius and Quartus stand far from the equator.',
   },
   {
-    id: 'kard', name: 'Kard', lat: 40.46, lon: 34.93,
-    basin: 'centralSea', s: 0.53,
-    notes: 'Mid-sea on the Qamis shore (map px ~395,630). Sits near the semidiurnal ' +
-           'node, so the tide is almost purely once-daily.',
+    id: 'kard', name: 'Kard', lat: 39.66, lon: 34.30,
+    basin: 'centralSea', s: 0.63,
+    notes: 'Mid-sea on the Qamis shore, at the river mouth south of the KARD label ' +
+           '(map px ~365,682).',
   },
   {
-    id: 'jia', name: 'Jia', lat: 36.9, lon: 32.9,
-    basin: 'centralSea', s: 0.96,
-    notes: 'Peninsula capital of Edrad near the mouth of the Central Sea (px ~300,860). ' +
+    id: 'jia', name: 'Jia', lat: 37.23, lon: 31.83,
+    basin: 'centralSea', s: 0.93,
+    notes: 'Peninsula capital of Edrad, on the tip of the peninsula near the mouth of the ' +
+           'Central Sea (px ~247,840). ' +
            'Tide close to the open-ocean tide.',
   },
   {
@@ -78,13 +79,14 @@ export const PORTS = [
            'with the Tertius–Quartus beat (~5.7 days) as its spring–neap cycle.',
   },
   {
-    id: 'freeport', name: 'Freeport', lat: 30.5, lon: 32.9,
+    id: 'freeport', name: 'Freeport', lat: 30.53, lon: 33.31,
     semi:    { G: 1.2, T0: 10.0, Q: 4, tau: 0.5 },
     diurnal: { G: 0.8, tau: 0 },
-    notes: 'Notch harbour on the big southern island (px ~300,1270). A ~10 h bay-and-shelf ' +
-           'resonance makes Secundus the dominant tide: fast and irregular, beating ' +
-           'against Tertius every ~1.5 days. Needs a broad shallow shelf offshore — ' +
-           'the notch itself is too small (~70 km) to resonate at 10 h.',
+    notes: 'Notch harbour on the big southern island, at the city dot on the headland ' +
+           'north of the inlet (px ~318,1276). A ~10 h bay-and-shelf resonance makes ' +
+           'Secundus the dominant tide: fast and irregular, beating against Tertius ' +
+           'every ~1.5 days. Needs a broad shallow shelf offshore — the notch itself ' +
+           'is too small (~70 km) to resonate at 10 h.',
   },
 ];
 

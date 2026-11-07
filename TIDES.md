@@ -891,9 +891,11 @@ This gives a structure along the sea:
 
 - **Qaringil** (head, antinode): biggest tides in the sea, mixed but mostly once-daily, peaking
   when Tertius and Quartus are far from the equator.
-- **Kard** (mid-sea): sits near the *semidiurnal node*. The twice-daily tide almost vanishes
-  (Quartus 0.17×, Sun 0.16× equilibrium), so Kard has a once-daily tide 85% of days.
-- **Jia** (near the mouth): close to the open-ocean tide.
+- **Kard** (mid-sea, at a river mouth): just seaward of the *semidiurnal node*. Tertius's and
+  Quartus's twice-daily tides are weak there (0.24× and 0.33× equilibrium), but Secundus's
+  shorter 9.8 h tide has its node further up the sea and is nearly full strength (0.9×). So
+  Kard is mainly once-daily: one high water on 64% of days, two on about a quarter.
+- **Jia** (on the peninsula tip near the mouth): close to the open-ocean tide.
 
 Qaia's moons put tidal forcing all through 9.8–27.3 h, so no depth avoids resonance entirely.
 Around 120 m the second mode lands on Secundus, and at ≳ 500 m the fundamental lands on
@@ -906,8 +908,8 @@ lagoon behind narrow inlets (not modelled).
 | Port | Model | Character | Median / spring daily range | Highs per day |
 |---|---|---|---|---|
 | Qaringil | Central Sea, head | Mixed, mainly diurnal (F = 1.6) | 3.4 / 4.4 m | 1: 58%, 2: 38% |
-| Kard | Central Sea, mid | Diurnal (F = 4.2) | 2.2 / 3.0 m | 1: 85% |
-| Jia | Central Sea, mouth | Mixed, mainly semidiurnal (F = 0.7) | 1.6 / 2.1 m | 2: 57%, 3: 23% |
+| Kard | Central Sea, mid | Mixed, mainly diurnal (F = 2.6) | 2.0 / 2.8 m | 1: 64%, 2: 26% |
+| Jia | Central Sea, mouth | Mixed, mainly semidiurnal (F = 0.8) | 1.6 / 2.2 m | 2: 56%, 3: 23% |
 | Qis (river mouth) | Resonator, 12.6 h | Semidiurnal, Tertius-dominated (F = 0.27) | 3.1 / 4.5 m | 2: 76% |
 | Freeport | Resonator, 10 h | Semidiurnal, Secundus-dominated (F = 0.14) | 4.3 / 5.7 m | 2: 54%, 3: 41% |
 

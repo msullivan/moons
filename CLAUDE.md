@@ -102,6 +102,8 @@ frame.js        — Ecliptic → body-fixed → observer frames (shared by skyvi
 tides.js        — Location tide model: equilibrium species, resonator & channel ocean models
 ports.js        — Tide ports and basins (worldbuilding parameters, map-derived coordinates)
 tide_analysis.js — Ephemeris recording, port runs, partial-tide fits, range stats (Node + browser)
+ocean_grid.js   — 2-D tide model grid: land/sea mask + invented bathymetry (regions, shelves)
+ocean_mask.json — Land/sea mask, 6 px cells, from docket/tools/sea_mask.py
 tides.html      — Port tides page: tide tables and charts, computed live in tides_worker.js
 tides_page.js   — tides.html UI and SVG charts;  tides_worker.js — runs the sim + tide models
 tests/          — Playwright screenshot and stability scripts
@@ -113,6 +115,7 @@ analysis/       — Node.js analysis scripts (no browser needed)
   tide_sim.mjs    — Tidal periods and 72h simulation → TIDES.md
   tide_table.mjs  — High/low water table for a port: `node analysis/tide_table.mjs kard 2253-03-01 7`
   port_report.mjs — Port tuning diagnostics (partial tides, ranges, --plot → analysis/ports/)
+  bathymetry_plot.mjs — Render ocean_grid.js depths over the map → analysis/bathymetry.png
 ```
 
 Files use ES modules — imports are explicit. To add or change a moon, edit `bodies.js` only.
