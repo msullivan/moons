@@ -922,8 +922,8 @@ currents.
 
 ### The isthmus, the bridges and Qaringil
 
-Qaringil is on the western shore of the volcanic island in the isthmus, facing the Great
-Western Bridge, at the north end (head) of the Central Sea. The isthmus is partly
+Qaringil is on a tiny island just south of the west side of the isthmus, at the north end
+(head) of the Central Sea; `docket/map-nice-marked.jpeg` marks it with a dot. The isthmus is partly
 wizard-made: the causeway and two enormous bridges span what used to be open water. So the
 Central Sea was once a strait to the sea in the north.
 
