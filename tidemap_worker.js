@@ -2,8 +2,7 @@
 //
 // Messages in:
 //   { type: 'init' }                          → { type: 'init', info }
-//   { type: 'start', run, date, spinDays, engine } → progress…, then { type: 'frame', run, … }
-//     engine: 'auto' (WebGL2 if available, else CPU), 'gpu' or 'cpu'
+//   { type: 'start', run, date, spinDays } → progress…, then { type: 'frame', run, … }
 //   { type: 'step', run, seconds, probe, layer } → { type: 'frame', run, … }
 //     seconds is rounded down to whole ocean steps (40 s); the frame's t says where it got to
 //   { type: 'probe', run, cell }              → { type: 'probe', run, cell, series }
@@ -15,7 +14,7 @@ import { createInitialBodies, applySnapshot } from './bodies.js';
 import { Simulation } from './simulation.js';
 import { tideBodyIndices, tideFrame } from './tides.js';
 import { buildOceanGrid, nearestSeaCell, latToPy, lonToPx } from './ocean_grid.js';
-import { createOcean } from './ocean2d_gl.js';
+import { createOcean } from './ocean2d.js';
 import { PORTS } from './ports.js';
 import { parseLocalDate, DAY } from './tide_analysis.js';
 
@@ -68,7 +67,7 @@ self.onmessage = async ({ data: msg }) => {
 
 const yieldToMessages = () => new Promise(r => setTimeout(r, 0));
 
-async function start({ run: id, date, spinDays, engine = 'auto' }) {
+async function start({ run: id, date, spinDays }) {
   const t0 = parseLocalDate(date, 30), tStart = t0 - spinDays * DAY;
   if (tStart < snapshot.time) throw new Error('Pick a date from 20 January 2253 on (the simulation snapshot starts mid-January 2253).');
   const progress = (text, frac) => self.postMessage({ type: 'progress', run: id, text, frac });
@@ -90,8 +89,7 @@ async function start({ run: id, date, spinDays, engine = 'auto' }) {
     if (run !== me) return;
   }
   const ind = tideBodyIndices(sim.bodies);
-  const { ocean, engine: used } = createOcean(grid, { engine });
-  me.engine = used;
+  const ocean = createOcean(grid);
   Object.assign(me, { sim, ind, ocean, dt, frame: tideFrame(sim.bodies, ind, sim.time), next: new Float64Array(4 * ind.bodies.length),
                       histT: new Float64Array(HIST_LEN), histN: 0, histHead: 0, nframes: 0,
                       per: Math.round(dt / ocean.dt), sub: 0 });
@@ -99,7 +97,7 @@ async function start({ run: id, date, spinDays, engine = 'auto' }) {
   ocean.reset(me.frame, sim.time);
 
   // Spin-up.
-  const nSpin = Math.round((t0 - sim.time) / dt), chunk = used === 'gpu' ? 120 : 40;
+  const nSpin = Math.round((t0 - sim.time) / dt), chunk = 120;
   for (let k = 0; k < nSpin; ) {
     const n = Math.min(nSpin - k, chunk);
     advanceFrames(me, n);
@@ -134,8 +132,8 @@ function advanceSteps(r, n) {
   }
 }
 
-// Water level history over the map area, kept by the solver (on the GPU for
-// the WebGL one, so recording never stalls on a readback).
+// Water level history over the map area, kept on the GPU by the solver, so
+// recording never stalls on a readback.
 function record(r) {
   r.ocean.recordHistory(r.histHead);
   r.histT[r.histHead] = r.ocean.time;
@@ -170,7 +168,7 @@ function frameMessage(r, layer, probeCell) {
   const o = r.ocean, eta = o.readEta(region), field = layer === 'speed' ? o.readSpeed(region) : eta;
   for (let m = 0; m < mapIdx.length; m++) if (!info.sea[m]) field[m] = NaN;
   return {
-    type: 'frame', run: r.id, t: o.time, layer: layer ?? 'eta', field, engine: r.engine,
+    type: 'frame', run: r.id, t: o.time, layer: layer ?? 'eta', field,
     ports: info.ports.map(p => eta[p.cell]),
     gaps: o.gapCurrents(),
     // The probe's last 48 h at 12-min resolution (240 samples), so the chart

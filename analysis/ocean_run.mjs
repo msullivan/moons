@@ -1,5 +1,6 @@
-// Run the 2-D tide model (ocean2d.js) and report on it.
+// Run the 2-D tide model (ocean2d.js, WebGL2) and report on it.
 //   node analysis/ocean_run.mjs [YYYY-MM-DD] [days] [--spin D]
+// The model runs on the GPU in headless Chromium (analysis/ocean_browser.mjs).
 // Spins up for D days (default 4) before the date, runs `days` days (default
 // 3), and prints speed, conservation, and the tide at each port: range, and
 // — for runs of ≥ 30 days — partial tides fitted jointly to the full series,
@@ -7,11 +8,11 @@
 
 import { readFileSync } from 'fs';
 import { buildOceanGrid, nearestSeaCell, latToPy, lonToPx } from '../ocean_grid.js';
-import { Ocean2D } from '../ocean2d.js';
 import { component, makeSite } from '../tides.js';
 import { PORTS } from '../ports.js';
-import { recordEphemeris, parseLocalDate, runPorts, hourAngleRate, fitPartials,
-         REPORT_BODIES, REPORT_SPECIES, DAY, HOUR } from './tide_common.mjs';
+import { recordEphemeris, parseLocalDate, runPorts, fitPartials,
+         REPORT_BODIES, REPORT_SPECIES, DAY } from './tide_common.mjs';
+import { runOceanInBrowser } from './ocean_browser.mjs';
 
 const args = process.argv.slice(2);
 const flag = (name, def) => { const i = args.indexOf(name); if (i < 0) return def; const v = args[i + 1]; args.splice(i, 2); return +v; };
@@ -20,41 +21,25 @@ const [date = '2253-02-01', daysArg = '3'] = args;
 const days = +daysArg;
 
 const grid = buildOceanGrid(JSON.parse(readFileSync(new URL('../ocean_mask.json', import.meta.url))));
-const ocean = new Ocean2D(grid);
 const t0 = parseLocalDate(date, 30), tStart = t0 - spinDays * DAY;
-console.log(`grid ${grid.nx}×${grid.ny}, ${grid.sea.reduce((a, b) => a + b, 0)} sea cells, dt ${ocean.dt} s; ` +
-            `spin-up ${spinDays} d, run ${days} d from ${date}`);
+console.log(`grid ${grid.nx}×${grid.ny}, ${grid.sea.reduce((a, b) => a + b, 0)} sea cells; spin-up ${spinDays} d, run ${days} d from ${date}`);
 
-let tm = Date.now();
+// Ephemeris in Node too, for the port models and the fits (same sim, same frames).
 const eph = recordEphemeris(tStart, t0 + days * DAY);
-console.log(`N-body ephemeris: ${((Date.now() - tm) / 1000).toFixed(1)} s for ${eph.n} frames`);
-
 const probes = PORTS.map(p => {
   const px = lonToPx(p.lon), py = latToPy(p.lat), k = nearestSeaCell(grid, px, py);
-  return { id: p.id, name: p.name, k, h: new Float64Array(eph.n), depth: grid.depth[k] };
+  return { id: p.id, name: p.name, k, depth: grid.depth[k] };
 });
-const gapU = grid.gaps.map(() => new Float64Array(eph.n));
-
-ocean.reset(eph.frame(0), eph.t0);
-const k0 = Math.round((t0 - eph.t0) / eph.dt);
-tm = Date.now();
+const run = await runOceanInBrowser({ t0: tStart, t1: t0 + days * DAY, cells: probes.map(p => p.k), log: m => console.log(`  ${m}`) });
+console.log(`renderer: ${run.renderer}`);
+console.log(`ocean: ${run.secPerDay.toFixed(3)} s per simulated day (N-body included)`);
+if (run.t.length !== eph.n || Math.abs(run.t[0] - eph.t0) > 1) throw new Error(`browser and Node ephemerides disagree (${run.t.length} vs ${eph.n} frames)`);
+probes.forEach((p, c) => { p.h = run.eta[c]; });
+const gapU = run.gaps;
 let maxEta = 0;
-for (let k = 0; k < eph.n; k++) {
-  if (k) ocean.advance(eph.frame(k - 1), eph.frame(k), eph.dt);
-  for (const p of probes) p.h[k] = ocean.eta[p.k];
-  ocean.gaps.forEach((gp, n) => { gapU[n][k] = gp.u; });
-  if (k % 240 === 0) {
-    let m = 0;
-    for (let c = 0; c < ocean.eta.length; c++) if (grid.sea[c]) m = Math.max(m, Math.abs(ocean.eta[c]));
-    maxEta = Math.max(maxEta, m);
-    if (!Number.isFinite(m) || m > 50) { console.log(`blew up at day ${(k * eph.dt / DAY).toFixed(2)}: max |η| ${m}`); process.exit(1); }
-    if (k % 2400 === 0)
-      process.stdout.write(`  day ${(k * eph.dt / DAY - spinDays).toFixed(0).padStart(3)}: max |η| ${m.toFixed(2)} m, ` +
-                           `${((Date.now() - tm) / 1000 / Math.max(1e-9, k * eph.dt / DAY)).toFixed(2)} s per sim day\n`);
-  }
-}
-const secPerDay = (Date.now() - tm) / 1000 / ((eph.n - 1) * eph.dt / DAY);
-console.log(`ocean: ${secPerDay.toFixed(2)} s per simulated day; max |η| anywhere ${maxEta.toFixed(2)} m`);
+for (const p of probes) for (const h of p.h) maxEta = Math.max(maxEta, Math.abs(h));
+if (!Number.isFinite(maxEta) || maxEta > 50) { console.log(`blew up: max |η| at ports ${maxEta}`); process.exit(1); }
+const k0 = Math.round((t0 - eph.t0) / eph.dt);
 
 // ── ranges ──────────────────────────────────────────────────────────────
 const old = runPorts(PORTS, eph);

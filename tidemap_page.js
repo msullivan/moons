@@ -192,7 +192,7 @@ function start() {
   state.probeSeries = { t: [], h: [] };
   $('play').disabled = true;
   showOverlay('Starting…', 0);
-  worker.postMessage({ type: 'start', run: state.run, date, spinDays: SPIN_DAYS, engine: params.get('engine') ?? 'auto' });
+  worker.postMessage({ type: 'start', run: state.run, date, spinDays: SPIN_DAYS });
 }
 
 function requestFrame(seconds) {
@@ -327,8 +327,7 @@ function buildPortsTable() {
 function updatePanel(m) {
   const lt = localTime(m.t, QARINGIL_LON);
   $('clock').innerHTML = `${lt.date.replace(' AD', '')} ${lt.clock} <small>${zoneName(QARINGIL_LON)} (Qaringil)</small>`;
-  const eng = m.engine === 'gpu' ? 'WebGL' : 'CPU';
-  $('rate').textContent = `${eng} · ` + (state.playing ? (state.rate != null ? `running at ${state.rate.toFixed(1)} sim hours per second` : '') : 'paused');
+  $('rate').textContent = state.playing ? (state.rate != null ? `running at ${state.rate.toFixed(1)} sim hours per second` : '') : 'paused';
   state.info.ports.forEach((p, n) => {
     const h = m.ports[n];
     $(`port-${n}`).textContent = `${h >= 0 ? '+' : '−'}${Math.abs(h).toFixed(2)} m`;

@@ -104,8 +104,7 @@ ports.js        — Tide ports and basins (worldbuilding parameters, map-derived
 tide_analysis.js — Ephemeris recording, port runs, partial-tide fits, range stats (Node + browser)
 ocean_grid.js   — 2-D tide model grid: land/sea mask + invented bathymetry (regions, shelves)
 ocean_mask.json — Land/sea mask, 6 px cells, from docket/tools/sea_mask.py
-ocean2d.js      — 2-D shallow-water tide solver (C grid, Coriolis, friction, sponge, isthmus gap)
-ocean2d_gl.js   — WebGL2 version of the same solver (~20× faster); createOcean() picks GPU or CPU
+ocean2d.js      — 2-D shallow-water tide solver on WebGL2 (C grid, Coriolis, friction, sponge, isthmus gap)
 tidemap.html    — Tide map page: live 2-D tide heatmap over the map (tidemap_page.js + tidemap_worker.js)
 tides.html      — Port tides page: tide tables and charts, computed live in tides_worker.js
 tides_page.js   — tides.html UI and SVG charts;  tides_worker.js — runs the sim + tide models
@@ -114,8 +113,8 @@ tests/          — Playwright screenshot and stability scripts
   skyview_frame_check.mjs — Dump sky-view transforms; diff before/after frame refactors
   screenshot_tides.mjs    — Screenshot tides.html (desktop + mobile), report console errors
   screenshot_tidemap.mjs  — Screenshot tidemap.html after spin-up and a few seconds of play (--gpu for real GPU)
-  ocean_gpu_check.mjs     — WebGL solver vs CPU solver: field difference and speed (--gpu for real GPU)
   tidemap_rate_check.mjs  — tidemap.html playback: achieved vs requested speed for each setting
+  ocean_bench.mjs         — 2-D model speed: ocean stepping, N-body and both, s per sim day
 analysis/       — Node.js analysis scripts (no browser needed)
   moon_stats.mjs  — Physical/observational stats for all moons → MOONS.md
   tide_sim.mjs    — Tidal periods and 72h simulation → TIDES.md
@@ -123,6 +122,7 @@ analysis/       — Node.js analysis scripts (no browser needed)
   port_report.mjs — Port tuning diagnostics (partial tides, ranges, --plot → analysis/ports/)
   bathymetry_plot.mjs — Render ocean_grid.js depths over the map → analysis/bathymetry.png
   ocean_run.mjs   — Run the 2-D model: speed, ranges and partial tides at ports vs port models
+  ocean_browser.mjs — Run ocean2d.js from Node in headless Chromium on the GPU (Node has no WebGL)
 ```
 
 Files use ES modules — imports are explicit. To add or change a moon, edit `bodies.js` only.
@@ -205,11 +205,15 @@ across α = 5°–175° at multiple radii revealed complete phase inversion in s
 
 ### Tidal notes
 
-- Headless Chromium renders WebGL with SwiftShader (software, slower than the CPU solver).
-  Pass `--enable-gpu --ignore-gpu-blocklist --use-angle=vulkan --enable-features=Vulkan`
-  (the `--gpu` flag of the tide test scripts) to use this machine's Intel GPU.
-- `ocean2d.js` and `ocean2d_gl.js` must stay in step: any change to the equations goes in
-  both, then `node tests/ocean_gpu_check.mjs 1 --gpu` (expect ≲0.1 mm difference).
+- The 2-D tide model is GPU-only (WebGL2 + EXT_color_buffer_float); there is no CPU
+  version any more. Node scripts run it in headless Chromium via `analysis/ocean_browser.mjs`.
+- Headless Chromium renders WebGL with SwiftShader (software, very slow). Pass
+  `--enable-gpu --ignore-gpu-blocklist --use-angle=vulkan --enable-features=Vulkan`
+  (the `--gpu` flag of the tide test scripts; `ocean_browser.mjs` does it by default,
+  `OCEAN_GL=egl|swiftshader` to change) to use the real GPU.
+- Never read the whole ocean state back every step or snapshot: each `readPixels` stalls
+  until the GPU queue drains (~10 ms). Record on the GPU (history texture array, probe
+  recorder) and read back in bulk.
 
 - Port tides (`tides.js`/`ports.js`) are driven by the sim's real geometry, so they
   depend on the 200-yr snapshot and `MOON_PARAMS`; rerun `analysis/port_report.mjs all`
