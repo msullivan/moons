@@ -136,7 +136,7 @@ await page.evaluate(async ({ nx, ny, cellPx, pad, depth, sea, ports, regions, ga
   ctx.drawImage(layer, 0, 0);
 
   // Contours (marching squares on cell centres; land counts as 0 m).
-  const LEVELS = [50, 100, 150, 200, 300, 500, 1000, 2000, 3000];
+  const LEVELS = [50, 100, 150, 200, 300, 500, 1000, 2000, 2500];   // not 3000: that is the flat deep-ocean floor itself
   ctx.lineWidth = 1;
   for (const L of LEVELS) {
     ctx.strokeStyle = L >= 1000 ? 'rgba(255,255,255,0.45)' : 'rgba(10,40,70,0.45)';
