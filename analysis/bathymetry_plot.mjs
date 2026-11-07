@@ -48,6 +48,10 @@ const port = await new Promise(r => server.once('listening', () => r(server.addr
 
 const ports = PORTS.map(p => ({ name: p.name.replace(/ \(.*\)/, ''), px: lonToPx(p.lon), py: latToPy(p.lat) }));
 const regions = OCEAN.regions.map(r => ({ name: r.name, px: r.px }));
+const gaps = g.gaps.map(gp => ({ name: gp.name, cells: gp.cells.map(k => [k % g.nx, Math.floor(k / g.nx)]) }));
+for (const gp of g.gaps)
+  console.log(`  gap ${gp.name}: ${gp.width} m × ${gp.depth} m (${(gp.area / 1e3).toFixed(0)}k m²), ${gp.length / 1000} km long, ` +
+              `cells ${gp.cells.map(k => `(${k % g.nx},${Math.floor(k / g.nx)})`).join(' ↔ ')}`);
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
@@ -55,7 +59,7 @@ const W = g.nx * g.cellPx, H = g.ny * g.cellPx, LEG = 150;
 await page.setViewportSize({ width: W + LEG, height: H });
 await page.goto(`http://localhost:${port}/blank`);
 await page.setContent(`<body style="margin:0;background:#06060f"><canvas id=c width=${W + LEG} height=${H}></canvas></body>`);
-await page.evaluate(async ({ nx, ny, cellPx, pad, depth, sea, ports, regions, base, coastDepth }) => {
+await page.evaluate(async ({ nx, ny, cellPx, pad, depth, sea, ports, regions, gaps, base, coastDepth }) => {
   const img = new Image();
   img.src = `${base}/docket/map-nice-marked-flat.jpeg`;
   await img.decode();
@@ -176,6 +180,13 @@ await page.evaluate(async ({ nx, ny, cellPx, pad, depth, sea, ports, regions, ba
     ctx.beginPath(); ctx.moveTo(x - 6, y - 6); ctx.lineTo(x + 6, y + 6); ctx.moveTo(x + 6, y - 6); ctx.lineTo(x - 6, y + 6); ctx.stroke();
     label(r.name, x + 9, y + 15, '#5a4500');
   }
+  for (const gp of gaps) {
+    const [[i0, j0], [i1, j1]] = gp.cells.map(([i, j]) => [(i + 0.5) * cellPx, (j + 0.5) * cellPx]);
+    ctx.strokeStyle = '#ff7a1a'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(i0, j0); ctx.lineTo(i1, j1); ctx.stroke();
+    for (const [x, y] of [[i0, j0], [i1, j1]]) { ctx.fillStyle = '#ff7a1a'; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill(); }
+    label(gp.name, Math.max(i0, i1) + 10, (j0 + j1) / 2 - 4, '#a04000');
+  }
   label('map edge', ox + 6, oy - 8, '#222');
   label('extra ocean (model only)', 10, 22, '#222');
 
@@ -193,7 +204,7 @@ await page.evaluate(async ({ nx, ny, cellPx, pad, depth, sea, ports, regions, ba
     ctx.fillRect(bx + bw, y, 6, 1); ctx.fillText(String(L), bx + bw + 9, y + 5);
   }
 }, { nx: g.nx, ny: g.ny, cellPx: g.cellPx, pad: g.pad, depth: Array.from(g.depth), sea: Array.from(g.sea),
-     ports, regions, base: `http://localhost:${port}`, coastDepth: OCEAN.coastDepth });
+     ports, regions, gaps, base: `http://localhost:${port}`, coastDepth: OCEAN.coastDepth });
 
 const out = join(ROOT, 'analysis', 'bathymetry.png');
 await page.screenshot({ path: out });

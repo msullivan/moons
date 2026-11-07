@@ -37,6 +37,19 @@ export const OCEAN = {
   // meets it: slope = cells of latitude gained per cell west (positive =
   // the land widens westward).  Steep in the north, shallow in the south.
   westLand: { northSlope: 1.5, southSlope: 0.3 },
+  // Sub-grid straits through land walls.  The isthmus is a closed wall in the
+  // mask except for one gap, under the Great Western Bridge where the map
+  // shows water between the causeway and the volcanic island (px ~127, 338),
+  // sized like the Golden Gate
+  // (≈1.6 km wide, ≈60 m mean depth (113 m max), ≈5 km long).  The solver
+  // treats each gap as a 1-D channel joining the sea cells nearest its two
+  // ends:  du/dt = g·Δη/length − (Cd/depth + loss/(2·length))·|u|·u,
+  // with flux u·width·depth taken from one side and added to the other.
+  // loss = entry + exit head-loss coefficient.
+  gaps: [
+    { name: 'Great Western Bridge', ends: [[127, 320], [127, 352]],
+      width: 1600, depth: 60, length: 5000, loss: 1.0 },
+  ],
   defaults: { shelfDepth: 140, shelfWidth: 80, slopeWidth: 120, deep: 4000 },   // m, km
   regions: [
     // The Central Sea: a flooded continental basin ~230 m deep with narrow
@@ -61,6 +74,7 @@ const PARAMS = ['shelfDepth', 'shelfWidth', 'slopeWidth', 'deep'];
 // Build the model grid.  Returns
 //   { nx, ny, dx, pad, cellPx, sea (Uint8Array), depth (Float32Array, m; 0 on land),
 //     coastKm (Float32Array), lat, lon (Float32Array, degrees),
+//     gaps ([{ ...cfg.gaps[n], cells: [k0, k1], area }]),
 //     mapCell(px, py) → cell index, cellCentrePx(i, j) → [px, py] }
 // Cell (i, j) is column i, row j; index j·nx + i.
 export function buildOceanGrid(mask, cfg = OCEAN) {
@@ -160,7 +174,28 @@ export function buildOceanGrid(mask, cfg = OCEAN) {
     depth[k] = Math.max(h0, Math.min(h, Math.max(deep, h0)));
   }
 
-  return { nx, ny, dx: dxKm * 1000, pad, cellPx, sea, depth, coastKm, lat, lon, mapCell, cellCentrePx };
+  // Gaps: snap each end to the nearest sea cell.
+  const nearestSea = (px, py) => {
+    const k0 = mapCell(px, py), i0 = k0 % nx, j0 = (k0 - i0) / nx;
+    for (let r = 0; r < 5; r++) {
+      let best = -1, bd = Infinity;
+      for (let j = j0 - r; j <= j0 + r; j++) for (let i = i0 - r; i <= i0 + r; i++) {
+        const k = j * nx + i;
+        if (!sea[k]) continue;
+        const d = (i - i0) ** 2 + (j - j0) ** 2;
+        if (d < bd) { bd = d; best = k; }
+      }
+      if (best >= 0) return best;
+    }
+    throw new Error(`ocean gap: no sea within 5 cells of (${px}, ${py})`);
+  };
+  const gaps = (cfg.gaps ?? []).map(gp => {
+    const cells = gp.ends.map(([px, py]) => nearestSea(px, py));
+    if (cells[0] === cells[1]) throw new Error(`ocean gap ${gp.name}: both ends in the same cell`);
+    return { ...gp, cells, area: gp.width * gp.depth };
+  });
+
+  return { nx, ny, dx: dxKm * 1000, pad, cellPx, sea, depth, coastKm, lat, lon, gaps, mapCell, cellCentrePx };
 }
 
 // 5×5 chamfer distance (in cells) from cells where isSource(k).

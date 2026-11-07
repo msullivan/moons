@@ -7,6 +7,7 @@ sea), then:
   - lettering in the water is forced to sea, and land specks of 1-2 cells (labels,
     city dots) become sea;
   - edge cells continue the land just inside them (see below);
+  - the isthmus is drawn in as an unbroken wall;
   - sea not connected to the map edge (none at present) becomes land.
 
     uv run --no-project --with scipy --with numpy --with pillow \
@@ -56,8 +57,46 @@ for _ in range(2):
     sea[:, 0] &= sea[:, 1]; sea[:, -1] &= sea[:, -2]
     sea[0, :] &= sea[1, :]; sea[-1, :] &= sea[-2, :]
 
-# Sea must connect to the map edge (8-connected).
-lab, n = ndi.label(sea, structure=np.ones((3, 3), bool))
+# The isthmus is drawn as a wall: at 6 px cells its thin western causeway
+# otherwise breaks up into a one-cell (10 km) channel.  Flow through it is
+# modelled separately as a sub-grid strait (ocean_grid.js GAPS).  The polyline
+# runs along the causeway, the volcanic island and the eastern bridge, and is
+# rasterised with 4-connected steps so no cell-face path crosses it.
+ISTHMUS = [(40, 338), (100, 338), (130, 334), (160, 333), (190, 343), (250, 350), (310, 362)]
+
+def wall(points):
+    cells = []
+    for (xa, ya), (xb, yb) in zip(points, points[1:]):
+        i, j = xa // CELL, ya // CELL
+        ib, jb = xb // CELL, yb // CELL
+        cells.append((i, j))
+        while (i, j) != (ib, jb):
+            # step along whichever axis keeps us closest to the segment
+            di, dj = (ib > i) - (ib < i), (jb > j) - (jb < j)
+            if di and dj:
+                ex = abs((jb - (ya // CELL)) * (i + di - xa // CELL) - (ib - xa // CELL) * (j - ya // CELL))
+                ey = abs((jb - (ya // CELL)) * (i - xa // CELL) - (ib - xa // CELL) * (j + dj - ya // CELL))
+                if ex <= ey: i += di
+                else: j += dj
+            elif di: i += di
+            else: j += dj
+            cells.append((i, j))
+    return cells
+
+for i, j in wall(ISTHMUS):
+    sea[j, i] = False
+
+# Check: within a box around the isthmus, water north and south of it must
+# not touch through cell faces.
+x0, y0, x1, y1 = 40 // CELL, 280 // CELL, 330 // CELL, 400 // CELL
+box = sea[y0:y1, x0:x1]
+lab, _ = ndi.label(box)
+n_id, s_id = lab[300 // CELL - y0, 100 // CELL - x0], lab[372 // CELL - y0, 100 // CELL - x0]
+assert n_id and s_id and n_id != s_id, 'isthmus leaks'
+
+# Sea must connect to the map edge through cell faces (as flow does in the
+# model), so pockets cut off by the wall become land.
+lab, n = ndi.label(sea)
 edge = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
 sea = np.isin(lab, list(edge))
 
