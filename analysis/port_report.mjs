@@ -1,4 +1,4 @@
-// Tuning diagnostics for a tide port.
+// Diagnostics for a tide port (its fitted model from port_response.js).
 //
 //   node analysis/port_report.mjs <port|all> [YYYY-MM-DD] [days] [--plot]
 //   node analysis/port_report.mjs kard 2253-02-01 365 --plot
@@ -13,8 +13,7 @@
 // interactively.)
 
 import { mkdirSync } from 'fs';
-import { PORTS, BASINS } from '../ports.js';
-import { Channel } from '../tides.js';
+import { PORTS } from '../ports.js';
 import { getPort, parseLocalDate, recordEphemeris, runPort, spinupSeconds, fitPartials,
          formNumber, portStats, REPORT_BODIES, DAY } from './tide_common.mjs';
 
@@ -34,17 +33,11 @@ for (const port of ports) await report(port);
 async function report(port) {
   const days = +daysArg;
   const t0 = parseLocalDate(dateArg, port.lon), t1 = t0 + days * DAY;
-  const eph = recordEphemeris(t0 - spinupSeconds(port), t1);
+  const eph = recordEphemeris(t0 - spinupSeconds(), t1);
   const k0 = Math.round((t0 - eph.t0) / eph.dt);
 
   console.log(`\n══ ${port.name} (${port.id}) — ${port.lat}°, ${port.lon}° ══`);
   if (port.notes) console.log(port.notes);
-  if (port.basin) {
-    const b = BASINS[port.basin];
-    const ch = new Channel(b, eph.dt, eph.R);
-    console.log(`Basin: ${b.name}, L = ${(ch.L / 1000).toFixed(0)} km, depth ${b.depth} m, ` +
-                `damping ${b.damping} h → fundamental ${ch.fundamentalPeriodHours.toFixed(1)} h; port at s = ${port.s}`);
-  }
 
   console.log('\nPartial tides (equilibrium amplitude at the port × gain; lag = time after the');
   console.log('body crosses the meridian that its partial tide peaks):');

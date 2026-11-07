@@ -4,7 +4,8 @@
 // Spins up for D days (default 4) before the date, runs `days` days (default
 // 3), and prints speed, conservation, and the tide at each port: range, and
 // — for runs of ≥ 30 days — partial tides fitted jointly to the full series,
-// side by side with the existing port models.
+// side by side with the fitted port models (port_response.js) — a check of
+// the fit on a new window.
 
 import { readFileSync } from 'fs';
 import { buildOceanGrid, nearestSeaCell, latToPy, lonToPx } from '../ocean_grid.js';

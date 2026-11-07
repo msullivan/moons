@@ -12,20 +12,15 @@
 //     Using the sim's actual positions means eccentricity, declination
 //     cycles, nodal/apsidal precession etc. all come along for free.
 //
-//  2. Local ocean response.  Two kinds of model, both linear time-domain
-//     systems driven by the equilibrium forcing (so every sideband and
-//     modulation is filtered correctly, with no harmonic bookkeeping):
-//
-//     - 'resonator' ports: per species, a damped harmonic oscillator
-//           x'' + (ω₀/Q)·x' + ω₀²·x = G·ω₀²·F(t)
-//       followed by a pure delay τ (propagation from the open ocean).
-//       Omit T0 for a non-resonant species (x = G·F).  Long-period gain = 1.
-//     - 'channel' ports: sit in a semi-enclosed sea modelled as a 1-D linear
-//       shallow-water channel, closed at the head and open to the ocean at
-//       the mouth, forced both at the mouth (ocean tide) and directly along
-//       its length (equilibrium gradient).  Ports read the water level at a
-//       fractional position s (0 = head, 1 = mouth).
-//
+//  2. Local ocean response: a response model per site (Munk & Cartwright
+//     1966), fitted to the 2-D tide model (ocean2d.js) by
+//     analysis/fit_port_response.mjs and stored in port_response.js.  The
+//     water level is a fixed linear filter of the local forcing — weights on
+//     each species' in-phase and quadrature equilibrium tide at lags of 0 to
+//     120 h — plus a few non-linear terms for bottom friction.  Because the
+//     filter acts on the actual forcing, eccentricity, declination cycles and
+//     orbital drift all carry through with no harmonic bookkeeping.
+
 // The ephemeris "frame" passed to the models is a Float64Array of
 // [K, u1, u2, u3] per tide-raising body, where u is the body's unit
 // direction in Qaia's body-fixed frame (see frame.js).  Build one with
@@ -138,175 +133,96 @@ export function totalForcing(frame, site, sel = null) {
   return sum;
 }
 
-// ── delay line ─────────────────────────────────────────────────────────
+// ── response model ─────────────────────────────────────────────────────
 
-class Delay {
-  constructor(tauSec, dt) {
-    this.lag = Math.max(0, tauSec / dt);
-    this.buf = new Float64Array(Math.ceil(this.lag) + 2);
-    this.k = -1;
-  }
-  push(v) {
-    if (this.k < 0) this.buf.fill(v);
-    this.k++;
-    this.buf[this.k % this.buf.length] = v;
-    // Value at (k − lag), linearly interpolated.
-    const pos = this.k - this.lag;
-    const i0 = Math.floor(pos), f = pos - i0;
-    const n = this.buf.length;
-    const a = this.buf[((i0 % n) + n) % n], b = this.buf[(((i0 + 1) % n) + n) % n];
-    return a + (b - a) * f;
-  }
-}
-
-// ── resonator model ────────────────────────────────────────────────────
-
-// Damped oscillator x'' + γx' + ω₀²x = G·ω₀²·F(t), RK4 with F linearly
-// interpolated across each step.  T0 / tau in hours.
-export class Resonator {
-  constructor({ G = 1, T0 = null, Q = 3, tau = 0 }, dt) {
-    this.G = G; this.dt = dt;
-    this.w0 = T0 ? 2 * Math.PI / (T0 * 3600) : null;
-    this.gam = T0 ? this.w0 / Q : 0;
-    this.delay = new Delay(tau * 3600, dt);
-    this.x = null; this.v = 0; this.Fprev = 0;
-  }
-  step(F) {
-    if (!this.w0) return this.delay.push(this.G * F);
-    if (this.x === null) { this.x = this.G * F; this.Fprev = F; return this.delay.push(this.x); }
-    const { w0, gam, G, dt } = this, w2 = w0 * w0, F0 = this.Fprev;
-    const acc = (x, v, f) => G * w2 * f - gam * v - w2 * x;
-    const Fm = 0.5 * (F0 + F);
-    let x = this.x, v = this.v;
-    const k1x = v,               k1v = acc(x, v, F0);
-    const k2x = v + 0.5*dt*k1v,  k2v = acc(x + 0.5*dt*k1x, v + 0.5*dt*k1v, Fm);
-    const k3x = v + 0.5*dt*k2v,  k3v = acc(x + 0.5*dt*k2x, v + 0.5*dt*k2v, Fm);
-    const k4x = v + dt*k3v,      k4v = acc(x + dt*k3x, v + dt*k3v, F);
-    this.x = x + dt / 6 * (k1x + 2*k2x + 2*k3x + k4x);
-    this.v = v + dt / 6 * (k1v + 2*k2v + 2*k3v + k4v);
-    this.Fprev = F;
-    return this.delay.push(this.x);
-  }
-}
-
-// ── channel model ──────────────────────────────────────────────────────
-
-// Great-circle distance between two {lat, lon} points, in metres.
-function gcDist(a, b, R) {
-  const p1 = a.lat * DEG, p2 = b.lat * DEG, dl = (b.lon - a.lon) * DEG;
-  const h = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
-}
-
-// Linear shallow-water channel on a staggered grid (η at cell centres,
-// u at faces).  Head (x = 0) is a wall; the mouth (x = L) is held at the
-// ocean tide, oceanG·η_eq(mouth) delayed by ocean.tau hours.
-//   ∂u/∂t = −g ∂(η − η_eq)/∂x − u/T_damp
-//   ∂η/∂t = −h ∂u/∂x
-// Quarter-wave fundamental period ≈ 4L / √(g·h).
-export class Channel {
-  constructor(basin, dt, R) {
-    const { head, mouth, depth, damping, cells = 40, ocean = {} } = basin;
-    this.N = cells; this.h = depth; this.dt = dt;
-    this.L = gcDist(head, mouth, R);
-    // Cell centres at (i + ½)·dx; the ocean ghost cell's centre is the mouth.
-    this.dx = this.L / (cells + 0.5);
-    this.r = 1 / (damping * 3600);
-    const c = Math.sqrt(G_SURF * depth);
-    this.nsub = Math.max(1, Math.ceil(dt / (0.5 * this.dx / c)));
-    this.oceanG = ocean.G ?? 1;
-    this.oceanDelay = new Delay((ocean.tau ?? 0) * 3600, dt);
-    // Sites at cell centres, plus index N = the mouth.
-    this.sites = [];
-    for (let i = 0; i <= cells; i++) {
-      const f = (i + 0.5) / (cells + 0.5);
-      this.sites.push(makeSite(head.lat + f * (mouth.lat - head.lat), head.lon + f * (mouth.lon - head.lon)));
+// Forcing series at a site over an ephemeris (eph.frame(k), k < eph.n):
+// per species s (0 long, 1 diurnal, 2 semi) the in-phase C[s] and quadrature
+// S[s] equilibrium tides, summed over the oscillating bodies.  Primus is left
+// out: it is geosynchronous, so its tide is a static offset.  sel = { body,
+// species } restricts the sum (either field may be omitted).
+export function forcingSeries(eph, site, sel = null, k1 = eph.n) {
+  const C = [0, 1, 2].map(() => new Float64Array(eph.n)), S = [0, 1, 2].map(() => new Float64Array(eph.n));
+  const bodies = [];
+  for (let j = 0; j < eph.nb; j++)
+    if (eph.names[j] !== 'Primus' && (sel?.body == null || sel.body === j)) bodies.push(j);
+  const species = [0, 1, 2].filter(s => sel?.species == null || sel.species === s);
+  for (let k = 0; k < k1; k++) {
+    const f = eph.frame(k);
+    for (const j of bodies) for (const s of species) {
+      C[s][k] += component(f, j, site, s);
+      if (s) S[s][k] += component(f, j, site, s, true);
     }
-    this.eta = new Float64Array(cells + 1);   // [N] = ocean ghost
-    this.u   = new Float64Array(cells + 1);   // faces 0..N; u[0] = 0 (wall)
-    this.eq0 = new Float64Array(cells + 1);
-    this.eq1 = new Float64Array(cells + 1);
-    this.ocean0 = 0; this.ocean1 = 0;
-    this.started = false;
   }
-
-  // Equilibrium forcing at cell i (N = mouth).  Overridable for tests.
-  forcingAt(frame, i, sel) { return totalForcing(frame, this.sites[i], sel); }
-
-  get fundamentalPeriodHours() {
-    return 4 * this.L / Math.sqrt(G_SURF * this.h) / 3600;
-  }
-
-  step(frame, sel = null) {
-    const N = this.N;
-    for (let i = 0; i <= N; i++) this.eq1[i] = this.forcingAt(frame, i, sel);
-    this.ocean1 = this.oceanDelay.push(this.oceanG * this.eq1[N]);
-    if (!this.started) {
-      // Start from the static solution: no flow, surface follows forcing.
-      for (let i = 0; i < N; i++) this.eta[i] = this.eq1[i] + (this.ocean1 - this.eq1[N]);
-      this.eq0.set(this.eq1); this.ocean0 = this.ocean1;
-      this.started = true;
-      return;
-    }
-    const { eta, u, dx, h, r } = this, g = G_SURF;
-    const sdt = this.dt / this.nsub;
-    for (let s = 1; s <= this.nsub; s++) {
-      const f = s / this.nsub;
-      const eqAt = i => this.eq0[i] + f * (this.eq1[i] - this.eq0[i]);
-      eta[N] = this.ocean0 + f * (this.ocean1 - this.ocean0);
-      // Momentum (semi-implicit friction), faces 1..N.
-      let dPrev = eta[0] - eqAt(0);
-      for (let i = 1; i <= N; i++) {
-        const d = eta[i] - eqAt(i);
-        u[i] = (u[i] - sdt * g * (d - dPrev) / dx) / (1 + r * sdt);
-        dPrev = d;
-      }
-      // Continuity, cells 0..N−1.
-      for (let i = 0; i < N; i++) eta[i] -= sdt * h * (u[i + 1] - u[i]) / dx;
-    }
-    this.eq0.set(this.eq1); this.ocean0 = this.ocean1;
-  }
-
-  // Water level at fractional position s along the channel (0 head, 1 mouth).
-  heightAt(s) {
-    const x = Math.min(this.N, Math.max(0, s * (this.N + 0.5) - 0.5));
-    const i = Math.min(this.N - 1, Math.floor(x)), f = x - i;
-    return this.eta[i] + f * (this.eta[i + 1] - this.eta[i]);
-  }
+  return { C, S };
 }
 
-// ── port model ─────────────────────────────────────────────────────────
-
-// A stepper producing the water level at a port, one sample per call.
-//   port   — entry from ports.js
-//   basins — BASINS from ports.js
-//   dt     — sample interval, s
-//   R      — Qaia radius, m
-// step(frame, sel) returns the height (m) relative to the undisturbed
-// geoid; subtract a long-run mean to get heights relative to MSL.
-export function createPortModel(port, basins, dt, R) {
-  const site = makeSite(port.lat, port.lon);
-  if (port.basin) {
-    const basin = basins[port.basin];
-    if (!basin) throw new Error(`port ${port.id}: unknown basin ${port.basin}`);
-    const ch = new Channel(basin, dt, R);
-    return {
-      site, channel: ch,
-      step(frame, sel = null) { ch.step(frame, sel); return ch.heightAt(port.s ?? 0); },
-    };
+// Apply a fitted response (see port_response.js) to forcing series F:
+//   h(t) = c + g·C₀(t) + Re[D(t) + S(t)] + Σ_j q_j·N_j(D(t), S(t))
+// where the once-daily (D) and twice-daily (S) parts are linear filters of the
+// forcing over the response's lags ℓ (hours, ≥ 0),
+//   D(t) = Σ_ℓ (a − ib)·(C₁ + iS₁)(t − ℓ)       (likewise S from C₂, S₂)
+// and N_j are the non-linear terms of NL_TERMS (friction mixing the two —
+// e.g. D·S at three cycles a day).  Samples earlier than the longest lag
+// reuse the first frame, so allow that much spin-up.  linear = true drops the
+// N_j terms and c (for a single body's or species' partial tide).
+export function applyResponse(resp, F, dt, { k1 = F.C[0].length, linear = false } = {}) {
+  const n = F.C[0].length, h = new Float64Array(n);
+  const parts = { 1: [new Float64Array(n), new Float64Array(n)], 2: [new Float64Array(n), new Float64Array(n)] };
+  for (const [s, key] of [[1, 'diurnal'], [2, 'semi']]) {
+    const C = F.C[s], S = F.S[s], [re, im] = parts[s];
+    resp.lags.forEach((lagH, i) => {
+      const L = Math.round(lagH * 3600 / dt), [a, b] = resp[key][i];
+      for (let k = 0; k < k1; k++) { const m = Math.max(0, k - L); re[k] += a * C[m] + b * S[m]; im[k] += a * S[m] - b * C[m]; }
+    });
   }
-  const fsite = port.forcing ? makeSite(port.forcing.lat, port.forcing.lon) : site;
-  const semi = new Resonator(port.semi ?? {}, dt);
-  const diur = new Resonator(port.diurnal ?? {}, dt);
-  return {
-    site,
-    step(frame, sel = null) {
-      const f = speciesForcing(frame, fsite, sel);
-      const long = sel?.species == null || sel.species === 0
-        ? speciesForcing(frame, site, { ...sel, species: 0 })[0] : 0;
-      return semi.step(f[2]) + diur.step(f[1]) + long;
-    },
-  };
+  const nl = !linear && resp.nl?.length ? resp.nl : null;
+  for (let k = 0; k < k1; k++) {
+    const dr = parts[1][0][k], di = parts[1][1][k], sr = parts[2][0][k], si = parts[2][1][k];
+    let v = (linear ? 0 : resp.c ?? 0) + resp.long * F.C[0][k] + dr + sr;
+    if (nl) { const t = NL_TERMS(dr, di, sr, si); for (let j = 0; j < nl.length; j++) v += nl[j] * t[j]; }
+    h[k] = v;
+  }
+  h.parts = parts;
+  return h;
+}
+
+// Non-linear terms of the response model, from the complex once-daily (D)
+// and twice-daily (S) linear parts: real and imaginary parts of products
+// that quadratic bottom friction generates.  Changing this list changes the
+// meaning of port_response.js — refit after editing.
+export function NL_TERMS(dr, di, sr, si) {
+  const aD = Math.hypot(dr, di), aS = Math.hypot(sr, si), eps = 1e-9;
+  const s2r = sr * sr - si * si, s2i = 2 * sr * si;
+  return [
+    dr * sr - di * si, dr * si + di * sr,          // D·S     3 cycles/day
+    dr * sr + di * si, di * sr - dr * si,          // D·S̄     1
+    s2r, s2i,                                      // S²      4
+    dr * dr - di * di, 2 * dr * di,                // D²      2
+    aS * sr, aS * si, aD * dr, aD * di,            // |S|S, |D|D: amplitude-dependent gain
+    aS * dr, aS * di, aD * sr, aD * si,            // |S|D, |D|S
+    (s2r * sr - s2i * si) / (aS + eps), (s2r * si + s2i * sr) / (aS + eps),   // S³/|S|  6
+    (s2r * dr + s2i * di) / (aS + eps), (s2i * dr - s2r * di) / (aS + eps),   // S²D̄/|S| 3
+  ];
+}
+
+// Current through an isthmus gap, from the water levels hA, hB at its two ends
+// (and their forcing series FA, FB), with the 2-D model's strait equation
+//   du/dt = g·Δ(η − η_eq)/length − drag·|u|·u
+// (ocean2d.js).  Positive u runs from end A to end B.  strait = { length,
+// drag } from port_response.js.  Starts from rest at sample 0.
+export function gapCurrent(strait, hA, hB, FA, FB, dt) {
+  const n = hA.length, u = new Float64Array(n), SUB = 9, h = dt / SUB;
+  const d = k => (hA[k] - FA.C[0][k] - FA.C[1][k] - FA.C[2][k]) - (hB[k] - FB.C[0][k] - FB.C[1][k] - FB.C[2][k]);
+  let v = 0, d0 = d(0);
+  for (let k = 1; k < n; k++) {
+    const d1 = d(k);
+    for (let i = 1; i <= SUB; i++) {
+      const dd = d0 + (d1 - d0) * (i - 0.5) / SUB;
+      v = (v + h * G_SURF * dd / strait.length) / (1 + h * strait.drag * Math.abs(v));
+    }
+    u[k] = v; d0 = d1;
+  }
+  return u;
 }
 
 // ── high / low water detection ─────────────────────────────────────────

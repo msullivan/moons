@@ -5,10 +5,9 @@
 // Messages out: { id, kind: 'progress', text } and { id, kind, result } or
 // { id, kind: 'error', message }.
 
-import { PORTS, PORTS_BY_ID, BASINS } from './ports.js';
-import { Channel } from './tides.js';
+import { PORTS, PORTS_BY_ID } from './ports.js';
 import { recordEphemeris, parseLocalDate, localTime, spinupSeconds, runPort, runPorts,
-         fitPartials, formNumber, portStats, channelProfile, equilibriumSeries, declination,
+         fitPartials, formNumber, portStats, seaProfile, gapSeries, declination,
          findExtremaWindow, zoneName, REPORT_BODIES, DAY, HOUR } from './tide_analysis.js';
 
 let snapshot = null;
@@ -39,7 +38,7 @@ function checkStart(snap, t) {
 // Tide table and curves for one port over `days` local days from `date`.
 function tideWindow(snap, { port: id, date, days }) {
   const port = PORTS_BY_ID[id];
-  const t0 = parseLocalDate(date, port.lon), t1 = t0 + days * DAY, spin = spinupSeconds(port);
+  const t0 = parseLocalDate(date, port.lon), t1 = t0 + days * DAY, spin = spinupSeconds();
   checkStart(snap, t0 - spin);
   const eph = recordEphemeris(snap, t0 - spin, t1 + DAY / 4);
   const k0 = Math.round((t0 - eph.t0) / eph.dt), k1 = Math.min(eph.n - 1, Math.round((t1 - eph.t0) / eph.dt));
@@ -69,7 +68,7 @@ function tideWindow(snap, { port: id, date, days }) {
 
 // Year overview for every port, from local midnight at Qaringil on `date`.
 function yearOverview(snap, { date }, progress) {
-  const t0 = parseLocalDate(date, 30), spin = Math.max(...PORTS.map(spinupSeconds));
+  const t0 = parseLocalDate(date, 30), spin = spinupSeconds();
   checkStart(snap, t0 - spin);
   progress('Running the simulation for a year…');
   const eph = recordEphemeris(snap, t0 - spin, t0 + 365 * DAY);
@@ -88,8 +87,7 @@ function yearOverview(snap, { date }, progress) {
   for (const p of PORTS) {
     const h = hs.get(p.id), st = portStats(p, eph, h, k0);
     const { F, type } = formNumber(partials[p.id]);
-    summary.push({ id: p.id, name: p.name, model: p.basin ? `${BASINS[p.basin].name} channel` : (p.semi?.T0 ? `Resonator ${p.semi.T0} h` : 'Open ocean'),
-                   F, type, neap: st.neap, median: st.median, spring: st.spring, highest: st.highest, lowest: st.lowest,
+    summary.push({ id: p.id, name: p.name, F, type, neap: st.neap, median: st.median, spring: st.spring, highest: st.highest, lowest: st.lowest,
                    highsPerDay: st.highsPerDay });
     daily[p.id] = st.daily;
     const c = new Float32Array(n14);
@@ -100,11 +98,14 @@ function yearOverview(snap, { date }, progress) {
     [id, rows.map(({ y, ...rest }) => rest)]));
 
   progress('Along the Central Sea…');
-  const profile = channelProfile('centralSea', eph, k0, kFit);
-  const cs = BASINS.centralSea, ch = new Channel(cs, eph.dt, eph.R);
-  const basin = { name: cs.name, lengthKm: ch.L / 1000, depth: cs.depth, damping: cs.damping,
-                  fundamental: ch.fundamentalPeriodHours,
-                  ports: PORTS.filter(p => p.basin === 'centralSea').map(p => ({ name: p.name, km: p.s * ch.L / 1000 })) };
+  const profile = seaProfile(eph, k0, kFit);
+  // Central Sea ports, placed at the nearest profile point.
+  const near = p => profile.reduce((best, q) => {
+    const d = Math.hypot(q.lat - p.lat, (q.lon - p.lon) * Math.cos(p.lat * Math.PI / 180));
+    return d < best.d ? { d, km: q.km } : best;
+  }, { d: Infinity }).km;
+  const basin = { name: 'Central Sea', lengthKm: profile[profile.length - 1].km,
+                  ports: PORTS.filter(p => p.sea === 'Central Sea').map(p => ({ name: p.name, km: near(p) })) };
 
   // Declinations at local noon (PMT+2), one per day.
   const decl = { day: [], Secundus: [], Tertius: [], Quartus: [], Sun: [] };
@@ -115,15 +116,15 @@ function yearOverview(snap, { date }, progress) {
     for (const b of REPORT_BODIES) decl[b].push(declination(eph, eph.names.indexOf(b), k));
   }
 
-  // Across the isthmus: Qaringil vs a plain equilibrium tide just north.
-  const north = equilibriumSeries(eph, 45.6, 30.6), q = hs.get('qaringil');
-  let mq = 0, mn = 0;
-  for (let k = k0; k < eph.n; k++) { mq += q[k]; mn += north[k]; }
-  mq /= eph.n - k0; mn /= eph.n - k0;
-  const bridge = { qaringil: new Float32Array(n14), north: new Float32Array(n14), current: new Float32Array(n14) };
+  // Across the isthmus: the levels at the two ends of the bridge gap and the
+  // current through it.
+  const gap = gapSeries(eph);
+  const mean = h => { let m = 0; for (let k = k0; k < eph.n; k++) m += h[k]; return m / (eph.n - k0); };
+  const ms = mean(gap.south), mn = mean(gap.north);
+  const bridge = { name: gap.name, south: new Float32Array(n14), north: new Float32Array(n14), current: new Float32Array(n14) };
   for (let i = 0; i < n14; i++) {
-    const k = k0 + i * step, a = q[k] - mq, b = north[k] - mn, d = a - b;
-    bridge.qaringil[i] = a; bridge.north[i] = b; bridge.current[i] = Math.sign(d) * Math.sqrt(2 * 9.81 * Math.abs(d));
+    const k = k0 + i * step;
+    bridge.south[i] = gap.south[k] - ms; bridge.north[i] = gap.north[k] - mn; bridge.current[i] = gap.current[k];
   }
 
   return { startDay: localTime(t0 + HOUR, 30).day, summary, partials: partialRows, curves, curveStepHours: step * eph.dt / HOUR,

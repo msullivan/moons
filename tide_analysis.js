@@ -1,13 +1,14 @@
-// Tide analysis on top of tides.js: run the sim over a window, drive ports,
-// fit partial tides, compute range statistics.  No DOM or filesystem access,
+// Tide analysis on top of tides.js: run the sim over a window, apply the
+// fitted port models (port_response.js), fit partial tides, compute range
+// statistics.  No DOM or filesystem access,
 // so it runs both in Node (analysis/*.mjs) and in the browser (tides_worker.js).
 
 import { Simulation } from './simulation.js';
 import { createInitialBodies, applySnapshot, MEAN_SOLAR_DAY } from './bodies.js';
 import { calToSimTime, simDate, clockHM, zoneOffset } from './calendar.js';
-import { TIDE_BODY_NAMES, tideBodyIndices, tideFrame, createPortModel, component,
-         findExtrema, Channel, makeSite, totalForcing } from './tides.js';
-import { BASINS } from './ports.js';
+import { TIDE_BODY_NAMES, tideBodyIndices, tideFrame, component, findExtrema, makeSite,
+         forcingSeries, applyResponse, gapCurrent } from './tides.js';
+import { RESPONSE } from './port_response.js';
 
 export const HOUR = 3600;
 export const DAY  = MEAN_SOLAR_DAY;
@@ -75,35 +76,30 @@ export function recordEphemeris(snapshot, t0, t1) {
            frame(k) { return data.subarray(4 * nb * k, 4 * nb * (k + 1)); } };
 }
 
-// Spin-up long enough for the slowest port transient to decay.
-export function spinupSeconds(port) {
-  if (port.basin) return Math.max(10 * DAY, 8 * BASINS[port.basin].damping * HOUR);
-  const decay = sp => sp?.T0 ? (sp.Q ?? 3) * sp.T0 / Math.PI * HOUR : 0;  // 1/(γ/2)
-  return Math.max(10 * DAY, 10 * Math.max(decay(port.semi), decay(port.diurnal)));
+// Spin-up: the port models look back over the forcing of the last 120 h
+// (port_response.js lags), so a window needs that much ephemeris before it.
+const MAX_LAG_H = Math.max(...Object.values(RESPONSE.ports).map(r => r.lags[r.lags.length - 1]));
+export function spinupSeconds() {
+  return Math.ceil(MAX_LAG_H / 24 + 0.5) * DAY;
 }
 
 // ── running ports ──────────────────────────────────────────────────────
 
-// Drive several ports across samples [0, k1) of the ephemeris.  Ports in
-// the same basin share one channel run.  Returns Map(port.id → Float64Array).
+// Water level at a site with response model `resp` over samples [0, k1) of
+// the ephemeris.  sel = { body, species } keeps only that part of the forcing
+// (a partial tide: linear terms only, no constant).
+function runResponse(resp, site, eph, sel = null, k1 = eph.n) {
+  const F = forcingSeries(eph, site, sel, k1);
+  return applyResponse(resp, F, eph.dt, { k1, linear: sel != null });
+}
+
+// Several ports at once.  Returns Map(port.id → Float64Array).
 export function runPorts(ports, eph, sel = null, k1 = eph.n) {
-  const out = new Map(ports.map(p => [p.id, new Float64Array(eph.n)]));
-  const channels = new Map(), resonators = [];
-  for (const p of ports) {
-    if (p.basin) {
-      if (!channels.has(p.basin)) channels.set(p.basin, { ch: new Channel(BASINS[p.basin], eph.dt, eph.R), ports: [] });
-      channels.get(p.basin).ports.push(p);
-    } else resonators.push({ p, model: createPortModel(p, BASINS, eph.dt, eph.R) });
-  }
-  for (let k = 0; k < k1; k++) {
-    const f = eph.frame(k);
-    for (const { ch, ports: ps } of channels.values()) {
-      ch.step(f, sel);
-      for (const p of ps) out.get(p.id)[k] = ch.heightAt(p.s ?? 0);
-    }
-    for (const { p, model } of resonators) out.get(p.id)[k] = model.step(f, sel);
-  }
-  return out;
+  return new Map(ports.map(p => {
+    const resp = RESPONSE.ports[p.id];
+    if (!resp) throw new Error(`port ${p.id} has no fitted model in port_response.js — run analysis/fit_port_response.mjs --write`);
+    return [p.id, runResponse(resp, makeSite(p.lat, p.lon), eph, sel, k1)];
+  }));
 }
 
 export function runPort(port, eph, sel = null) {
@@ -207,33 +203,35 @@ export function portStats(port, eph, h, k0) {
   };
 }
 
-// Typical once-daily and twice-daily amplitude along a channel basin, from
-// the head to the mouth, over samples [k0, k1).  Returns [{ km, diurnal, semidiurnal }] (m).
-export function channelProfile(basinKey, eph, k0, k1 = eph.n) {
-  const amps = {};
-  let ch;
-  for (const [species, s] of REPORT_SPECIES) {
-    ch = new Channel(BASINS[basinKey], eph.dt, eph.R);
-    const N = ch.N, sum = new Float64Array(N + 1), sq = new Float64Array(N + 1);
-    for (let k = 0; k < k1; k++) {
-      ch.step(eph.frame(k), { species: s });
-      if (k < k0) continue;
-      for (let i = 0; i <= N; i++) { sum[i] += ch.eta[i]; sq[i] += ch.eta[i] ** 2; }
+// Typical once-daily and twice-daily amplitude down the middle of the
+// Central Sea (port_response.js axis points), over samples [k0, k1).
+// Returns [{ km, lat, lon, diurnal, semidiurnal }] (m), km from Qaringil.
+export function seaProfile(eph, k0, k1 = eph.n) {
+  return RESPONSE.axis.map(pt => {
+    const site = makeSite(pt.lat, pt.lon), amp = {};
+    for (const [species, s] of REPORT_SPECIES) {
+      const y = runResponse(pt, site, eph, { species: s }, k1);
+      let sum = 0, sq = 0;
+      for (let k = k0; k < k1; k++) { sum += y[k]; sq += y[k] * y[k]; }
+      const m = k1 - k0;
+      amp[species] = Math.sqrt(2 * Math.max(0, sq / m - (sum / m) ** 2));
     }
-    const m = k1 - k0;
-    amps[species] = Array.from(sum, (v, i) => Math.sqrt(2 * Math.max(0, sq[i] / m - (v / m) ** 2)));
-  }
-  return amps.diurnal.map((d, i) => ({
-    km: (i < ch.N ? (i + 0.5) * ch.dx : ch.L) / 1000, diurnal: d, semidiurnal: amps.semidiurnal[i],
-  }));
+    return { km: pt.km, lat: pt.lat, lon: pt.lon, ...amp };
+  });
 }
 
-// Plain equilibrium tide at a site (used for the open water north of the
-// isthmus in the bridge-current estimate).
-export function equilibriumSeries(eph, lat, lon) {
-  const site = makeSite(lat, lon), out = new Float64Array(eph.n);
-  for (let k = 0; k < eph.n; k++) out[k] = totalForcing(eph.frame(k), site);
-  return out;
+// Levels at the two ends of isthmus gap n (port_response.js gaps) and the
+// current through it, over the whole ephemeris.  Returns { name, north,
+// south, current } — current in m/s, positive running north, out of the
+// Central Sea.  End A (ends[0]) is the northern end.
+export function gapSeries(eph, n = 0) {
+  const gp = RESPONSE.gaps[n];
+  const [A, B] = gp.ends.map(e => {
+    const site = makeSite(e.lat, e.lon), F = forcingSeries(eph, site);
+    return { F, h: applyResponse(e, F, eph.dt) };
+  });
+  const u = gapCurrent(gp, A.h, B.h, A.F, B.F, eph.dt);
+  return { name: gp.name, north: A.h, south: B.h, current: u.map(v => -v) };
 }
 
 // Declination (degrees) of body j at sample k.

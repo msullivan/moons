@@ -287,7 +287,7 @@ function drawYear() {
   // Summary table.
   const table = $('summary');
   table.replaceChildren();
-  const cols = [['Port'], ['Model'], ['Tide type'], ['Form', 1], ['Neap', 1], ['Median', 1], ['Spring', 1],
+  const cols = [['Port'], ['Tide type'], ['Form', 1], ['Neap', 1], ['Median', 1], ['Spring', 1],
                 ['Highest', 1], ['Lowest', 1], ['≤1 HW', 1], ['2 HW', 1], ['3+ HW', 1]];
   const hr = table.createTHead().insertRow();
   for (const [h, num] of cols) { const th = document.createElement('th'); th.textContent = h; if (num) th.className = 'num'; hr.append(th); }
@@ -295,7 +295,7 @@ function drawYear() {
   for (const p of r.summary) {
     const tr = tb.insertRow();
     const hp = p.highsPerDay, pc = f => (100 * f).toFixed(0) + '%';
-    const vals = [p.name, p.model, p.type, p.F.toFixed(2), p.neap.toFixed(2) + ' m', p.median.toFixed(2) + ' m', p.spring.toFixed(2) + ' m',
+    const vals = [p.name, p.type, p.F.toFixed(2), p.neap.toFixed(2) + ' m', p.median.toFixed(2) + ' m', p.spring.toFixed(2) + ' m',
                   signed(p.highest) + ' m', signed(p.lowest) + ' m', pc(hp[0] + hp[1]), pc(hp[2]), pc(hp[3])];
     vals.forEach((v, i) => { const td = tr.insertCell(); td.textContent = v; if (cols[i][1]) td.className = 'num'; });
   }
@@ -384,9 +384,9 @@ function drawDrivers() {
 
 function drawProfile() {
   const r = yearData, b = r.basin;
-  $('profile-note').textContent = `Typical tide amplitude from the isthmus (left) to the open mouth (right). The sea is ` +
-    `${b.lengthKm.toFixed(0)} km long and ${b.depth} m deep, so it rings at ${b.fundamental.toFixed(1)} h, near the once-daily tides: ` +
-    `those pile up at the closed head, while twice-daily tides nearly cancel mid-sea.`;
+  $('profile-note').textContent = `Typical tide amplitude down the middle of the sea, from Qaringil under the isthmus (left), ` +
+    `past the islands and Jia, to the open water south of Templado (right), ${b.lengthKm.toFixed(0)} km. ` +
+    `Ports are marked where they sit along it.`;
   const xs = r.profile.map(p => p.km);
   const series = [
     { name: 'once-daily', color: SP_COLOR.diurnal, xs, ys: r.profile.map(p => p.diurnal * 100) },
@@ -439,23 +439,23 @@ function drawYearRange() {
 }
 
 function bridgeXs() {
-  const r = yearData, n = r.bridge.qaringil.length;
+  const r = yearData, n = r.bridge.south.length;
   return Float32Array.from({ length: n }, (_, i) => i * r.curveStepHours);
 }
 function drawBridgeLevels() {
   const r = yearData, xs = bridgeXs(), B = r.bridge;
   const series = [
     { name: 'north of the isthmus', color: NORTH, width: 1.5, xs, ys: B.north },
-    { name: 'Qaringil', color: TOTAL, width: 2, xs, ys: B.qaringil },
+    { name: 'Central Sea side', color: TOTAL, width: 2, xs, ys: B.south },
   ];
   const m = Math.max(...series.flatMap(s => Array.from(s.ys, Math.abs))) * 1.08;
   lineChart($('bridge-levels'), {
     height: 200, zero: true, x: dayTicks(r.startDay, xs[xs.length - 1]), y: { domain: [-m, m], fmt: axisNum },
     series,
     tip: i => ({ head: `${dayLabel(r.startDay + Math.floor(xs[i] / 24))} ${clock(xs[i])} PMT+2`, rows: [
-      { color: TOTAL, name: 'Qaringil', value: signed(B.qaringil[i]) + ' m' },
+      { color: TOTAL, name: 'Central Sea side', value: signed(B.south[i]) + ' m' },
       { color: NORTH, name: 'north side', value: signed(B.north[i]) + ' m' },
-      { name: 'difference', value: signed(B.qaringil[i] - B.north[i]) + ' m' }] }),
+      { name: 'difference', value: signed(B.south[i] - B.north[i]) + ' m' }] }),
   });
 }
 function drawBridgeCurrent() {
@@ -463,7 +463,7 @@ function drawBridgeCurrent() {
   const m = Math.max(...Array.from(c, Math.abs)) * 1.08;
   lineChart($('bridge-current'), {
     height: 180, zero: true, x: dayTicks(r.startDay, xs[xs.length - 1]), y: { domain: [-m, m], fmt: v => axisNum(v) + ' m/s' },
-    series: [{ name: 'implied current', color: CURRENT, width: 1.6, xs, ys: c }],
+    series: [{ name: 'current', color: CURRENT, width: 1.6, xs, ys: c }],
     tip: i => ({ head: `${dayLabel(r.startDay + Math.floor(xs[i] / 24))} ${clock(xs[i])} PMT+2`, rows: [
       { color: CURRENT, name: c[i] >= 0 ? 'running north' : 'running south', value: `${Math.abs(c[i]).toFixed(1)} m/s · ${(Math.abs(c[i]) * 1.9438).toFixed(0)} kn` }] }),
   });

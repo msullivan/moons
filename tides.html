@@ -127,7 +127,7 @@
   </nav>
 
   <h1>Port tides</h1>
-  <p class="muted">Tide predictions computed in your browser from the N-body simulation: each moon's real position drives the equilibrium tide, and a model of each port's sea turns it into local high and low water. Heights are metres from mean sea level; times are local zone time.</p>
+  <p class="muted">Tide predictions computed in your browser from the N-body simulation: each moon's real position drives the equilibrium tide, and each port's response — fitted to the 2-D <a href="tidemap.html">tide map</a> model of the seas — turns it into local high and low water. Heights are metres from mean sea level; times are local zone time.</p>
 
   <div class="controls">
     <label>Port <select id="port"></select></label>
@@ -180,7 +180,7 @@
     </div>
     <div class="card">
       <h3>Along the Central Sea</h3>
-      <p id="profile-note">Typical tide amplitude from the isthmus (left) to the open mouth (right).</p>
+      <p id="profile-note">Typical tide amplitude down the middle of the sea.</p>
       <div class="legend"><span><i class="sw-diurnal"></i>once-daily</span><span><i class="sw-semi"></i>twice-daily</span></div>
       <div class="chart" id="profile"></div>
     </div>
@@ -188,26 +188,26 @@
 
   <div class="card">
     <h3 id="yearrange-title">Daily range through the year</h3>
-    <p>Top: each local day's range at the selected port. Bottom: declination of Tertius, Quartus and the Sun. Once-daily tides grow when the moons stand far from the equator, so the Central Sea ports (Kard most clearly) follow the lower panel; the open-coast ports follow the moons lining up instead.</p>
+    <p>Top: each local day's range at the selected port. Bottom: declination of Tertius, Quartus and the Sun. Once-daily tides grow when the moons stand far from the equator, so Qaringil, the most once-daily port, follows the lower panel; the twice-daily ports follow the moons lining up instead.</p>
     <div class="legend" id="decl-legend"></div>
     <div class="chart" id="yearrange"></div>
     <div class="chart" id="decl"></div>
   </div>
 
   <div class="card">
-    <h3>Under Qaringil's bridges</h3>
-    <p>An upper bound, not a model of the currents: it assumes the water north of the isthmus follows the plain equilibrium tide and that the whole level difference across a bridge gap becomes speed, with no friction. Positive current runs north out of the Central Sea.</p>
+    <h3 id="bridge-title">Under the Great Western Bridge</h3>
+    <p>The one deep gap through the isthmus, 1.6 km wide and 60 m deep, like the Golden Gate. Top: the water level at either end. Bottom: the current through it, driven by the difference and held back by friction and the losses at the narrows, as in the 2-D model. Positive current runs north, out of the Central Sea.</p>
     <div class="legend">
-      <span><i style="background: var(--bright)"></i>Qaringil</span>
+      <span><i style="background: var(--bright)"></i>Central Sea side</span>
       <span><i style="background: rgba(140, 170, 220, 0.55)"></i>north of the isthmus</span>
-      <span><i style="background: #ff9f6b"></i>implied current</span>
+      <span><i style="background: #ff9f6b"></i>current</span>
     </div>
     <div class="chart" id="bridge-levels"></div>
     <div class="chart" id="bridge-current"></div>
   </div>
 
   <footer>
-    Model and parameters: <code>tides.js</code>, <code>ports.js</code>, <code>tide_analysis.js</code>; method notes in <a href="docs.html?file=TIDES.md">TIDES.md</a>.
+    Model: <code>tides.js</code>, <code>tide_analysis.js</code>, ports in <code>ports.js</code>, fitted weights in <code>port_response.js</code> (from <code>analysis/fit_port_response.mjs</code>); method notes in <a href="docs.html?file=TIDES.md">TIDES.md</a>.
     Command-line equivalents: <code>node analysis/tide_table.mjs</code> and <code>node analysis/port_report.mjs</code>.
   </footer>
 

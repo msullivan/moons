@@ -22,7 +22,7 @@ const port = getPort(id);
 const days = +daysArg;
 const t0 = parseLocalDate(dateArg, port.lon);
 const t1 = t0 + days * DAY;
-const spin = spinupSeconds(port);
+const spin = spinupSeconds();
 if (t0 - spin < SNAPSHOT_TIME && t0 >= SNAPSHOT_TIME)
   console.error('note: spin-up reaches before the snapshot; integrating from the epoch (slow)');
 

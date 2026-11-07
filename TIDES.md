@@ -858,11 +858,12 @@ like Earth's Moon. Primus is magically anchored — no migration.
 Everything above is a global, location-free model. For tide tables at actual places, open
 **[Port tides](tides.html)** (`tides.html`): pick a port and date for a tide table and charts,
 plus a year overview of every port, computed live in the browser. The model is `tides.js`,
-port parameters are in `ports.js`, and two scripts give the same results on the command line:
+ports are in `ports.js` and their fitted responses in `port_response.js`. Two scripts give
+the same results on the command line:
 
 ```bash
 node analysis/tide_table.mjs qaringil 2253-03-01 7      # high/low water table, local time
-node analysis/port_report.mjs all 2253-02-01 365 --plot  # tuning diagnostics + 14-day plots
+node analysis/port_report.mjs all 2253-02-01 365 --plot  # partial tides, ranges + 14-day plots
 ```
 
 ### Method
@@ -873,99 +874,129 @@ node analysis/port_report.mjs all 2253-02-01 365 --plot  # tuning diagnostics + 
    δ, hour angle H and distance r come straight from the N-body sim, so eccentricity,
    declination cycles and orbital precession (the "nodal corrections" of Earth tide tables)
    are built in.
-2. **Ocean response**, as a linear time-domain system driven by that forcing:
-   - *Resonator ports* (open coasts): per species, a damped oscillator
-     `x'' + (ω₀/Q)x' + ω₀²x = G·ω₀²·F(t)` plus a propagation delay τ.
-   - *Channel ports* (inside the Central Sea): a 1-D linear shallow-water channel, closed at
-     the isthmus and open to the ocean at the southwest mouth, forced at the mouth and
-     directly along its length. Verified against the analytic damped quarter-wave solution
-     to < 1% (`tests/tide_channel_check.mjs`).
+2. **Ocean response: the response method** (Munk & Cartwright 1966), fitted to the
+   [2-D model](#2-d-tide-model-the-qamis-map). Per site, the water level is a fixed linear
+   filter of the local forcing:
+
+       h(t) = c + g·C₀(t) + Σ_s Σ_ℓ [ a_sℓ·C_s(t − ℓ) + b_sℓ·S_s(t − ℓ) ]  +  Σ_j q_j·N_j
+
+   C_s and S_s are the in-phase and quadrature (cos mH ↔ sin mH) equilibrium tides of
+   species s, summed over the moons and the Sun, at lags ℓ = 0, 6, …, 120 h. N_j are a few
+   products of the fitted once- and twice-daily parts (`NL_TERMS`), the kind of distortion
+   quadratic bottom friction causes. 86 linear and 20 non-linear weights per site.
+
+   For any one moon the whole forcing field of a species is a fixed spatial pattern times
+   one complex number, so the local forcing carries everything the 2-D model sees. The
+   filter therefore stands in for the whole sea, and because it acts on the actual forcing it
+   follows the orbits as they evolve. A fixed set of harmonic constituents would not, and Qaia
+   would need dozens of them.
+
+   `analysis/fit_port_response.mjs` runs the 2-D model over four 90-day windows years apart
+   (2253–2263, so it sees the orbits in several configurations) and fits each site by least
+   squares. It then scores the fit on two windows it never saw (2261, 2270).
+
+   | Site | Signal RMS | Error, fitted windows | Error, unseen windows | Worst miss |
+   |---|---|---|---|---|
+   | Qaringil | 79 cm | 6.8 cm | 7.9 cm | 38 cm |
+   | Kard | 48 cm | 4.8 cm | 5.4 cm | 24 cm |
+   | Jia | 75 cm | 8.5 cm | 8.8 cm | 37 cm |
+   | Templado | 71 cm | 7.0 cm | 7.2 cm | 36 cm |
+   | Qis | 121 cm | 9.6 cm | 10.5 cm | 33 cm |
+   | Freeport | 139 cm | 10.3 cm | 10.5 cm | 55 cm |
+   | Bridge current | 3.6 m/s | | 0.26 m/s | 1.6 m/s |
+
+   So high and low water times and heights match the 2-D model to a few percent. What's left
+   is mostly twice-daily misfit spread through the wide band (Secundus's eccentric sidebands
+   reach ~2.9 cycles a day) plus some friction overtides. Lags past 120 h don't help, the
+   non-linear terms take the worst misses down by a quarter (Freeport 73 → 55 cm), and the
+   errors are the same with a 12-day spin-up of the 2-D model, so they aren't start-up
+   transients.
+
+   Partial tides (one body, one species; the "What drives each port" chart) use the linear
+   part alone. **Changing the bathymetry, the mask, a port's position or a moon means
+   refitting** (`node analysis/fit_port_response.mjs --write`, ~3 min on the laptop GPU;
+   `--cache DIR` keeps the 2-D runs for re-fitting). Each port's tide is now tuned through
+   the bathymetry in `ocean_grid.js`, not per port.
 
 ### The Central Sea
 
-From the map, the Central Sea is a ~900 km basin closed at the north by the wizard-built
-isthmus and open to the deep ocean in the southwest. Geometrically it is the Adriatic,
-with Qaringil in Venice's spot at the head. At 220 m mean depth its quarter-wave period is
-~21.7 h, close to the Adriatic's 21.5 h seiche, so it **resonates in the diurnal band**.
-This gives a structure along the sea:
+From the map, the Central Sea is a ~1000 km sea closed at the north by the wizard-built
+isthmus (with one gap) and open to the ocean in the southwest. Geometrically it is the
+Adriatic, with Qaringil in Venice's spot at the head. In the 2-D model it is ~200 m deep. Down
+its middle (the "Along the Central Sea" chart, typical amplitudes over 120 days from 1 Feb
+2253):
 
-- **Qaringil** (head, antinode): biggest tides in the sea, mixed but mostly once-daily, peaking
-  when Tertius and Quartus are far from the equator.
-- **Kard** (mid-sea, at a river mouth): just seaward of the *semidiurnal node*. Tertius's and
-  Quartus's twice-daily tides are weak there (0.24× and 0.33× equilibrium), but Secundus's
-  shorter 9.8 h tide has its node further up the sea and is nearly full strength (0.9×). So
-  Kard is mainly once-daily: one high water on 64% of days, two on about a quarter.
-- **Jia** (on the peninsula tip near the mouth): close to the open-ocean tide.
+| km from Qaringil | 0 | 200 | 280 | 400 | 600 | 800 | 870 | 1000 |
+|---|---|---|---|---|---|---|---|---|
+| once-daily | 75 cm | 68 | 52 | 38 | 27 | 31 | 53 | 55 |
+| twice-daily | 39 cm | 31 | 9 | 32 | 31 | 36 | 77 | 76 |
+
+- **Qaringil** (head): once-daily tides pile up at the closed end. It's the most once-daily
+  port (F = 1.4): about half the days have one high water. Median daily range 1.8 m.
+- The twice-daily tide nearly vanishes ~280 km down the sea, among the northern islands.
+  With Coriolis it's a rotating amphidrome rather than a 1-D node, and Kard, mid-sea, is
+  clear of it.
+- **Kard** (mid-sea, Qamis shore): the smallest tides on the map, median 1.3 m, mostly twice
+  daily (F = 0.7), led by Tertius.
+- **Jia** and **Templado** (the mouth): out of the sea's shelter, the twice-daily tide
+  doubles. Secundus and Tertius are about equal there, so a third of days have three high
+  waters. Median ~2.3–2.4 m.
 
 Qaia's moons put tidal forcing all through 9.8–27.3 h, so no depth avoids resonance entirely.
-Around 120 m the second mode lands on Secundus, and at ≳ 500 m the fundamental lands on
-Tertius. A Venice-like *microtidal* Qaringil (< 1 m) isn't reachable with an open
-sea: Qaia's equilibrium tide is 2–3× Earth's. That would need extra sheltering, such as a
-lagoon behind narrow inlets (not modelled).
+A Venice-like *microtidal* Qaringil (< 1 m) isn't reachable with an open sea: Qaia's
+equilibrium tide is 2–3× Earth's. That would need extra sheltering, such as a lagoon behind
+narrow inlets (not modelled).
 
 ### Current ports (1 year from 1 Feb 2253, heights relative to mean sea level)
 
-| Port | Model | Character | Median / spring daily range | Highs per day |
+| Port | Character | Largest partial tides | Median / spring daily range | Highs per day |
 |---|---|---|---|---|
-| Qaringil | Central Sea, head | Mixed, mainly diurnal (F = 1.6) | 3.4 / 4.4 m | 1: 58%, 2: 38% |
-| Kard | Central Sea, mid | Mixed, mainly diurnal (F = 2.6) | 2.0 / 2.8 m | 1: 64%, 2: 26% |
-| Jia | Central Sea, mouth | Mixed, mainly semidiurnal (F = 0.8) | 1.6 / 2.2 m | 2: 56%, 3: 23% |
-| Qis (river mouth) | Resonator, 12.6 h | Semidiurnal, Tertius-dominated (F = 0.27) | 3.1 / 4.5 m | 2: 76% |
-| Freeport | Resonator, 10 h | Semidiurnal, Secundus-dominated (F = 0.14) | 4.3 / 5.7 m | 2: 54%, 3: 41% |
+| Qaringil | Mixed, on the edge of diurnal (F = 1.4) | Tertius D 40, Tertius SD 36, Quartus D 19 cm | 1.8 / 2.5 m | 1: 49%, 2: 48% |
+| Kard | Mixed, mainly semidiurnal (F = 0.7) | Tertius SD 37, Tertius D 25, Quartus SD 14 cm | 1.3 / 1.9 m | 1: 21%, 2: 74% |
+| Jia | Mixed, mainly semidiurnal (F = 0.7) | Secundus SD 32, Tertius SD 30, Tertius D 29 cm | 2.4 / 3.5 m | 2: 57%, 3+: 35% |
+| Templado | Mixed, mainly semidiurnal (F = 0.6) | Secundus SD 41, Tertius SD 36, Tertius D 27 cm | 2.3 / 3.4 m | 2: 59%, 3+: 31% |
+| Qis (river mouth) | Semidiurnal, Secundus-dominated (F = 0.19) | Secundus SD 150, Tertius SD 61, Quartus SD 36 cm | 4.3 / 5.7 m | 2: 54%, 3+: 45% |
+| Freeport | Semidiurnal (F = 0.24) | Secundus SD 133, Tertius SD 104, Quartus SD 54 cm | 4.9 / 6.5 m | 2: 57%, 3+: 39% |
 
 F is the form number, Σ diurnal / Σ semidiurnal partial-tide amplitudes. Spring range is
-the 90th percentile of the daily range. All port parameters are worldbuilding choices; see
-the comments in `ports.js` for their rationale and for map coordinates (~1.72 km per map
-pixel, anchored on Qaringil and Qama).
+the 90th percentile of the daily range. Qis's shelf resonates near Secundus's 9.9 h, so Qis is
+Secundus-dominated. Retune the Qis shelf in `ocean_grid.js` (wider or shallower) if it should
+be Tertius-dominated. The tides are those of an invented bathymetry; see `ports.js` for each
+port's map coordinates (~1.72 km per map pixel, anchored on Qaringil and Qama).
 
-**Not modelled:** Coriolis effects (amphidromic rotation; the Central Sea is about one Rossby
-radius wide), shallow-water distortion (fast flood and slow ebb), storm surge, and tidal
-currents.
+**Not modelled:** storm surge, river flow, and anything at harbour scale (the 2-D grid is
+~10 km). The fitted model doesn't give currents, except through the bridge gap.
 
 ### The isthmus, the bridges and Qaringil
 
 Qaringil is on a tiny island just south of the west side of the isthmus, at the north end
 (head) of the Central Sea; `docket/map-nice-marked.jpeg` marks it with a dot. The isthmus is partly
-wizard-made: the causeway and two enormous bridges span what used to be open water. So the
-Central Sea was once a strait to the sea in the north.
+wizard-made: the causeway and its bridges span what used to be open water. So the Central Sea
+was once a strait to the sea in the north.
 
-**The model treats the head as closed** (no flow at the isthmus). Rough check, with guessed
-gap sizes of ~5 km wide × ~20 m deep under each bridge:
+In the 2-D model the isthmus is a wall with **one gap under the Great Western Bridge**, sized
+like the Golden Gate (1.6 km wide, 60 m deep, 5 km long; see the 2-D model below). It's far too
+small to change the Central Sea's tide much: the head stays effectively closed. It still runs a
+ferocious current, because the levels on either side differ by up to ~2.8 m:
 
-- About 100 km from the head, the once-daily tide moves ~4×10⁶ m³/s through the sea
-  (~400 km wide, 220 m deep).
-- A 10⁵ m² gap passes at most ~2–3×10⁵ m³/s even at 2–3 m/s, about 5% of that.
-- So the leak changes Qaringil's tide heights by ~5–10%, and the closed head is fine for
-  tide tables.
-- This fails if the spans cross a real strait (tens of km wide or ~100 m deep). Then the
-  Central Sea becomes a channel between two seas, and Qaringil's tide depends on the
-  northern sea's tide too.
-
-**Currents under the bridges.** Qaringil's tide is amplified 2–3× and lags a few hours. If
-the water north of the isthmus (dark blue on the map, probably open ocean) has an ordinary
-tide, the two sides of each gap differ by 1–3 m. The hydraulic limit `√(2gΔη)` gives
-4–7 m/s (8–15 knots) before friction, in the class of the Strait of Messina (Charybdis) or
-Saltstraumen. The flow is mostly once-daily, like Qaringil's tide: north around Central Sea
-high water, south around low water. Slack water is the only safe time to pass a bridge.
+- Peak current about **6 m/s (12 knots)** either way over a year, median speed 3 m/s, and
+  ~2 slack waters a day. That's in the class of the Strait of Messina (Charybdis) or
+  Saltstraumen. Slack water is the only safe time to pass.
+- The Port tides page rebuilds the current from the fitted levels at the gap's two ends with
+  the 2-D model's own strait equation (`tides.js` `gapCurrent`). It matches the 2-D model's
+  current to 0.26 m/s RMS.
 
 Worldbuilding hooks: bridge pilots and slack-water tables as a Qaringil monopoly; tide
 mills; whirlpools at the gap mouths. Also, "the tides rose when the wizards closed the
 strait": with the strait open, Qaringil was not at a closed head and its tides would have
 been smaller.
 
-**To model the currents** (speeds, slack-water times), the head boundary would become a
-"leaky" one: gap flow driven by the level difference against a northern-sea tide, with
-friction (~20 lines in `Channel`). That needs gap widths and depths, whether the northern
-water is open ocean or another enclosed sea, and whether the bridges have large flow-blocking
-piers. Not yet decided. The Port tides page uses a crude upper bound instead: northern side =
-equilibrium tide, speed = `√(2g|Δη|)`.
-
 ## 2-D Tide Model (the Qamis map)
 
 A depth-averaged shallow-water model on the flat-sea map (`ocean_grid.js`, `ocean2d.js`),
-shown live on the **Tide map** page (`tidemap.html`). Unlike the port models it has the real
-coastline, Coriolis, and the open ocean around the map, so it produces amphidromes,
-coastal amplification and currents on its own.
+shown live on the **Tide map** page (`tidemap.html`). It has the real coastline, Coriolis,
+and the open ocean around the map, so it produces amphidromes, coastal amplification and
+currents on its own. The port tide tables are fitted to it (see the method above).
 
 ### Grid and bathymetry
 
@@ -1006,7 +1037,10 @@ within 1.5 cells of each end.
 
 ### First results (34 days from 1 Feb 2253, after 4 days of spin-up)
 
-| Port | 2-D daily range | Port model | Notes |
+Against the hand-tuned port models (1-D channel and resonators) that the fitted ones have
+since replaced:
+
+| Port | 2-D daily range | Old port model | Notes |
 |---|---|---|---|
 | Qaringil | 1.8 m | 3.7 m | Once-daily tides about the same; the twice-daily tide mostly cancels |
 | Kard | 1.4 m | 2.2 m | No clean twice-daily node any more (Coriolis): Tertius twice-daily 38 cm vs 8 cm |
@@ -1019,8 +1053,7 @@ tides from a joint fit to one run isn't reliable: every body's once-daily tide c
 component at exactly one sidereal day (Earth's K1), so the bodies' shares can't be separated
 from one run. Ranges and twice-daily partials are fine.
 
-**Open questions**: retune the Qis shelf (wider/shallower) if Qis should be Tertius-dominated;
-refit the port models (`ports.js`) to the 2-D results so `tides.html` agrees with the map.
+**Open question**: retune the Qis shelf (wider/shallower) if Qis should be Tertius-dominated.
 
 **Speed**: the solver runs on the GPU (WebGL2, `ocean2d.js`): two fragment-shader passes per
 40 s step on float textures (continuity; then both velocity components, the second
@@ -1075,7 +1108,7 @@ shelves are 2–5× bigger and hours late), and still water doesn't match a movi
 - **Limits**: one complex gain per body and species blurs the sidebands (e.g. K1 vs O1-like
   frequencies respond differently near the Central Sea's diurnal resonance), and the linear
   friction is off where currents are strongest.
-- **Bonus**: the coefficients are co-tidal maps (amphidromes per moon) and exactly what's
-  needed to refit the port models.
+- **Bonus**: the coefficients are co-tidal maps (amphidromes per moon). (The port models
+  were refitted another way: `analysis/fit_port_response.mjs`.)
 - **When**: after the bathymetry is settled; every bathymetry or moon change invalidates the
   file (regenerate like `state_200yr.json`).
