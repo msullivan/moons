@@ -117,6 +117,7 @@ tests/          — Playwright screenshot and stability scripts
   tidemap_rate_check.mjs  — tidemap.html playback: achieved vs requested speed for each setting
   tide_links_check.mjs    — Tide pages open on the sim's / each other's date (links, ?date= clamping)
   ocean_bench.mjs         — 2-D model speed: ocean stepping, N-body and both, s per sim day
+  mobile_controls_check.mjs — Main page control bar at phone/tablet/desktop sizes: both rows, links, panel offsets
 analysis/       — Node.js analysis scripts (no browser needed)
   moon_stats.mjs  — Physical/observational stats for all moons → MOONS.md
   tide_sim.mjs    — Tidal periods and 72h simulation → TIDES.md

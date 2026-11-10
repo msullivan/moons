@@ -44,6 +44,10 @@ async function init() {
   const canvas = document.getElementById('sim-canvas');
   resizeCanvas(canvas);
   window.addEventListener('resize', () => resizeCanvas(canvas));
+  // Panels that sit above the control bar on phones use its measured height.
+  const controls = document.getElementById('controls');
+  new ResizeObserver(() => document.documentElement.style.setProperty('--controls-h', `${controls.offsetHeight}px`))
+    .observe(controls);
 
   // Try to load 200-year snapshot; fall back to t=0 if not available.
   try {

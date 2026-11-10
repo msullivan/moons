@@ -95,6 +95,8 @@ html, body {
   gap: 5px;
 }
 
+.ctrl-row { display: contents; }
+
 .ctrl-group + .ctrl-group {
   border-left: 1px solid rgba(80, 130, 255, 0.15);
   padding-left: 12px;
@@ -470,7 +472,7 @@ button.ctrl-btn.active {
   #phase-panel {
     position: fixed;
     top: auto;
-    bottom: 42px;
+    bottom: var(--controls-h, 72px);
     left: 0;
     right: 0;
     flex-direction: row;
@@ -500,12 +502,21 @@ button.ctrl-btn.active {
     font-size: 9px;
   }
 
-  /* Controls: single row, horizontally scrollable */
+  /* Controls: two rows, each horizontally scrollable.  Panels above them
+     sit at --controls-h, the measured height (main.js). */
   #controls {
     padding: 6px 8px;
-    gap: 6px;
+    gap: 5px;
     font-size: 11px;
+    flex-direction: column;
+    align-items: stretch;
     flex-wrap: nowrap;
+  }
+
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -544,22 +555,19 @@ button.ctrl-btn.active {
   }
 
   #goto-popup {
-    bottom: 44px;
+    bottom: calc(var(--controls-h, 72px) + 2px);
     left: 8px;
     font-size: 11px;
   }
 
   #sky-panel {
-    bottom: 42px;
+    bottom: var(--controls-h, 72px);
   }
 
   #sky-localtime {
     font-size: 11px;
   }
 
-  #doc-links {
-    display: none;
-  }
 }
 
 /* ── Tablet / landscape phone ─────────────────────────────── */
@@ -599,7 +607,7 @@ button.ctrl-btn.active {
   #phase-panel {
     position: fixed;
     top: auto;
-    bottom: 38px;
+    bottom: var(--controls-h, 64px);
     left: 0;
     right: 0;
     flex-direction: row;
@@ -629,11 +637,19 @@ button.ctrl-btn.active {
     font-size: 9px;
   }
 
-  /* Compact controls */
+  /* Compact controls: two scrolling rows, as on narrow phones */
   #controls {
     padding: 5px 8px;
-    gap: 6px;
+    gap: 4px;
+    flex-direction: column;
+    align-items: stretch;
     flex-wrap: nowrap;
+  }
+
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     overflow-x: auto;
   }
 
@@ -668,10 +684,6 @@ button.ctrl-btn.active {
   }
 
   #sky-panel {
-    bottom: 38px;
-  }
-
-  #doc-links {
-    display: none;
+    bottom: var(--controls-h, 64px);
   }
 }
